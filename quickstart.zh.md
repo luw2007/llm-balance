@@ -18,6 +18,10 @@ llm-balance cost --platform=aliyun      # 阿里云 ✅
 llm-balance cost --platform=tencent     # 腾讯云 ✅
 llm-balance cost --platform=zhipu       # 智谱AI ✅
 
+# 同时查看多个平台（逗号分隔）
+llm-balance cost --platform=volcengine,aliyun,deepseek
+llm-balance cost --platform="deepseek, moonshot, tencent"
+
 # 使用别名命令
 llm-balance check
 ```
@@ -130,6 +134,9 @@ llm-balance cost --currency=USD --format=total
 # 特定平台的欧元余额详情
 llm-balance cost --platform=deepseek --currency=EUR --format=table
 
+# 同时检查多个平台并显示美元总计
+llm-balance cost --platform=volcengine,aliyun,deepseek --currency=USD --format=total
+
 # 使用自定义汇率和JSON输出
 LLM_BALANCE_RATES='{"USD": 7.5}' llm-balance cost --currency=USD --format=json
 
@@ -141,7 +148,7 @@ llm-balance cost --platform=openai --browser=chrome --currency=GBP --format=mark
 
 ```bash
 # 国际平台
-export OPENAI_ADMIN_KEY="your_openai_admin_key"      # OpenAI (需要管理员密钥)
+# export OPENAI_ADMIN_KEY="your_openai_admin_key"      # OpenAI (当前不支持)
 export ANTHROPIC_API_KEY="your_anthropic_api_key"   # Anthropic Claude
 export GEMINI_API_KEY="your_gemini_api_key"         # Google Gemini
 export AZURE_ACCESS_TOKEN="your_azure_token"        # Azure OpenAI
@@ -184,10 +191,10 @@ export LLM_BALANCE_CONFIG_FILE="/path/to/config.yaml"
 
 ## 快速平台参考
 
-### 🌍 国际平台 (4个)
+### 🌍 国际平台 (3个)
 | 平台 | 认证方式 | 环境变量 |
 |------|----------|----------|
-| OpenAI | 管理员API | `OPENAI_ADMIN_KEY` |
+| OpenAI | 管理员API | 当前不支持 |
 | Claude | API密钥 | `ANTHROPIC_API_KEY` |
 | Gemini | API密钥 | `GEMINI_API_KEY` |
 | Azure OpenAI | 访问令牌 | `AZURE_ACCESS_TOKEN` |

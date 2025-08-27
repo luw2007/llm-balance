@@ -5,8 +5,7 @@ setup(
     version="0.2.0",
     description="Check LLM platform balance and usage via API keys and browser cookies",
     author="Your Name",
-    packages=find_packages(where="src"),
-    package_dir={"": "src"},
+    packages=find_packages(),
     install_requires=[
         "fire>=0.5.0",
         "requests>=2.31.0",

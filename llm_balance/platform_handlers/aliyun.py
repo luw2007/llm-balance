@@ -19,6 +19,26 @@ except ImportError:
 class AliyunHandler(BasePlatformHandler):
     """Aliyun platform cost handler using official SDK"""
     
+    @classmethod
+    def get_default_config(cls) -> dict:
+        """Get default configuration for Aliyun platform"""
+        return {
+            "api_url": "https://business.aliyuncs.com",
+            "method": "POST",
+            "auth_type": "sdk",
+            "env_var": "ALIYUN_ACCESS_KEY_ID",
+            "headers": {
+                "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
+                "Accept": "application/json",
+                "Content-Type": "application/json"
+            },
+            "params": {},
+            "data": {},
+            "enabled": True,
+            "cookie_domain": None,
+            "region": "cn-hangzhou"
+        }
+    
     def __init__(self, config: PlatformConfig, browser: str = 'chrome'):
         super().__init__(browser)
         self.config = config

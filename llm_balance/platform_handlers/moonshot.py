@@ -2,6 +2,7 @@
 Moonshot platform handler
 """
 
+import json
 import os
 from typing import Dict, Any, Optional
 from .base import BasePlatformHandler, CostInfo
@@ -9,6 +10,24 @@ from ..config import PlatformConfig
 
 class MoonshotHandler(BasePlatformHandler):
     """Moonshot platform cost handler"""
+    
+    @classmethod
+    def get_default_config(cls) -> dict:
+        """Get default configuration for Moonshot platform"""
+        return {
+            "api_url": "https://api.moonshot.cn/v1/users/me/balance",
+            "method": "GET",
+            "auth_type": "bearer_token",
+            "env_var": "MOONSHOT_API_KEY",
+            "headers": {
+                "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
+                "Accept": "application/json"
+            },
+            "params": {},
+            "data": {},
+            "enabled": True,
+            "cookie_domain": None
+        }
     
     def __init__(self, config: PlatformConfig, browser: str = 'chrome'):
         super().__init__(browser)

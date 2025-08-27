@@ -89,10 +89,17 @@ def _format_table(balances: List[Dict[str, Any]], target_currency: str = 'CNY') 
         platform = balance['platform']
         amount = balance['balance']
         currency = balance['currency']
-        lines.append(f"{platform:<20} {amount:<15.2f} {currency:<10}")
+        
+        # Ensure amount is a number
+        try:
+            amount_float = float(amount) if amount is not None else 0.0
+        except (ValueError, TypeError):
+            amount_float = 0.0
+            
+        lines.append(f"{platform:<20} {amount_float:<15.2f} {currency:<10}")
         
         # Convert to target currency for total
-        total += convert_currency(amount, currency, target_currency)
+        total += convert_currency(amount_float, currency, target_currency)
     
     lines.append("-" * 60)
     lines.append(f"{'Total (' + target_currency + ')':<20} {total:<15.2f} {target_currency:<10}")

@@ -33,24 +33,7 @@ platforms:
       User-Agent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
       Accept: "application/json"
   
-  openai:
-    # OpenAI Admin API configuration - requires admin API key
-    api_url: "https://api.openai.com/v1/organization/costs"
-    method: "GET"
-    balance_path: ["data", 0, "results", 0, "amount", "value"]
-    currency_path: ["data", 0, "results", 0, "amount", "currency"]
-    enabled: true
-    auth_type: "bearer_token"
-    env_var: "OPENAI_ADMIN_KEY"
-    # Set environment variable: export OPENAI_ADMIN_KEY="your_admin_api_key"
-    # Note: Requires admin API key, not regular API key
-    params:
-      start_time: 1730419200
-      limit: 1
-    headers:
-      User-Agent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
-      Accept: "application/json"
-  
+    
     
   volcengine:
     # Volcengine SDK Authentication (recommended)
@@ -119,13 +102,12 @@ platforms:
 # Platform Status Summary
 # ============================================
 # 
-# International Platforms (1): OpenAI
 # Chinese Platforms (6): DeepSeek, Moonshot, Volcengine, Aliyun, Tencent, Zhipu
 # 
 # Authentication Types:
-# - API Key: DeepSeek, Moonshot, OpenAI
+# - API Key: DeepSeek, Moonshot
 # - SDK: Volcengine, Aliyun, Tencent
 # - Cookie: Zhipu
 # 
-# Total: 7 platforms supported (main branch)
+# Total: 6 platforms supported (main branch)
 # ============================================

@@ -2,12 +2,32 @@
 DeepSeek platform handler
 """
 
+import json
+import os
 from typing import Dict, Any, Optional
 from .base import BasePlatformHandler, CostInfo
 from ..config import PlatformConfig
 
 class DeepSeekHandler(BasePlatformHandler):
     """DeepSeek platform cost handler"""
+    
+    @classmethod
+    def get_default_config(cls) -> dict:
+        """Get default configuration for DeepSeek platform"""
+        return {
+            "api_url": "https://api.deepseek.com/v1/user/balance",
+            "method": "GET",
+            "auth_type": "bearer_token",
+            "env_var": "DEEPSEEK_API_KEY",
+            "headers": {
+                "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
+                "Accept": "application/json"
+            },
+            "params": {},
+            "data": {},
+            "enabled": True,
+            "cookie_domain": None
+        }
     
     def __init__(self, config: PlatformConfig, browser: str = 'chrome'):
         super().__init__(browser)
@@ -19,11 +39,10 @@ class DeepSeekHandler(BasePlatformHandler):
             raise ValueError("No API URL configured for DeepSeek")
         
         # Prepare authentication
-        headers = self.config.headers.copy()
+        headers = self.config.headers.copy() if self.config.headers else {}
         
         # Get API key from environment variable
-        import os
-        api_key = os.getenv('DEEPSEEK_API_KEY')
+        api_key = os.getenv(self.config.env_var or 'DEEPSEEK_API_KEY')
         
         if not api_key:
             raise ValueError("DeepSeek API key required. Set DEEPSEEK_API_KEY environment variable.")
@@ -57,7 +76,6 @@ class DeepSeekHandler(BasePlatformHandler):
     
     def _extract_balance(self, response: Dict[str, Any]) -> Optional[float]:
         """Extract balance from DeepSeek API response"""
-        # DeepSeek response format: {"is_available": true, "balance_infos": [{"currency": "CNY", "total_balance": "100.00", ...}]}
         balance_infos = response.get('balance_infos', [])
         if balance_infos:
             total_balance = balance_infos[0].get('total_balance', '0')
