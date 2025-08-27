@@ -13,6 +13,7 @@ from .gemini import GeminiHandler
 from .azure_openai import AzureOpenAIHandler
 from .tencent import TencentHandler
 from .lingyi import LingyiHandler
+from .minimax import MiniMaxHandler
 from .zhipu import ZhipuHandler
 
 def create_handler(config, browser: str = 'chrome'):
@@ -35,6 +36,8 @@ def create_handler(config, browser: str = 'chrome'):
         return TencentHandler(config, handler_browser)
     elif config.name == 'lingyi':
         return LingyiHandler(config, handler_browser)
+    elif config.name == 'minimax':
+        return MiniMaxHandler(config, handler_browser)
     elif config.name == 'zhipu':
         return ZhipuHandler(config, handler_browser)
     elif config.name == 'aliyun':
