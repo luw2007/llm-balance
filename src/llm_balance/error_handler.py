@@ -49,13 +49,13 @@ PLATFORM_INFO = {
     },
         'moonshot': {
         'name': 'Moonshot',
-        'url': 'https://kimi.moonshot.cn',
-        'api_url': 'https://kimi.moonshot.cn/settings/apikeys',
+        'url': 'https://www.kimi.com',
+        'api_url': 'https://www.kimi.com/settings/apikeys',
         'env_var': 'MOONSHOT_API_KEY',
         'description': 'Moonshot AI (Kimi)',
         'auth_type': 'API Key',
         'setup_steps': [
-            '访问 https://kimi.moonshot.cn 并注册/登录',
+            '访问 https://www.kimi.com 并注册/登录',
             '进入 "设置" → "API Keys"',
             '点击 "创建新的API Key"',
             '复制API Key并设置环境变量: export MOONSHOT_API_KEY="your_api_key"'
@@ -69,16 +69,15 @@ PLATFORM_INFO = {
     'volcengine': {
         'name': 'Volcengine',
         'url': 'https://console.volcengine.com',
-        'api_url': 'https://console.volcengine.com/ark/region:ark+cn-beijing/apiKey',
+        'api_url': 'https://console.volcengine.com',
         'env_var': 'VOLCENGINE_ACCESS_KEY',
         'env_var_secret': 'VOLCENGINE_SECRET_KEY',
         'description': '字节跳动火山引擎 (企业级云服务)',
         'auth_type': 'SDK',
         'setup_steps': [
             '访问 https://console.volcengine.com 并注册/登录',
-            '进入 "火山引擎方舟" 控制台',
-            '选择 "API Key 管理"',
-            '创建 Access Key 和 Secret Key',
+            '进入控制台后选择相应服务',
+            '在 "访问控制" 中创建 Access Key 和 Secret Key',
             '设置环境变量:',
             '  export VOLCENGINE_ACCESS_KEY="your_access_key"',
             '  export VOLCENGINE_SECRET_KEY="your_secret_key"'
@@ -325,7 +324,7 @@ def get_setup_guide() -> str:
    5. 设置: export OPENAI_ADMIN_KEY="sk-your-key"
 
 🌟 Moonshot (Kimi):
-   1. 访问: https://kimi.moonshot.cn
+   1. 访问: https://www.kimi.com
    2. 注册并登录
    3. 进入设置 → API Keys
    4. 创建新的API Key
@@ -333,8 +332,8 @@ def get_setup_guide() -> str:
 
 🇨🇳 火山引擎 (企业级):
    1. 访问: https://console.volcengine.com
-   2. 进入火山引擎方舟控制台
-   3. 创建 Access Key 和 Secret Key
+   2. 进入控制台后选择相应服务
+   3. 在访问控制中创建 Access Key 和 Secret Key
    4. 设置: 
       export VOLCENGINE_ACCESS_KEY="your_access_key"
       export VOLCENGINE_SECRET_KEY="your_secret_key"
