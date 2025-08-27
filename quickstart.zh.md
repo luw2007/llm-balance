@@ -1,6 +1,6 @@
 # LLM Balance Checker 快速参考
 
-**支持全球12个主流LLM平台**
+**支持7个生产就绪的LLM平台**
 
 ## 基本命令
 
@@ -9,19 +9,14 @@
 # 查看所有平台余额（默认人民币）
 llm-balance cost
 
-# 查看特定平台
-llm-balance cost --platform=deepseek   # DeepSeek
-llm-balance cost --platform=moonshot    # Moonshot AI
-llm-balance cost --platform=openai      # OpenAI
-llm-balance cost --platform=claude      # Anthropic
-llm-balance cost --platform=volcengine  # 火山引擎
-llm-balance cost --platform=aliyun      # 阿里云
-llm-balance cost --platform=gemini      # Google Gemini
-llm-balance cost --platform=azure_openai # Azure OpenAI
-llm-balance cost --platform=tencent     # 腾讯云
-llm-balance cost --platform=lingyi      # 零一万物
-llm-balance cost --platform=minimax     # MiniMax
-llm-balance cost --platform=zhipu       # 智谱AI
+# 查看特定平台（生产就绪）
+llm-balance cost --platform=deepseek   # DeepSeek ✅
+llm-balance cost --platform=moonshot    # Moonshot AI ✅
+llm-balance cost --platform=openai      # OpenAI ✅
+llm-balance cost --platform=volcengine  # 火山引擎 ✅
+llm-balance cost --platform=aliyun      # 阿里云 ✅
+llm-balance cost --platform=tencent     # 腾讯云 ✅
+llm-balance cost --platform=zhipu       # 智谱AI ✅
 
 # 使用别名命令
 llm-balance check
