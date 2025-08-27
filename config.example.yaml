@@ -51,28 +51,7 @@ platforms:
       User-Agent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
       Accept: "application/json"
   
-  claude:
-    # Claude API configuration (via open.bigmodel.cn)
-    api_url: "https://open.bigmodel.cn/api/anthropic/v1/messages"
-    method: "POST"
-    balance_path: ["usage", "input_tokens"]
-    currency_path: "USD"
-    enabled: true
-    auth_type: "bearer_token"
-    env_var: "ANTHROPIC_API_KEY"
-    # Set environment variable: export ANTHROPIC_API_KEY="your_api_key"
-    data:
-      max_tokens: 10
-      messages:
-        - content: test
-          role: user
-      model: claude-3-5-sonnet-20241022
-    headers:
-      User-Agent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
-      Accept: "application/json"
-      Content-Type: "application/json"
-      anthropic-version: "2023-06-01"
-  
+    
   volcengine:
     # Volcengine SDK Authentication (recommended)
     auth_type: "sdk"
@@ -103,37 +82,7 @@ platforms:
       Accept: "application/json"
     # Note: Uses official Aliyun Python SDK for authentication
 
-  gemini:
-    # Google Gemini API configuration
-    auth_type: "api_key"
-    api_url: "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:countTokens"
-    method: "POST"
-    balance_path: ["usage", "total_tokens"]
-    currency_path: "USD"
-    enabled: false
-    env_var: "GEMINI_API_KEY"
-    # Set environment variable: export GEMINI_API_KEY="your_api_key"
-    headers:
-      Content-Type: "application/json"
-      x-goog-api-key: "${GEMINI_API_KEY}"
-    data:
-      contents:
-        - parts:
-            - text: "test"
-  
-  azure_openai:
-    # Microsoft Azure OpenAI configuration
-    auth_type: "bearer_token"
-    api_url: "https://management.azure.com/subscriptions/{subscription_id}/providers/Microsoft.CognitiveServices/accounts/{account_name}/usage?api-version=2023-05-01"
-    method: "GET"
-    balance_path: ["value", 0, "currentValue"]
-    currency_path: ["value", 0, "unit"]
-    enabled: false
-    env_var: "AZURE_ACCESS_TOKEN"
-    # Set environment variable: export AZURE_ACCESS_TOKEN="your_access_token"
-    headers:
-      Authorization: "Bearer ${AZURE_ACCESS_TOKEN}"
-  
+    
     
     
   tencent:
@@ -151,36 +100,7 @@ platforms:
     # export TENCENT_SECRET_KEY="your_secret_key"
   
   
-  lingyi:
-    # 零一万物 API configuration
-    auth_type: "bearer_token"
-    api_url: "https://api.lingyiwanwu.com/web/v1/billing/balanceInfo"
-    method: "GET"
-    balance_path: ["data", "balance"]
-    currency_path: "CNY"
-    enabled: false
-    env_var: "LINGYI_API_KEY"
-    # Set environment variable: export LINGYI_API_KEY="your_api_key"
-    headers:
-      Authorization: "Bearer ${LINGYI_API_KEY}"
-      User-Agent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
-      Accept: "application/json"
-  
-  minimax:
-    # MiniMax API configuration
-    auth_type: "bearer_token"
-    api_url: "https://api.minimax.chat/v1/dashboard/billing/subscription"
-    method: "GET"
-    balance_path: ["hard_balance_usd"]
-    currency_path: "USD"
-    enabled: false
-    env_var: "MINIMAX_API_KEY"
-    # Set environment variable: export MINIMAX_API_KEY="your_api_key"
-    headers:
-      Authorization: "Bearer ${MINIMAX_API_KEY}"
-      User-Agent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
-      Accept: "application/json"
-  
+    
   zhipu:
     # 智谱AI configuration - 使用 Cookie 认证
     auth_type: "cookie"
@@ -199,13 +119,13 @@ platforms:
 # Platform Status Summary
 # ============================================
 # 
-# International Platforms (4): OpenAI, Claude, Google Gemini, Azure OpenAI
-# Chinese Platforms (8): DeepSeek, Moonshot, Volcengine, Aliyun, Tencent, Lingyi, MiniMax, Zhipu
+# International Platforms (1): OpenAI
+# Chinese Platforms (6): DeepSeek, Moonshot, Volcengine, Aliyun, Tencent, Zhipu
 # 
 # Authentication Types:
-# - API Key: DeepSeek, Moonshot, Claude, Gemini, Azure OpenAI, Lingyi, MiniMax
+# - API Key: DeepSeek, Moonshot, OpenAI
 # - SDK: Volcengine, Aliyun, Tencent
 # - Cookie: Zhipu
 # 
-# Total: 12 platforms supported
+# Total: 7 platforms supported (main branch)
 # ============================================

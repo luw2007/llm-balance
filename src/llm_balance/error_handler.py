@@ -47,64 +47,7 @@ PLATFORM_INFO = {
             'API Key以 sk- 开头'
         ]
     },
-    'claude': {
-        'name': 'Claude',
-        'url': 'https://console.anthropic.com',
-        'api_url': 'https://console.anthropic.com/settings/keys',
-        'env_var': 'ANTHROPIC_API_KEY',
-        'description': 'Anthropic Claude (via 智谱AI)',
-        'auth_type': 'API Key',
-        'setup_steps': [
-            '访问 https://console.anthropic.com 并登录',
-            '进入 "Settings" → "API Keys"',
-            '点击 "Create API Key"',
-            '复制API Key并设置环境变量: export ANTHROPIC_API_KEY="your_api_key"'
-        ],
-        'notes': [
-            'API Key以 sk-ant- 开头',
-            '需要绑定支付方式才能使用',
-            '通过智谱AI平台调用'
-        ]
-    },
-    'gemini': {
-        'name': 'Google Gemini',
-        'url': 'https://makersuite.google.com',
-        'api_url': 'https://makersuite.google.com/app/apikey',
-        'env_var': 'GEMINI_API_KEY',
-        'description': 'Google Gemini AI',
-        'auth_type': 'API Key',
-        'setup_steps': [
-            '访问 https://makersuite.google.com 并登录Google账号',
-            '点击 "Get API Key" 按钮',
-            '在弹出窗口中创建新的API Key',
-            '复制API Key并设置环境变量: export GEMINI_API_KEY="your_api_key"'
-        ],
-        'notes': [
-            'API Key格式：AIzaxxxxxxxxxxxxxxxxxxxxxxx',
-            '每分钟有请求限制',
-            '支持Gemini Pro、Gemini Ultra等模型'
-        ]
-    },
-    'azure_openai': {
-        'name': 'Azure OpenAI',
-        'url': 'https://portal.azure.com',
-        'api_url': 'https://portal.azure.com/#view/Microsoft_Azure_ProjectOxford/CognitiveServicesHub/~/OpenAI',
-        'env_var': 'AZURE_ACCESS_TOKEN',
-        'description': 'Microsoft Azure OpenAI Service',
-        'auth_type': 'Access Token',
-        'setup_steps': [
-            '访问 Azure Portal 并登录',
-            '创建或选择OpenAI服务资源',
-            '获取访问令牌或服务密钥',
-            '设置环境变量: export AZURE_ACCESS_TOKEN="your_access_token"'
-        ],
-        'notes': [
-            '需要Azure订阅',
-            '按使用量付费',
-            '支持企业级部署'
-        ]
-    },
-    'moonshot': {
+        'moonshot': {
         'name': 'Moonshot',
         'url': 'https://kimi.moonshot.cn',
         'api_url': 'https://kimi.moonshot.cn/settings/apikeys',
@@ -189,45 +132,7 @@ PLATFORM_INFO = {
             '支持混元大模型'
         ]
     },
-    'minimax': {
-        'name': 'MiniMax',
-        'url': 'https://api.minimax.chat',
-        'api_url': 'https://api.minimax.chat/console',
-        'env_var': 'MINIMAX_API_KEY',
-        'description': 'MiniMax 海螺AI',
-        'auth_type': 'API Key',
-        'setup_steps': [
-            '访问 https://api.minimax.chat 并注册/登录',
-            '进入控制台',
-            '创建API Key',
-            '复制API Key并设置环境变量: export MINIMAX_API_KEY="your_api_key"'
-        ],
-        'notes': [
-            'API Key格式：sk-xxxxxxxx',
-            '有免费试用额度',
-            '支持海螺AI系列模型'
-        ]
-    },
-    'lingyi': {
-        'name': 'Lingyi Wanwu',
-        'url': 'https://platform.lingyiwanwu.com',
-        'api_url': 'https://platform.lingyiwanwu.com/apikeys',
-        'env_var': 'LINGYI_API_KEY',
-        'description': '零一万物',
-        'auth_type': 'API Key',
-        'setup_steps': [
-            '访问 https://platform.lingyiwanwu.com 并注册/登录',
-            '进入 "API Keys" 页面',
-            '创建新的API Key',
-            '复制API Key并设置环境变量: export LINGYI_API_KEY="your_api_key"'
-        ],
-        'notes': [
-            'API Key格式：sk-xxxxxxxx',
-            '需要实名认证',
-            '支持Yi系列大模型'
-        ]
-    },
-    'zhipu': {
+        'zhipu': {
         'name': 'Zhipu AI',
         'url': 'https://open.bigmodel.cn',
         'api_url': 'https://open.bigmodel.cn/console/apikey',
@@ -370,7 +275,7 @@ def get_setup_guide() -> str:
 """
     
     # Popular platforms first
-    popular_platforms = ['openai', 'claude', 'gemini', 'azure_openai']
+    popular_platforms = ['openai']
     
     for platform in popular_platforms:
         info = get_platform_info(platform)
@@ -387,7 +292,7 @@ def get_setup_guide() -> str:
 🇨🇳 中国平台:
 """
     
-    chinese_platforms = ['deepseek', 'moonshot', 'volcengine', 'aliyun', 'tencent', 'minimax', 'lingyi', 'zhipu']
+    chinese_platforms = ['deepseek', 'moonshot', 'volcengine', 'aliyun', 'tencent', 'zhipu']
     
     for platform in chinese_platforms:
         info = get_platform_info(platform)
@@ -502,7 +407,7 @@ def format_platform_summary() -> str:
 """
     
     # Show setup commands for popular platforms
-    for platform in ['deepseek', 'openai', 'anthropic', 'gemini']:
+    for platform in ['deepseek', 'openai']:
         info = get_platform_info(platform)
         if info and not os.getenv(info['env_var']):
             summary += f"""

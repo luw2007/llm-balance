@@ -122,27 +122,7 @@ class ConfigManager:
                         'Accept': 'application/json'
                     }
                 },
-                'claude': {
-                    'api_url': 'https://open.bigmodel.cn/api/anthropic/v1/messages',
-                    'method': 'POST',
-                    'balance_path': ['usage', 'input_tokens'],
-                    'currency_path': 'USD',
-                    'enabled': False,
-                    'auth_type': 'bearer_token',
-                    'env_var': 'ANTHROPIC_API_KEY',
-                    'data': {
-                        'max_tokens': 10,
-                        'messages': [{'content': 'test', 'role': 'user'}],
-                        'model': 'glm-4.5-air'
-                    },
-                    'headers': {
-                        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json',
-                        'anthropic-version': '2023-06-01'
-                    }
-                },
-                'volcengine': {
+                                'volcengine': {
                     'api_url': 'https://console.volcengine.com/api/top/bill_volcano_engine/cn-north-1/2020-01-01/GetBalanceFromTradeBalance',
                     'method': 'POST',
                     'cookie_domain': 'console.volcengine.com',
@@ -175,39 +155,7 @@ class ConfigManager:
                     },
                     'params': {}
                 },
-                'gemini': {
-                    'api_url': 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:countTokens',
-                    'method': 'POST',
-                    'balance_path': ['usage', 'total_tokens'],
-                    'currency_path': 'USD',
-                    'enabled': False,
-                    'auth_type': 'api_key',
-                    'env_var': 'GEMINI_API_KEY',
-                    'headers': {
-                        'Content-Type': 'application/json',
-                        'x-goog-api-key': '${GEMINI_API_KEY}'
-                    },
-                    'data': {
-                        'contents': [{
-                            'parts': [{
-                                'text': 'test'
-                            }]
-                        }]
-                    }
-                },
-                'azure_openai': {
-                    'api_url': 'https://management.azure.com/subscriptions/{subscription_id}/providers/Microsoft.CognitiveServices/accounts/{account_name}/usage?api-version=2023-05-01',
-                    'method': 'GET',
-                    'balance_path': ['value', 0, 'currentValue'],
-                    'currency_path': ['value', 0, 'unit'],
-                    'enabled': False,
-                    'auth_type': 'bearer_token',
-                    'env_var': 'AZURE_ACCESS_TOKEN',
-                    'headers': {
-                        'Authorization': 'Bearer ${AZURE_ACCESS_TOKEN}'
-                    }
-                },
-                'tencent': {
+                                'tencent': {
                     'api_url': 'https://hunyuan.tencentcloudapi.com/',
                     'method': 'POST',
                     'balance_path': ['Response', 'Balance'],
@@ -224,35 +172,7 @@ class ConfigManager:
                     },
                     'data': {}
                 },
-                'minimax': {
-                    'api_url': 'https://api.minimax.chat/v1/account/balance',
-                    'method': 'GET',
-                    'balance_path': ['balance', 'total'],
-                    'currency_path': ['balance', 'currency'],
-                    'enabled': False,
-                    'auth_type': 'bearer_token',
-                    'env_var': 'MINIMAX_API_KEY',
-                    'headers': {
-                        'Authorization': 'Bearer ${MINIMAX_API_KEY}',
-                        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
-                        'Accept': 'application/json'
-                    }
-                },
-                'lingyi': {
-                    'api_url': 'https://api.lingyiwanwu.com/v1/account/balance',
-                    'method': 'GET',
-                    'balance_path': ['data', 'balance'],
-                    'currency_path': ['data', 'currency'],
-                    'enabled': False,
-                    'auth_type': 'bearer_token',
-                    'env_var': 'LINGYI_API_KEY',
-                    'headers': {
-                        'Authorization': 'Bearer ${LINGYI_API_KEY}',
-                        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
-                        'Accept': 'application/json'
-                    }
-                },
-                'zhipu': {
+                                'zhipu': {
                     'api_url': 'https://bigmodel.cn/api/biz/account/query-customer-account-report',
                     'method': 'GET',
                     'balance_path': ['data', 'balance'],

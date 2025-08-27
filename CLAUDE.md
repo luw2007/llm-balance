@@ -319,5 +319,5 @@ llm-balance check  # Should work as alias for cost
 - **Testing**: Manual testing procedures documented
 
 ###验收情况
-- Aliyun,Claude,DeepSeek,Moonshot,OpenAI,Tencent,Volcengine,Zhipu 已经通过验收
-- 有几个平台还没测试通过： Azure OpenAI、Google Gemini、lingyi、MiniMax。
+- Aliyun,DeepSeek,Moonshot,OpenAI,Tencent,Volcengine,Zhipu 已经通过验收
+- 未验收平台已移至dev分支进行开发： Azure OpenAI、Claude、Google Gemini、lingyi、MiniMax。
