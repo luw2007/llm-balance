@@ -5,7 +5,7 @@
 ## 功能特性
 
 - 🔑 **多重认证**: 支持API Key、浏览器Cookie和代理服务认证
-- 🌐 **多平台支持**: 集成5个主流LLM平台
+- 🌐 **多平台支持**: 集成7个主流LLM平台（生产就绪）
 - 📊 **多种输出格式**: JSON、Markdown、表格、仅总额
 - 💱 **多货币支持**: 支持CNY、USD、EUR等多种货币显示
 - ⚙️ **灵活配置**: YAML配置文件，支持动态启用/禁用平台
@@ -36,10 +36,20 @@ pip install -e .
 ```bash
 # API Key 认证平台
 export DEEPSEEK_API_KEY="your_deepseek_api_key"
-export ANTHROPIC_API_KEY="your_anthropic_api_key"  
 export OPENAI_ADMIN_KEY="your_openai_admin_key"
+export MOONSHOT_API_KEY="your_moonshot_api_key"
 
-# Cookie 认证平台需要登录浏览器，无需额外配置
+# SDK 认证平台
+export VOLCENGINE_ACCESS_KEY="your_volcengine_access_key"
+export VOLCENGINE_SECRET_KEY="your_volcengine_secret_key"
+export ALIYUN_ACCESS_KEY_ID="your_aliyun_access_key_id"
+export ALIYUN_ACCESS_KEY_SECRET="your_aliyun_access_key_secret"
+
+# 中国平台（API Key 认证）
+export TENCENT_API_KEY="your_tencent_api_key"
+
+# Cookie 认证平台（需要浏览器登录）
+# Zhipu 需要登录 https://open.bigmodel.cn
 ```
 
 ## 使用方法
@@ -194,21 +204,28 @@ platforms:
 
 ## 支持的平台
 
-### 🟢 已启用平台
+### 🌍 国际平台 (1)
 
 | 平台 | 认证方式 | 状态 | 说明 |
 |------|----------|------|------|
-| **阿里云** | Cookie | ✅ | 需要登录 fortune.console.aliyun.com |
-| **DeepSeek** | API Key | ✅ | 需要 DEEPSEEK_API_KEY |
-| **Claude** | 代理服务 | ✅ | 通过智谱AI代理，需要 ANTHROPIC_API_KEY |
 | **OpenAI** | Admin API | ✅ | 需要 OPENAI_ADMIN_KEY |
-| **火山引擎** | Cookie | ✅ | 需要登录 console.volcengine.com |
 
-### 🟡 可选平台
+### 🇨🇳 中国平台 (6)
 
 | 平台 | 认证方式 | 状态 | 说明 |
 |------|----------|------|------|
-| **Moonshot** | Cookie | ⚪ | 默认禁用，需要手动启用 |
+| **DeepSeek** | API Key | ✅ | 需要 DEEPSEEK_API_KEY |
+| **Moonshot** | API Key | ✅ | 需要 MOONSHOT_API_KEY |
+| **火山引擎** | SDK/Cookie | ✅ | 需要 VOLCENGINE_ACCESS_KEY + SECRET_KEY 或浏览器登录 |
+| **阿里云** | 官方SDK | ✅ | 需要 ALIYUN_ACCESS_KEY_ID + SECRET_KEY |
+| **腾讯云** | SDK | ✅ | 需要 TENCENT_API_KEY (SecretId:SecretKey) |
+| **智谱AI** | Cookie | ✅ | 需要登录 https://open.bigmodel.cn |
+
+### 📊 平台状态总结
+
+**生产就绪 (7个平台)**: 以上列出的所有平台均经过完整测试，可用于生产环境。
+
+**开发状态**: 其他平台 (Claude、Google Gemini、Azure OpenAI、零一万物、MiniMax) 在 `dev` 分支中积极开发中。
 
 ### 认证方式说明
 
@@ -216,8 +233,8 @@ platforms:
 适用于提供API接口的平台：
 ```bash
 export DEEPSEEK_API_KEY="sk-xxxxxxxxxxxxxxxxxxxxxxxx"
-export ANTHROPIC_API_KEY="sk-ant-xxxxxxxxxxxxxxxxxxxxxxxx"
 export OPENAI_ADMIN_KEY="sk-admin-xxxxxxxxxxxxxxxxxxxxxxxx"
+export MOONSHOT_API_KEY="sk-xxxxxxxxxxxxxxxxxxxxxxxx"
 ```
 
 #### 🍪 Cookie 认证
@@ -226,10 +243,10 @@ export OPENAI_ADMIN_KEY="sk-admin-xxxxxxxxxxxxxxxxxxxxxxxx"
 2. 工具会自动从浏览器获取认证cookie
 3. 支持Chrome、Firefox、Arc、Brave等主流浏览器
 
-#### 🌐 代理服务
-特殊代理访问的平台：
-- Claude通过智谱AI代理服务访问
-- 需要设置对应的API key
+#### 🌐 特殊服务
+使用特殊访问方式的平台：
+- 智谱AI使用浏览器Cookie认证
+- 需要登录 https://open.bigmodel.cn
 
 ## 浏览器支持
 

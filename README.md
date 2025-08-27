@@ -5,7 +5,7 @@ A Python CLI tool for checking balance and usage across multiple LLM platforms. 
 ## Features
 
 - 🔑 **Multiple Authentication**: API Key, browser cookie, official SDK, and proxy service authentication
-- 🌐 **Multi-Platform Support**: Integrated with 12 major LLM platforms
+- 🌐 **Multi-Platform Support**: Integrated with 7 major LLM platforms (production-ready)
 - 📊 **Multiple Output Formats**: JSON, Markdown, table, total-only
 - 💱 **Multi-Currency Support**: Support for CNY, USD, EUR and more
 - 🌍 **Global Browser Configuration**: Single browser setting for all cookie-based platforms
@@ -42,27 +42,20 @@ Configure environment variables based on the platforms you use:
 ```bash
 # API Key authentication platforms
 export DEEPSEEK_API_KEY="your_deepseek_api_key"
-export ANTHROPIC_API_KEY="your_anthropic_api_key"  
 export OPENAI_ADMIN_KEY="your_openai_admin_key"
 export MOONSHOT_API_KEY="your_moonshot_api_key"
 
 # Official SDK authentication platforms
 export VOLCENGINE_ACCESS_KEY="your_volcengine_access_key"
 export VOLCENGINE_SECRET_KEY="your_volcengine_secret_key"
-
-# New platforms (API Key authentication)
-export GEMINI_API_KEY="your_gemini_api_key"
-export AZURE_ACCESS_TOKEN="your_azure_access_token"
+export ALIYUN_ACCESS_KEY_ID="your_aliyun_access_key_id"
+export ALIYUN_ACCESS_KEY_SECRET="your_aliyun_access_key_secret"
 
 # Chinese platforms (API Key authentication)
 export TENCENT_API_KEY="your_tencent_api_key"
-export LINGYI_API_KEY="your_lingyi_api_key"
-export MINIMAX_API_KEY="your_minimax_api_key"
 
 # Cookie authentication platforms (require browser login)
-# Zhipu requires login to open.bigmodel.cn
-
-# Cookie authentication platforms require browser login, no additional config needed
+# Zhipu requires login to https://open.bigmodel.cn
 ```
 
 ## Usage
@@ -147,19 +140,9 @@ export VOLCENGINE_ACCESS_KEY="your_access_key"
 export VOLCENGINE_SECRET_KEY="your_secret_key"
 llm-balance cost --platform=volcengine --format=table
 
-# Test new platforms
-export GEMINI_API_KEY="your_gemini_api_key"
-export AZURE_ACCESS_TOKEN="your_azure_access_token"
-llm-balance cost --platform=gemini --format=table
-llm-balance cost --platform=azure_openai --format=table
-
 # Test Chinese platforms
 export TENCENT_API_KEY="your_tencent_api_key"
-export LINGYI_API_KEY="your_lingyi_api_key"
-export MINIMAX_API_KEY="your_minimax_api_key"
 llm-balance cost --platform=tencent --format=table
-llm-balance cost --platform=lingyi --format=table
-llm-balance cost --platform=minimax --format=table
 
 # Test cookie authentication platforms
 # Zhipu requires login to open.bigmodel.cn
@@ -250,16 +233,13 @@ platforms:
 
 ## Supported Platforms
 
-### 🌍 International Platforms (4)
+### 🌍 International Platforms (1)
 
 | Platform | Authentication | Status | Description |
 |----------|----------------|--------|-------------|
 | **OpenAI** | Admin API | ✅ | Requires OPENAI_ADMIN_KEY |
-| **Claude** | API Key | ✅ | Requires ANTHROPIC_API_KEY |
-| **Google Gemini** | API Key | ✅ | Requires GEMINI_API_KEY |
-| **Azure OpenAI** | Access Token | ✅ | Requires AZURE_ACCESS_TOKEN |
 
-### 🇨🇳 Chinese Platforms (8)
+### 🇨🇳 Chinese Platforms (6)
 
 | Platform | Authentication | Status | Description |
 |----------|----------------|--------|-------------|
@@ -268,9 +248,13 @@ platforms:
 | **Volcengine** | SDK/Cookie | ✅ | Requires VOLCENGINE_ACCESS_KEY + SECRET_KEY or browser login |
 | **Aliyun** | Official SDK | ✅ | Requires ALIYUN_ACCESS_KEY_ID + SECRET_KEY |
 | **Tencent** | SDK | ✅ | Requires TENCENT_API_KEY (SecretId:SecretKey) |
-| **Lingyi** | API Key | ✅ | Requires LINGYI_API_KEY |
-| **MiniMax** | API Key | ✅ | Requires MINIMAX_API_KEY |
-| **Zhipu** | Cookie | ✅ | Requires login to open.bigmodel.cn |
+| **Zhipu** | Cookie | ✅ | Requires login to https://open.bigmodel.cn |
+
+### 📊 Platform Status Summary
+
+**Production-Ready (7 platforms)**: All platforms listed above are fully tested and ready for production use.
+
+**Development Status**: Additional platforms (Claude, Google Gemini, Azure OpenAI, Lingyi, MiniMax) are available in the `dev` branch and under active development.
 
 ### Authentication Methods
 
@@ -279,9 +263,6 @@ For platforms providing API interfaces:
 ```bash
 # DeepSeek
 export DEEPSEEK_API_KEY="sk-xxxxxxxxxxxxxxxxxxxxxxxx"
-
-# Claude
-export ANTHROPIC_API_KEY="sk-ant-xxxxxxxxxxxxxxxxxxxxxxxx"
 
 # OpenAI (requires admin API key)
 export OPENAI_ADMIN_KEY="sk-admin-xxxxxxxxxxxxxxxxxxxxxxxx"
@@ -302,8 +283,8 @@ For platforms requiring browser sessions:
 
 #### 🌐 Special Services
 Some platforms use special access methods:
-- Claude uses custom API endpoint
-- Requires corresponding API key
+- Zhipu uses cookie authentication via browser login
+- Requires login to https://open.bigmodel.cn
 
 ## Browser Support
 
@@ -377,23 +358,22 @@ src/llm_balance/
 ├── cli.py                  # CLI command interface
 ├── balance_checker.py      # Main business logic
 ├── config.py              # Configuration file management
+├── error_handler.py       # Error handling
 ├── utils.py               # Utility functions
 └── platform_handlers/     # Platform handlers
     ├── __init__.py         # Handler factory
     ├── base.py            # Base handler class
-    ├── aliyun.py          # Aliyun handler
-    ├── deepseek.py        # DeepSeek handler
-    ├── claude.py          # Claude handler
-    ├── openai.py          # OpenAI handler
-    ├── volcengine.py      # Volcengine handler
-    ├── tencent.py         # Tencent handler
-    ├── lingyi.py          # Lingyi handler
-    ├── zhipu.py           # Zhipu handler
-    ├── moonshot.py        # Moonshot handler
-    ├── gemini.py          # Gemini handler
-    ├── azure_openai.py    # Azure OpenAI handler
+    ├── aliyun.py          # Aliyun handler ✅
+    ├── deepseek.py        # DeepSeek handler ✅
+    ├── openai.py          # OpenAI handler ✅
+    ├── moonshot.py        # Moonshot handler ✅
+    ├── volcengine.py      # Volcengine handler ✅
+    ├── tencent.py         # Tencent handler ✅
+    ├── zhipu.py           # Zhipu handler ✅
     └── generic.py         # Generic handler
 ```
+
+**Note**: Additional platform handlers (Claude, Gemini, Azure OpenAI, Lingyi, MiniMax) are available in the `dev` branch.
 
 ### Adding New Platforms
 

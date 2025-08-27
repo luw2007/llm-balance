@@ -6,6 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 A Python CLI tool for checking costs and balances across multiple LLM platforms. The tool supports multiple authentication methods, multi-currency conversion, global browser configuration, and provides real-time cost monitoring with flexible output formats.
 
+**Current Status**: Master branch contains 7 production-ready platforms. Dev branch contains additional platforms under development.
+
 ## Commands
 
 ### Development Commands
@@ -252,21 +254,26 @@ llm-balance check  # Should work as alias for cost
 
 ## Current Platform Support
 
-### International Platforms (4)
-- **OpenAI**: Admin API authentication via api.openai.com
-- **Claude**: API Key authentication via open.bigmodel.cn
-- **Google Gemini**: API Key authentication via generativelanguage.googleapis.com
-- **Azure OpenAI**: Bearer token authentication via management.azure.com
+### Master Branch (Production-Ready)
 
-### Chinese Platforms (9)
+#### International Platforms (1)
+- **OpenAI**: Admin API authentication via api.openai.com
+
+#### Chinese Platforms (6)
 - **DeepSeek**: API Key authentication via api.deepseek.com
-- **Moonshot**: API Key authentication via api.moonshot.cn
+- **Moonshot**: API Key authentication via api.moonshot.cn (now redirects to www.kimi.com)
 - **Volcengine**: Official SDK authentication via volcengine-python-sdk (recommended) or Cookie authentication (fallback)
 - **Aliyun**: Official SDK authentication via aliyun-python-sdk-bssopenapi
 - **Tencent**: SDK authentication via Tencent Cloud SDK
-- **Lingyi**: API Key authentication via api.lingyiwanwu.com
-- **MiniMax**: API Key authentication via api.minimax.chat
 - **Zhipu**: Cookie authentication via open.bigmodel.cn
+
+### Dev Branch (Under Development)
+Additional platforms available in dev branch:
+- **Claude**: API Key authentication
+- **Google Gemini**: API Key authentication  
+- **Azure OpenAI**: Bearer token authentication
+- **Lingyi**: API Key authentication
+- **MiniMax**: API Key authentication
 
 ## Key Implementation Details
 

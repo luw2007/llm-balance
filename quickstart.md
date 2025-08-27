@@ -1,6 +1,6 @@
 # LLM Balance Checker Quick Reference
 
-**Supporting 12 major LLM platforms worldwide**
+**Supporting 7 production-ready LLM platforms**
 
 ## Basic Commands
 
@@ -9,19 +9,14 @@
 # Check all platform balance (default CNY)
 llm-balance cost
 
-# Check specific platform
-llm-balance cost --platform=deepseek   # DeepSeek
-llm-balance cost --platform=moonshot    # Moonshot AI
-llm-balance cost --platform=openai      # OpenAI
-llm-balance cost --platform=claude      # Anthropic
-llm-balance cost --platform=volcengine  # Volcengine
-llm-balance cost --platform=aliyun      # Alibaba Cloud
-llm-balance cost --platform=gemini      # Google Gemini
-llm-balance cost --platform=azure_openai # Azure OpenAI
-llm-balance cost --platform=tencent     # Tencent Cloud
-llm-balance cost --platform=lingyi      # Lingyi Wanwu
-llm-balance cost --platform=minimax     # MiniMax
-llm-balance cost --platform=zhipu       # Zhipu AI
+# Check specific platform (production-ready)
+llm-balance cost --platform=deepseek   # DeepSeek ✅
+llm-balance cost --platform=moonshot    # Moonshot AI ✅
+llm-balance cost --platform=openai      # OpenAI ✅
+llm-balance cost --platform=volcengine  # Volcengine ✅
+llm-balance cost --platform=aliyun      # Alibaba Cloud ✅
+llm-balance cost --platform=tencent     # Tencent Cloud ✅
+llm-balance cost --platform=zhipu       # Zhipu AI ✅
 
 # Use alias command
 llm-balance check
