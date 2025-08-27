@@ -1,0 +1,33 @@
+# LLM Balance Checker - 全局配置文件
+# 此文件包含全局配置和用户自定义设置
+
+# 全局浏览器配置（影响所有基于cookie的平台）
+browser: chrome
+
+# 用户自定义平台配置
+# 这些配置会覆盖平台的默认配置
+platforms:
+  deepseek:
+    enabled: true
+    # 可以在这里覆盖任何默认配置
+    # api_url: "https://api.deepseek.com/user/balance"
+    # headers:
+    #   User-Agent: "Custom User Agent"
+  
+  moonshot:
+    enabled: true
+  
+  volcengine:
+    enabled: true
+    region: "cn-beijing"
+  
+  aliyun:
+    enabled: true
+  
+  tencent:
+    enabled: true
+  
+  zhipu:
+    enabled: true
+    # 可以在这里指定不同的浏览器
+    # browser: "firefox"

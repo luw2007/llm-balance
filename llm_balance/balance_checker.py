@@ -2,21 +2,21 @@
 Main balance checker functionality
 """
 
+import json
 from typing import List, Dict, Any, Optional
-import os
-from .config import ConfigManager, PlatformConfig
+from .config import ConfigManager
+from .platform_configs import PlatformConfig
 from .platform_handlers.base import BasePlatformHandler, CostInfo
 from .utils import get_nested_value, format_output
 from .platform_handlers import create_handler
-from .error_handler import format_api_key_error, format_auth_error, format_network_error
 
 class BalanceChecker:
     """Main balance checker class"""
     
     def __init__(self, config_file: str = None, browser: str = None):
         self.config_manager = ConfigManager(config_file)
-        # Use provided browser or fall back to global config
-        self.browser = browser or self.config_manager.global_browser
+        # Use provided browser or fall back to global configuration
+        self.browser = browser or self.config_manager.get_global_browser()
         self.handlers = {}
     
     def check_all_balances(self) -> List[Dict[str, Any]]:
@@ -34,8 +34,7 @@ class BalanceChecker:
                     'raw_data': balance_info.raw_data
                 })
             except Exception as e:
-                error_msg = self._format_helpful_error(platform_config.name, str(e))
-                print(error_msg)
+                print(f"Error checking {platform_config.name}: {e}")
                 continue
         
         return balances
@@ -48,6 +47,18 @@ class BalanceChecker:
             return None
         
         try:
+            # Convert dict config to PlatformConfig if needed
+            if isinstance(platform_config, dict):
+                platform_config = PlatformConfig(
+                    name=platform_name,
+                    display_name=platform_config.get('display_name', platform_name.title()),
+                    handler_class=platform_config.get('handler_class', f'{platform_name.title()}Handler'),
+                    description=platform_config.get('description', f'{platform_name.title()} platform'),
+                    auth_type=platform_config.get('auth_type', 'api_key'),
+                    enabled=platform_config.get('enabled', True),
+                    **{k: v for k, v in platform_config.items() if k not in ['name', 'display_name', 'handler_class', 'description', 'auth_type', 'enabled']}
+                )
+            
             handler = self._get_handler(platform_config)
             balance_info = handler.get_balance()
             return {
@@ -57,8 +68,7 @@ class BalanceChecker:
                 'raw_data': balance_info.raw_data
             }
         except Exception as e:
-            error_msg = self._format_helpful_error(platform_name, str(e))
-            print(error_msg)
+            print(f"Error checking {platform_name}: {e}")
             return None
     
     def _get_handler(self, config: PlatformConfig) -> BasePlatformHandler:
@@ -69,7 +79,7 @@ class BalanceChecker:
     
     def list_platforms(self) -> List[str]:
         """List all available platforms"""
-        return list(self.config_manager.platforms.keys())
+        return self.config_manager.list_platforms()
     
     def list_enabled_platforms(self) -> List[str]:
         """List enabled platforms"""
@@ -78,25 +88,4 @@ class BalanceChecker:
     def format_balances(self, balances: List[Dict[str, Any]], format_type: str = 'table', target_currency: str = 'CNY') -> str:
         """Format balances in specified format"""
         return format_output(balances, format_type, target_currency)
-    
-    def _format_helpful_error(self, platform_name: str, error_message: str) -> str:
-        """Format helpful error message for users"""
-        error_lower = error_message.lower()
-        
-        # API Key missing errors
-        if any(phrase in error_lower for phrase in ['api key required', 'api_key required', 'environment variable', 'not set']):
-            env_var = self.config_manager.get_platform(platform_name).env_var
-            return format_api_key_error(platform_name, env_var)
-        
-        # Authentication errors
-        elif any(phrase in error_lower for phrase in ['authentication failed', 'unauthorized', 'invalid api', '401', '403']):
-            return format_auth_error(platform_name, error_message)
-        
-        # Network errors
-        elif any(phrase in error_lower for phrase in ['network error', 'connection', 'timeout', 'http error', '400', '404', '500']):
-            return format_network_error(platform_name, error_message)
-        
-        # Generic error
-        else:
-            return f"❌ {platform_name}: {error_message}"
 

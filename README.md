@@ -69,6 +69,10 @@ llm-balance cost
 # Check specific platform
 llm-balance cost --platform=openai
 
+# Check multiple platforms (comma-separated)
+llm-balance cost --platform=volcengine,aliyun
+llm-balance cost --platform="deepseek, moonshot, tencent"
+
 # Specify browser (for cookie authentication)
 llm-balance cost --browser=chrome
 
@@ -128,6 +132,10 @@ llm-balance cost --currency=USD --format=total
 
 # Get detailed EUR balance for specific platform
 llm-balance cost --platform=deepseek --currency=EUR --format=table
+
+# Check multiple platforms at once
+llm-balance cost --platform=volcengine,aliyun,deepseek --format=table
+llm-balance cost --platform="openai, deepseek, moonshot" --currency=USD --format=total
 
 # Use custom exchange rates and output as JSON
 LLM_BALANCE_RATES='{"USD": 7.5}' llm-balance cost --currency=USD --format=json
@@ -233,11 +241,11 @@ platforms:
 
 ## Supported Platforms
 
-### 🌍 International Platforms (1)
+### 🌍 International Platforms (0)
 
 | Platform | Authentication | Status | Description |
 |----------|----------------|--------|-------------|
-| **OpenAI** | Admin API | ✅ | Requires OPENAI_ADMIN_KEY |
+| **OpenAI** | Admin API | ❌ | Currently not supported for balance queries |
 
 ### 🇨🇳 Chinese Platforms (6)
 
@@ -252,7 +260,7 @@ platforms:
 
 ### 📊 Platform Status Summary
 
-**Production-Ready (7 platforms)**: All platforms listed above are fully tested and ready for production use.
+**Production-Ready (6 platforms)**: All platforms listed above are fully tested and ready for production use.
 
 **Development Status**: Additional platforms (Claude, Google Gemini, Azure OpenAI, Lingyi, MiniMax) are available in the `dev` branch and under active development.
 
@@ -264,8 +272,8 @@ For platforms providing API interfaces:
 # DeepSeek
 export DEEPSEEK_API_KEY="sk-xxxxxxxxxxxxxxxxxxxxxxxx"
 
-# OpenAI (requires admin API key)
-export OPENAI_ADMIN_KEY="sk-admin-xxxxxxxxxxxxxxxxxxxxxxxx"
+# OpenAI (currently not supported for balance queries)
+# export OPENAI_ADMIN_KEY="sk-admin-xxxxxxxxxxxxxxxxxxxxxxxx"
 
 # Aliyun (requires both access key ID and secret)
 export ALIYUN_ACCESS_KEY_ID="your_access_key_id"

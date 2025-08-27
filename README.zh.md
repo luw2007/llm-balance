@@ -63,6 +63,10 @@ llm-balance cost
 # 检查特定平台
 llm-balance cost --platform=openai
 
+# 检查多个平台（逗号分隔）
+llm-balance cost --platform=volcengine,aliyun
+llm-balance cost --platform="deepseek, moonshot, tencent"
+
 # 指定浏览器（用于Cookie认证）
 llm-balance cost --browser=chrome
 
@@ -115,6 +119,10 @@ llm-balance cost --currency=USD --format=total
 
 # 获取特定平台的欧元余额详情
 llm-balance cost --platform=deepseek --currency=EUR --format=table
+
+# 同时检查多个平台
+llm-balance cost --platform=volcengine,aliyun,deepseek --format=table
+llm-balance cost --platform="openai, deepseek, moonshot" --currency=USD --format=total
 
 # 使用自定义汇率并输出为 JSON
 LLM_BALANCE_RATES='{"USD": 7.5}' llm-balance cost --currency=USD --format=json
@@ -204,11 +212,11 @@ platforms:
 
 ## 支持的平台
 
-### 🌍 国际平台 (1)
+### 🌍 国际平台 (0)
 
 | 平台 | 认证方式 | 状态 | 说明 |
 |------|----------|------|------|
-| **OpenAI** | Admin API | ✅ | 需要 OPENAI_ADMIN_KEY |
+| **OpenAI** | Admin API | ❌ | 当前不支持余额查询 |
 
 ### 🇨🇳 中国平台 (6)
 
@@ -223,7 +231,7 @@ platforms:
 
 ### 📊 平台状态总结
 
-**生产就绪 (7个平台)**: 以上列出的所有平台均经过完整测试，可用于生产环境。
+**生产就绪 (6个平台)**: 以上列出的所有平台均经过完整测试，可用于生产环境。
 
 **开发状态**: 其他平台 (Claude、Google Gemini、Azure OpenAI、零一万物、MiniMax) 在 `dev` 分支中积极开发中。
 
@@ -233,7 +241,7 @@ platforms:
 适用于提供API接口的平台：
 ```bash
 export DEEPSEEK_API_KEY="sk-xxxxxxxxxxxxxxxxxxxxxxxx"
-export OPENAI_ADMIN_KEY="sk-admin-xxxxxxxxxxxxxxxxxxxxxxxx"
+# export OPENAI_ADMIN_KEY="sk-admin-xxxxxxxxxxxxxxxxxxxxxxxx"
 export MOONSHOT_API_KEY="sk-xxxxxxxxxxxxxxxxxxxxxxxx"
 ```
 

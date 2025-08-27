@@ -18,6 +18,10 @@ llm-balance cost --platform=aliyun      # Alibaba Cloud ✅
 llm-balance cost --platform=tencent     # Tencent Cloud ✅
 llm-balance cost --platform=zhipu       # Zhipu AI ✅
 
+# Check multiple platforms at once (comma-separated)
+llm-balance cost --platform=volcengine,aliyun,deepseek
+llm-balance cost --platform="deepseek, moonshot, tencent"
+
 # Use alias command
 llm-balance check
 ```
@@ -130,6 +134,9 @@ llm-balance cost --currency=USD --format=total
 # EUR details for specific platform
 llm-balance cost --platform=deepseek --currency=EUR --format=table
 
+# Check multiple platforms with USD total
+llm-balance cost --platform=volcengine,aliyun,deepseek --currency=USD --format=total
+
 # Use custom exchange rates and JSON output
 LLM_BALANCE_RATES='{"USD": 7.5}' llm-balance cost --currency=USD --format=json
 
@@ -141,7 +148,7 @@ llm-balance cost --platform=openai --browser=chrome --currency=GBP --format=mark
 
 ```bash
 # International Platforms
-export OPENAI_ADMIN_KEY="your_openai_admin_key"      # OpenAI (requires admin key)
+# export OPENAI_ADMIN_KEY="your_openai_admin_key"      # OpenAI (currently not supported)
 export ANTHROPIC_API_KEY="your_anthropic_api_key"   # Anthropic Claude
 export GEMINI_API_KEY="your_gemini_api_key"         # Google Gemini
 export AZURE_ACCESS_TOKEN="your_azure_token"        # Azure OpenAI
@@ -184,10 +191,10 @@ export LLM_BALANCE_CONFIG_FILE="/path/to/config.yaml"
 
 ## Quick Platform Reference
 
-### 🌍 International Platforms (4)
+### 🌍 International Platforms (3)
 | Platform | Auth Method | Key Variable |
 |----------|-------------|---------------|
-| OpenAI | Admin API | `OPENAI_ADMIN_KEY` |
+| OpenAI | Admin API | Currently not supported |
 | Claude | API Key | `ANTHROPIC_API_KEY` |
 | Gemini | API Key | `GEMINI_API_KEY` |
 | Azure OpenAI | Access Token | `AZURE_ACCESS_TOKEN` |

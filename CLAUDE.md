@@ -8,6 +8,8 @@ A Python CLI tool for checking costs and balances across multiple LLM platforms.
 
 **Current Status**: Master branch contains 7 production-ready platforms. Dev branch contains additional platforms under development.
 
+**Configuration System**: Recently refactored to use Python-based configuration management with automatic YAML generation.
+
 ## Commands
 
 ### Development Commands
