@@ -1,20 +1,20 @@
 """
-Volcengine platform handler
+Volcengine platform handler using official SDK
 """
 
-import json
+import os
 from typing import Dict, Any, Optional
 from .base import BasePlatformHandler, CostInfo
 from ..config import PlatformConfig
 
 class VolcengineHandler(BasePlatformHandler):
-    """Volcengine platform cost handler"""
+    """Volcengine platform cost handler using official SDK"""
     
     @classmethod
     def get_default_config(cls) -> dict:
         """Get default configuration for Volcengine platform"""
         return {
-            "api_url": "https://console.volcengine.com/api/top/bill_volcano_engine/cn-north-1/2020-01-01/GetInvoiceAccount",
+            "api_url": "https://api.volcengine.com/api/billing/2022-01-01/QueryBalanceAcct",
             "method": "POST",
             "auth_type": "sdk",
             "env_var": "VOLCENGINE_ACCESS_KEY",
@@ -24,11 +24,8 @@ class VolcengineHandler(BasePlatformHandler):
                 "Content-Type": "application/json"
             },
             "params": {},
-            "data": {
-                "Region": "cn-north-1"
-            },
+            "data": {},
             "enabled": True,
-            "cookie_domain": "console.volcengine.com",
             "region": "cn-beijing"
         }
     
@@ -37,14 +34,14 @@ class VolcengineHandler(BasePlatformHandler):
         self.config = config
     
     def get_balance(self) -> CostInfo:
-        """Get cost information from Volcengine"""
-        # Use cookie authentication as primary method for better reliability
-        return self._get_balance_with_cookie()
+        """Get cost information from Volcengine using official SDK"""
+        return self._get_balance_with_sdk()
     
     def _get_balance_with_sdk(self) -> CostInfo:
-        """Get balance using Volcengine SDK"""
+        """Get balance using official Volcengine SDK with QueryBalanceAcct API"""
         try:
             import os
+            from volcenginesdkcore.rest import ApiException
             
             # Get credentials from environment variables
             access_key = os.getenv('VOLCENGINE_ACCESS_KEY')
@@ -55,69 +52,67 @@ class VolcengineHandler(BasePlatformHandler):
             if not secret_key:
                 raise ValueError("VOLCENGINE_SECRET_KEY environment variable not set")
             
-            # Try different SDK initialization approaches
             try:
-                # Approach 1: Try volcengine billing service with correct method
-                from volcengine.billing.BillingService import BillingService
-                billing_service = BillingService()
-                billing_service.set_ak(access_key)
-                billing_service.set_sk(secret_key)
+                # Import official SDK
+                import volcenginesdkcore
+                import volcenginesdkbilling
+                from volcenginesdkbilling.models import QueryBalanceAcctRequest
                 
-                # Use list_bill for account balance information
-                import datetime
-                current_month = datetime.datetime.now().strftime('%Y-%m')
-                resp = billing_service.list_bill({}, {'BillPeriod': current_month})
+                # Configure SDK
+                configuration = volcenginesdkcore.Configuration()
+                configuration.ak = access_key
+                configuration.sk = secret_key
+                configuration.region = self.config.region or "cn-beijing"
+                volcenginesdkcore.Configuration.set_default(configuration)
                 
-            except ImportError:
-                # Approach 2: Fallback to cookie authentication
+                # Use official billing API
+                api_instance = volcenginesdkbilling.BILLINGApi()
+                query_balance_acct_request = QueryBalanceAcctRequest()
+                
+                # Call QueryBalanceAcct API
+                resp = api_instance.query_balance_acct(query_balance_acct_request)
+                
+                # Parse response from official SDK
+                if not resp:
+                    raise ValueError("No response from Volcengine SDK")
+                
+                # Extract balance and currency from official response
+                balance = 0.0
+                currency = 'CNY'
+                
+                # Handle QueryBalanceAcct response format
+                if hasattr(resp, 'available_balance'):
+                    balance = float(resp.available_balance)
+                elif hasattr(resp, 'available_cash_amount'):
+                    balance = float(resp.available_cash_amount)
+                elif hasattr(resp, 'cash_balance'):
+                    balance = float(resp.cash_balance)
+                elif hasattr(resp, 'result') and resp.result:
+                    result = resp.result
+                    if hasattr(result, 'available_balance'):
+                        balance = float(result.available_balance)
+                    elif hasattr(result, 'available_cash_amount'):
+                        balance = float(result.available_cash_amount)
+                    elif hasattr(result, 'cash_balance'):
+                        balance = float(result.cash_balance)
+                
+                # Currency is typically CNY for Volcengine
+                currency = 'CNY'
+                
+                return CostInfo(
+                    platform=self.get_platform_name(),
+                    balance=balance,
+                    currency=currency,
+                    raw_data=resp.__dict__ if hasattr(resp, '__dict__') else str(resp)
+                )
+                
+            except ImportError as e:
+                print(f"Warning: Volcengine SDK import error: {e}")
                 return self._get_balance_with_cookie()
-            
-            # Parse response based on SDK version
-            if not resp:
-                raise ValueError("No response from Volcengine SDK")
-            
-            # Handle different response formats for Volcengine SDK
-            balance = 0.0
-            currency = 'CNY'
-            
-            try:
-                # Handle dict response from volcengine billing service
-                if isinstance(resp, dict):
-                    # Check for error response
-                    if 'Error' in resp.get('ResponseMetadata', {}):
-                        # This is an error response, fallback to cookie
-                        raise ValueError("SDK authentication failed")
-                    
-                    # Try to extract from Result
-                    result = resp.get('Result', {})
-                    if isinstance(result, dict):
-                        # Try different balance fields
-                        balance = float(result.get('TotalAmount', result.get('AvailableAmount', 0.0)))
-                        currency = result.get('Currency', 'CNY')
-                    else:
-                        balance = float(resp.get('TotalAmount', resp.get('AvailableAmount', 0.0)))
-                        currency = resp.get('Currency', 'CNY')
-                
-                # Handle object response
-                elif hasattr(resp, 'TotalAmount'):
-                    balance = float(resp.TotalAmount)
-                    currency = getattr(resp, 'Currency', 'CNY')
-                elif hasattr(resp, 'available_amount'):
-                    balance = float(resp.available_amount)
-                    currency = getattr(resp, 'currency', 'CNY')
-                    
-            except (AttributeError, KeyError, ValueError, TypeError) as e:
-                # Fallback to cookie authentication if parsing fails
-                print(f"Warning: Volcengine SDK error: {e}")
+            except ApiException as e:
+                print(f"Warning: Volcengine API error: {e}")
                 return self._get_balance_with_cookie()
-            
-            return CostInfo(
-                platform=self.get_platform_name(),
-                balance=balance,
-                currency=currency,
-                raw_data=resp
-            )
-            
+                
         except ImportError:
             # SDK not available, fallback to cookie authentication
             print("Warning: Volcengine SDK not found, falling back to cookie authentication")
@@ -198,9 +193,6 @@ class VolcengineHandler(BasePlatformHandler):
     
     def _extract_balance(self, response: Dict[str, Any]) -> Optional[float]:
         """Extract balance from Volcengine API response"""
-        # New API response format for GetInvoiceAccount
-        # Response structure: {Result: {InvoiceAccount: {AvailableAmount: "5.86", TotalAmount: "5.86"}}}
-        
         try:
             # Extract from Result.InvoiceAccount.AvailableAmount
             if 'Result' in response and 'InvoiceAccount' in response['Result']:
@@ -215,76 +207,4 @@ class VolcengineHandler(BasePlatformHandler):
     
     def _extract_currency(self, response: Dict[str, Any]) -> Optional[str]:
         """Extract currency from Volcengine API response"""
-        # Try different possible response structures for currency
-        currency_data = None
-        
-        # Try structure 1: {Result: {Data: {Currency: ...}}}
-        if 'Result' in response:
-            result = response['Result']
-            if 'Data' in result:
-                currency_data = result['Data'].get('Currency')
-            else:
-                currency_data = result.get('Currency')
-        
-        # Try structure 2: {Data: {Currency: ...}}
-        if not currency_data and 'Data' in response:
-            currency_data = response['Data'].get('Currency')
-        
-        # Try structure 3: Direct currency field
-        if not currency_data:
-            currency_data = response.get('Currency')
-        
-        return currency_data or 'CNY'
-    
-    def _get_csrf_token_from_page(self) -> Optional[str]:
-        """Get CSRF token from Volcengine finance overview page"""
-        try:
-            import requests
-            import re
-            
-            # Try to access the finance overview page to get CSRF token
-            overview_url = "https://console.volcengine.com/finance/account-overview/"
-            
-            # Get cookies for the domain
-            cookies = {}
-            if self.config.cookie_domain:
-                cookies = self._get_cookies(self.config.cookie_domain)
-            
-            # Make request to the overview page
-            response = requests.get(
-                overview_url,
-                headers={
-                    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
-                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
-                },
-                cookies=cookies,
-                timeout=10
-            )
-            
-            if response.status_code == 200:
-                # Try to extract CSRF token from HTML content
-                # Look for common CSRF token patterns
-                patterns = [
-                    r'csrfToken["\']?\s*[:=]\s*["\']([^"\']+)["\']',
-                    r'csrf_token["\']?\s*[:=]\s*["\']([^"\']+)["\']',
-                    r'X-CSRF-Token["\']?\s*[:=]\s*["\']([^"\']+)["\']',
-                    r'meta\s+name="csrf-token"\s+content="([^"]+)"',
-                    r'<input\s+type="hidden"\s+name="csrf_token"\s+value="([^"]+)"',
-                ]
-                
-                for pattern in patterns:
-                    match = re.search(pattern, response.text)
-                    if match:
-                        return match.group(1)
-            
-            # If we can't get from page, try to extract from cookies again with different patterns
-            if cookies:
-                for cookie_name in ['csrfToken', 'csrf_token', 'x-csrf-token', 'xsrf-token']:
-                    if cookie_name in cookies:
-                        return cookies[cookie_name]
-            
-            return None
-            
-        except Exception as e:
-            print(f"Failed to get CSRF token from page: {e}")
-            return None
+        return 'CNY'
