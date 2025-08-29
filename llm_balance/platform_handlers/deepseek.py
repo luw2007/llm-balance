@@ -4,8 +4,8 @@ DeepSeek platform handler
 
 import json
 import os
-from typing import Dict, Any, Optional
-from .base import BasePlatformHandler, CostInfo
+from typing import Dict, Any, Optional, List
+from .base import BasePlatformHandler, CostInfo, PlatformTokenInfo, ModelTokenInfo
 from ..config import PlatformConfig
 
 class DeepSeekHandler(BasePlatformHandler):
@@ -91,3 +91,7 @@ class DeepSeekHandler(BasePlatformHandler):
         if balance_infos:
             return balance_infos[0].get('currency', 'CNY')
         return 'CNY'
+    
+    def get_model_tokens(self) -> PlatformTokenInfo:
+        """Get model-level token information from DeepSeek"""
+        raise NotImplementedError(f"Model token checking not implemented for {self.get_platform_name()}")

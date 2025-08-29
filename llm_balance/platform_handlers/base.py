@@ -3,7 +3,7 @@ Base handler for platform cost checking
 """
 
 from abc import ABC, abstractmethod
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 from dataclasses import dataclass
 
 @dataclass
@@ -11,6 +11,20 @@ class CostInfo:
     platform: str
     balance: float
     currency: str
+    raw_data: Dict[str, Any]
+
+@dataclass
+class ModelTokenInfo:
+    model: str
+    package: str
+    remaining_tokens: float
+    used_tokens: float
+    total_tokens: float
+
+@dataclass
+class PlatformTokenInfo:
+    platform: str
+    models: List[ModelTokenInfo]
     raw_data: Dict[str, Any]
 
 class BasePlatformHandler(ABC):
@@ -28,6 +42,10 @@ class BasePlatformHandler(ABC):
     def get_platform_name(self) -> str:
         """Get platform display name"""
         pass
+    
+    def get_model_tokens(self) -> PlatformTokenInfo:
+        """Get model-level token information for the platform (optional)"""
+        raise NotImplementedError(f"Model token checking not implemented for {self.get_platform_name()}")
     
     def _get_cookies(self, domain: str) -> Dict[str, str]:
         """Get cookies for domain using pycookiecheat"""

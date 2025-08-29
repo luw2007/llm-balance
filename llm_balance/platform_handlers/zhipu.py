@@ -2,8 +2,8 @@
 Zhipu AI (智谱AI) platform handler
 """
 
-from typing import Dict, Any, Optional
-from .base import BasePlatformHandler, CostInfo
+from typing import Dict, Any, Optional, List
+from .base import BasePlatformHandler, CostInfo, PlatformTokenInfo, ModelTokenInfo
 from ..config import PlatformConfig
 
 class ZhipuHandler(BasePlatformHandler):
@@ -27,13 +27,14 @@ class ZhipuHandler(BasePlatformHandler):
             "cookie_domain": ".bigmodel.cn"
         }
     
-    def __init__(self, config: PlatformConfig, browser: str = 'chrome'):
+    def __init__(self, config, browser: str = 'chrome'):
         super().__init__(browser)
         self.config = config
     
     def get_balance(self) -> CostInfo:
         """Get cost information from Zhipu AI"""
-        if not self.config.api_url:
+        api_url = self.config.get('api_url') if isinstance(self.config, dict) else self.config.api_url
+        if not api_url:
             raise ValueError("No API URL configured for Zhipu AI")
         
         # Prepare authentication
@@ -85,6 +86,115 @@ class ZhipuHandler(BasePlatformHandler):
     def get_platform_name(self) -> str:
         """Get platform display name"""
         return "Zhipu AI"
+    
+    def get_model_tokens(self) -> PlatformTokenInfo:
+        """Get model-level token information from Zhipu AI using new token API"""
+        if not self.config.api_url:
+            raise ValueError("No API URL configured for Zhipu AI")
+        
+        # Token API endpoint
+        token_api_url = "https://bigmodel.cn/api/biz/tokenAccounts/list"
+        
+        # Prepare authentication
+        headers = self.config.headers.copy()
+        
+        # Get cookies
+        cookies = {}
+        if self.config.cookie_domain:
+            cookies = self._get_cookies(self.config.cookie_domain)
+        
+        # Check if we have necessary cookies for authentication
+        if not cookies:
+            raise ValueError(f"No authentication cookies found for {self.config.cookie_domain}. Please ensure you are logged in to Zhipu AI in {self.browser} browser.")
+        
+        # Try different possible cookie names for authentication
+        auth_cookie = None
+        for cookie_name in ['bigmodel_token_production', 'token', 'session_token', 'auth_token']:
+            if cookie_name in cookies:
+                auth_cookie = cookies[cookie_name]
+                break
+        if not auth_cookie:
+            raise ValueError(f"No authentication token found in cookies for {self.config.cookie_domain}. Please ensure you are logged in to Zhipu AI.")
+        
+        headers['authorization'] = auth_cookie
+        
+        # Make API request to token endpoint
+        params = {
+            'pageNum': 1,
+            'pageSize': 50,  # Increase page size to get all packages
+            'filterEnabled': 'false'
+        }
+        
+        response = self._make_request(
+            url=token_api_url,
+            method='GET',
+            headers=headers,
+            params=params
+        )
+        
+        if not response:
+            raise ValueError("No response from Zhipu AI token API")
+        
+        # Parse token data from response
+        models = self._extract_model_tokens(response)
+        
+        return PlatformTokenInfo(
+            platform=self.get_platform_name(),
+            models=models,
+            raw_data=response
+        )
+    
+    def _extract_model_tokens(self, response: Dict[str, Any]) -> List[ModelTokenInfo]:
+        """Extract model token information from Zhipu AI token API response"""
+        models = []
+        
+        # Get rows from response - handle both direct rows and nested data structure
+        data = response.get('data', {})
+        if isinstance(data, dict):
+            rows = data.get('rows', [])
+        else:
+            rows = data if isinstance(data, list) else []
+        
+        # If no rows found, try to get from response directly
+        if not rows:
+            rows = response.get('rows', [])
+        
+        for row in rows:
+            # Skip expired packages regardless of type
+            if row.get('status') == 'EXPIRED':
+                continue
+            
+            # Extract model information - use resourcePackageName as primary identifier
+            package_name = row.get('resourcePackageName', row.get('name', 'Unknown Model'))
+            
+            # Extract package/model name using suitableModel field
+            model_name = row.get('suitableModel', package_name)
+            
+            # Get available balance - handle both availableBalance and remaining tokens
+            available_balance = float(row.get('availableBalance', row.get('remaining', 0)))
+            
+            # Get total balance - handle both tokenBalance and total tokens
+            token_balance = float(row.get('tokenBalance', row.get('total', available_balance)))
+            
+            # Display all packages regardless of availableBalance (including 0 balance)
+            
+            # Calculate used tokens
+            used_tokens = max(0, token_balance - available_balance)
+            
+            # Create model token info
+            model_info = ModelTokenInfo(
+                model=model_name.lower(),
+                package=package_name,
+                remaining_tokens=available_balance,
+                used_tokens=used_tokens,
+                total_tokens=token_balance
+            )
+            models.append(model_info)
+        
+        # Sort models by remaining tokens (descending) for better display
+        models.sort(key=lambda x: x.remaining_tokens, reverse=True)
+        
+        return models
     
     def _extract_balance(self, response: Dict[str, Any]) -> Optional[float]:
         """Extract balance from Zhipu AI API response"""

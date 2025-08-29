@@ -62,6 +62,7 @@ export TENCENT_API_KEY="your_tencent_api_key"
 
 ### Basic Commands
 
+#### Check Balance
 ```bash
 # Check all platform balance
 llm-balance cost
@@ -91,7 +92,39 @@ llm-balance cost --currency=EUR     # Show total in EUR
 llm-balance cost --currency=CNY     # Show total in CNY (default)
 ```
 
+#### Check Token Usage
+```bash
+# Check token usage for all supported platforms
+llm-balance tokens
+
+# Check token usage for specific platform
+llm-balance tokens --platform=volcengine
+
+# Check token usage for specific model
+llm-balance tokens --platform=volcengine --model=deepseek-r1
+
+# Check token usage for multiple platforms
+llm-balance tokens --platform=volcengine,zhipu
+
+# Filter by model name (supports partial matching)
+llm-balance tokens --platform=volcengine --model=deepseek
+llm-balance tokens --platform=zhipu --model=glm-4
+
+# Different output formats for tokens
+llm-balance tokens --format=table   # Console table format
+llm-balance tokens --format=json    # Machine-readable format
+llm-balance tokens --format=markdown # Document-friendly format
+```
+
 > 💡 Backward compatibility: `llm-balance check` command is still available as an alias for `llm-balance cost`
+
+#### Command Summary
+| Command | Description | Example |
+|---------|-------------|---------|
+| `llm-balance cost` | Check account balance | `llm-balance cost --platform=volcengine` |
+| `llm-balance tokens` | Check token usage | `llm-balance tokens --platform=zhipu --model=glm-4` |
+| `llm-balance list` | List all platforms | `llm-balance list` |
+| `llm-balance enable/disable` | Manage platform status | `llm-balance enable volcengine` |
 
 ### Platform Management
 
@@ -126,6 +159,7 @@ llm-balance config deepseek timeout 30
 
 ### Advanced Usage Examples
 
+#### Balance Checking
 ```bash
 # View total balance in USD for all platforms
 llm-balance cost --currency=USD --format=total
@@ -155,6 +189,31 @@ llm-balance cost --platform=tencent --format=table
 # Test cookie authentication platforms
 # Zhipu requires login to open.bigmodel.cn
 llm-balance cost --platform=zhipu --browser=chrome
+```
+
+#### Token Usage Monitoring
+```bash
+# Check token usage across all supported platforms
+llm-balance tokens
+
+# Check token usage for specific model on Volcengine
+llm-balance tokens --platform=volcengine --model=deepseek-r1
+
+# Check token usage for Zhipu AI with specific model
+llm-balance tokens --platform=zhipu --model=glm-4-plus
+
+# Compare token usage across multiple platforms
+llm-balance tokens --platform=volcengine,zhipu --format=table
+
+# Get detailed JSON output for token usage
+llm-balance tokens --platform=volcengine --format=json
+
+# Filter models by partial name matching
+llm-balance tokens --platform=volcengine --model=deepseek
+llm-balance tokens --platform=zhipu --model=glm-4
+
+# Check token usage in different currencies
+llm-balance tokens --currency=USD --format=table
 ```
 
 ## Exchange Rate Features
@@ -249,20 +308,33 @@ platforms:
 
 ### 🇨🇳 Chinese Platforms (6)
 
-| Platform | Authentication | Status | Description |
-|----------|----------------|--------|-------------|
-| **DeepSeek** | API Key | ✅ | Requires DEEPSEEK_API_KEY |
-| **Moonshot** | API Key | ✅ | Requires MOONSHOT_API_KEY |
-| **Volcengine** | SDK/Cookie | ✅ | Requires VOLCENGINE_ACCESS_KEY + SECRET_KEY or browser login |
-| **Aliyun** | Official SDK | ✅ | Requires ALIYUN_ACCESS_KEY_ID + SECRET_KEY |
-| **Tencent** | SDK | ✅ | Requires TENCENT_API_KEY (SecretId:SecretKey) |
-| **Zhipu** | Cookie | ✅ | Requires login to https://open.bigmodel.cn |
+| Platform | Authentication | Status | Description | Token Usage |
+|----------|----------------|--------|-------------|-------------|
+| **DeepSeek** | API Key | ✅ | Requires DEEPSEEK_API_KEY | ❌ Not Available |
+| **Moonshot** | API Key | ✅ | Requires MOONSHOT_API_KEY | ❌ Not Available |
+| **Volcengine** | SDK/Cookie | ✅ | Requires VOLCENGINE_ACCESS_KEY + SECRET_KEY or browser login | ✅ Full Support |
+| **Aliyun** | Official SDK | ✅ | Requires ALIYUN_ACCESS_KEY_ID + SECRET_KEY | ❌ Not Available |
+| **Tencent** | SDK | ✅ | Requires TENCENT_API_KEY (SecretId:SecretKey) | ❌ Not Available |
+| **Zhipu** | Cookie | ✅ | Requires login to https://open.bigmodel.cn | ✅ Full Support |
 
 ### 📊 Platform Status Summary
 
 **Production-Ready (6 platforms)**: All platforms listed above are fully tested and ready for production use.
 
 **Development Status**: Additional platforms (Claude, Google Gemini, Azure OpenAI, Lingyi, MiniMax) are available in the `dev` branch and under active development.
+
+### Token Usage Support
+
+Some platforms provide token usage monitoring capabilities:
+
+| Platform | Token Usage Support | Models Available |
+|----------|-------------------|------------------|
+| **Volcengine** | ✅ Full Support | deepseek-r1, deepseek-v3, doubao-pro-32k, doubao-pro-128k, etc. |
+| **Zhipu AI** | ✅ Full Support | glm-4-plus, glm-4, glm-3-turbo, cogview-3, etc. |
+| **DeepSeek** | ❌ Not Available | - |
+| **Moonshot** | ❌ Not Available | - |
+| **Aliyun** | ❌ Not Available | - |
+| **Tencent** | ❌ Not Available | - |
 
 ### Authentication Methods
 
