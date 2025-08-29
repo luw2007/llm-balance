@@ -164,10 +164,10 @@ class ZhipuHandler(BasePlatformHandler):
             if row.get('status') == 'EXPIRED':
                 continue
             
-            # Extract model information - use resourcePackageName as primary identifier
-            package_name = row.get('resourcePackageName', row.get('name', 'Unknown Model'))
+            # Extract package information - always use resourcePackageName for display
+            package_name = row.get('resourcePackageName', row.get('name', 'Unknown Package'))
             
-            # Extract package/model name using suitableModel field
+            # Extract model name using suitableModel field, fallback to package name
             model_name = row.get('suitableModel', package_name)
             
             # Get available balance - handle both availableBalance and remaining tokens
@@ -176,15 +176,16 @@ class ZhipuHandler(BasePlatformHandler):
             # Get total balance - handle both tokenBalance and total tokens
             token_balance = float(row.get('tokenBalance', row.get('total', available_balance)))
             
-            # Display all packages regardless of availableBalance (including 0 balance)
+            # Always display packages, even when both balances are 0
+            # This ensures we show all resource packages including used ones
             
             # Calculate used tokens
             used_tokens = max(0, token_balance - available_balance)
             
-            # Create model token info
+            # Create model token info with package name as primary identifier
             model_info = ModelTokenInfo(
                 model=model_name.lower(),
-                package=package_name,
+                package=package_name,  # Always use resourcePackageName for display
                 remaining_tokens=available_balance,
                 used_tokens=used_tokens,
                 total_tokens=token_balance

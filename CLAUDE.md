@@ -10,15 +10,16 @@ A Python CLI tool for checking costs and balances across multiple LLM platforms.
 
 ### Core Components
 
-- **CLI Layer** (`cli.py`): Fire-based CLI interface with commands like `cost`, `list`, `enable`, `disable`
+- **CLI Layer** (`cli.py`): Fire-based CLI interface with commands like `cost`, `tokens`, `list`, `enable`, `disable`
 - **BalanceChecker** (`balance_checker.py`): Main orchestrator that manages platform checking and formatting
+- **TokenChecker** (`token_checker.py`): Token usage monitoring for supported platforms
 - **ConfigManager** (`config.py`): YAML configuration management with global browser settings
 - **Platform Handlers** (`platform_handlers/`): Modular platform-specific implementations
 - **Utilities** (`utils.py`): Currency conversion, output formatting, and helper functions
 
 ### Authentication Methods
 
-1. **API Key**: Bearer token authentication (DeepSeek, Moonshot, OpenAI)
+1. **API Key**: Bearer token authentication (DeepSeek, Moonshot)
 2. **Browser Cookies**: Automatic cookie extraction via pycookiecheat (Zhipu)
 3. **Official SDK**: Enterprise SDK integration (Aliyun, Volcengine, Tencent)
 
@@ -56,6 +57,11 @@ llm-balance cost --format=json
 llm-balance cost --format=table
 llm-balance cost --format=total
 
+# Token usage monitoring
+llm-balance package
+llm-balance package --platform=volcengine
+llm-balance package --platform=zhipu --model=glm-4
+
 # Multi-currency testing
 llm-balance cost --currency=USD
 llm-balance rates
@@ -64,11 +70,6 @@ llm-balance rates
 llm-balance list
 llm-balance enable moonshot
 llm-balance disable tencent
-
-# Package commands (only for supported platforms)
-llm-balance package
-llm-balance package --model=doubao
-llm-balance package --format=json
 ```
 
 ### Environment Variables
@@ -76,7 +77,6 @@ llm-balance package --format=json
 # API Key platforms
 export DEEPSEEK_API_KEY="your_key"
 export MOONSHOT_API_KEY="your_key"
-export OPENAI_ADMIN_KEY="your_key"
 
 # SDK platforms
 export VOLCENGINE_ACCESS_KEY="your_key"
