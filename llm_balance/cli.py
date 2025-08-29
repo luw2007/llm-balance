@@ -5,6 +5,7 @@ CLI interface for LLM Balance Checker
 import fire
 from typing import Optional, List
 from .balance_checker import BalanceChecker
+from .token_checker import TokenChecker
 from .utils import ensure_config_dir, get_exchange_rates
 
 class LLMBalanceCLI:
@@ -62,6 +63,55 @@ class LLMBalanceCLI:
         
         return checker.format_balances(balances, format, currency)
     
+    def package(self, platform: Optional[str] = None, 
+               format: str = 'table', 
+               browser: Optional[str] = None,
+               currency: str = 'CNY',
+               model: Optional[str] = None) -> str:
+        """
+        Check model-level package/tokens for LLM platforms
+        
+        Args:
+            platform: Specific platform(s) to check, comma-separated string or tuple (optional)
+                     Examples: "volcengine", "volcengine,zhipu", or multiple --platform flags
+            format: Output format (json, markdown, table, total)
+            browser: Browser to get cookies from (chrome, firefox, arc, brave, chromium)
+            currency: Target currency for total (CNY, USD, EUR, etc.)
+            model: Filter by model name (optional)
+                   Examples: "gpt-4", "doubao", "glm-4.5"
+        
+        Returns:
+            Formatted package information with model-level details
+        """
+        browser = browser or self.browser
+        checker = TokenChecker(self.config_file, browser)
+        
+        if platform:
+            # Handle comma-separated platform list or tuple from fire
+            if isinstance(platform, tuple):
+                platforms = [p.strip() for p in platform if p.strip()]
+            elif isinstance(platform, str):
+                platforms = [p.strip() for p in platform.split(',') if p.strip()]
+            else:
+                platforms = [str(platform).strip()] if str(platform).strip() else []
+            
+            if not platforms:
+                return "No valid platforms specified"
+                
+            tokens = []
+            
+            for p in platforms:
+                token_info = checker.check_platform_tokens(p)
+                if token_info:
+                    tokens.append(token_info)
+                else:
+                    return f"Platform '{p}' not found or does not support token checking"
+        else:
+            # Check all platforms
+            tokens = checker.check_all_tokens()
+        
+        return checker.format_tokens(tokens, format, currency, model)
+
     def check(self, platform: Optional[str] = None, 
               format: str = 'table', 
               browser: Optional[str] = None,

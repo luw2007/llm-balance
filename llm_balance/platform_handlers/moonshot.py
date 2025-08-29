@@ -4,8 +4,8 @@ Moonshot platform handler
 
 import json
 import os
-from typing import Dict, Any, Optional
-from .base import BasePlatformHandler, CostInfo
+from typing import Dict, Any, Optional, List
+from .base import BasePlatformHandler, CostInfo, PlatformTokenInfo, ModelTokenInfo
 from ..config import PlatformConfig
 
 class MoonshotHandler(BasePlatformHandler):
@@ -82,3 +82,7 @@ class MoonshotHandler(BasePlatformHandler):
     def get_platform_name(self) -> str:
         """Get platform display name"""
         return "Moonshot"
+    
+    def get_model_tokens(self) -> PlatformTokenInfo:
+        """Get model-level token information from Moonshot"""
+        raise NotImplementedError(f"Model token checking not implemented for {self.get_platform_name()}")

@@ -81,13 +81,27 @@ def _format_table(balances: List[Dict[str, Any]], target_currency: str = 'CNY') 
     """Format as text table"""
     lines = []
     lines.append("=" * 60)
-    lines.append(f"{'Platform':<20} {'Balance':<15} {'Currency':<10}")
+    
+    # Check if this is token data or balance data
+    is_tokens = any('tokens' in balance for balance in balances)
+    
+    if is_tokens:
+        lines.append(f"{'Platform':<20} {'Tokens':<15} {'Currency':<10}")
+    else:
+        lines.append(f"{'Platform':<20} {'Balance':<15} {'Currency':<10}")
+    
     lines.append("-" * 60)
     
     total = 0
     for balance in balances:
         platform = balance['platform']
-        amount = balance['balance']
+        
+        # Handle both balance and token data
+        if 'tokens' in balance:
+            amount = balance['tokens']
+        else:
+            amount = balance.get('balance', 0)
+            
         currency = balance['currency']
         
         # Ensure amount is a number
@@ -99,7 +113,8 @@ def _format_table(balances: List[Dict[str, Any]], target_currency: str = 'CNY') 
         lines.append(f"{platform:<20} {amount_float:<15.2f} {currency:<10}")
         
         # Convert to target currency for total
-        total += convert_currency(amount_float, currency, target_currency)
+        if amount_float > 0:  # Only add to total if we have valid data
+            total += convert_currency(amount_float, currency, target_currency)
     
     lines.append("-" * 60)
     lines.append(f"{'Total (' + target_currency + ')':<20} {total:<15.2f} {target_currency:<10}")
@@ -109,13 +124,27 @@ def _format_table(balances: List[Dict[str, Any]], target_currency: str = 'CNY') 
 
 def _format_markdown(balances: List[Dict[str, Any]]) -> str:
     """Format as markdown table"""
-    lines = ["# LLM Platform Costs\n"]
-    lines.append("| Platform | Balance | Currency |")
+    # Check if this is token data or balance data
+    is_tokens = any('tokens' in balance for balance in balances)
+    
+    if is_tokens:
+        lines = ["# LLM Platform Tokens\n"]
+        lines.append("| Platform | Tokens | Currency |")
+    else:
+        lines = ["# LLM Platform Costs\n"]
+        lines.append("| Platform | Balance | Currency |")
+    
     lines.append("|----------|---------|----------|")
     
     for balance in balances:
         platform = balance['platform']
-        amount = balance['balance']
+        
+        # Handle both balance and token data
+        if 'tokens' in balance:
+            amount = balance['tokens']
+        else:
+            amount = balance.get('balance', 0)
+            
         currency = balance['currency']
         lines.append(f"| {platform} | {amount:.2f} | {currency} |")
     
@@ -124,12 +153,24 @@ def _format_markdown(balances: List[Dict[str, Any]]) -> str:
 def _format_total(balances: List[Dict[str, Any]], target_currency: str = 'CNY') -> str:
     """Format as total only"""
     total = 0
+    
+    # Check if this is token data or balance data
+    is_tokens = any('tokens' in balance for balance in balances)
+    
     for balance in balances:
-        amount = balance['balance']
+        # Handle both balance and token data
+        if 'tokens' in balance:
+            amount = balance['tokens']
+        else:
+            amount = balance.get('balance', 0)
+            
         currency = balance['currency']
         total += convert_currency(amount, currency, target_currency)
     
-    return f"Total cost: {total:.2f} {target_currency}"
+    if is_tokens:
+        return f"Total tokens: {total:.2f} {target_currency}"
+    else:
+        return f"Total cost: {total:.2f} {target_currency}"
 
 def ensure_config_dir():
     """Ensure configuration directory exists"""

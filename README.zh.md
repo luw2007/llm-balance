@@ -56,6 +56,7 @@ export TENCENT_API_KEY="your_tencent_api_key"
 
 ### 基本命令
 
+#### 检查余额
 ```bash
 # 检查所有平台余额
 llm-balance cost
@@ -80,6 +81,25 @@ llm-balance cost --format=total     # 仅显示总额
 llm-balance cost --currency=USD     # 美元显示总额
 llm-balance cost --currency=EUR     # 欧元显示总额
 llm-balance cost --currency=CNY     # 人民币显示总额（默认）
+```
+
+#### 检查Token使用量
+```bash
+# 检查所有支持平台的Token使用量
+llm-balance tokens
+
+# 检查特定平台的Token使用量
+llm-balance tokens --platform=volcengine
+
+# 检查特定模型的Token使用量
+llm-balance tokens --platform=volcengine --model=deepseek-r1
+
+# 检查多个平台的Token使用量
+llm-balance tokens --platform=volcengine,zhipu
+
+# Token使用量的不同输出格式
+llm-balance tokens --format=table   # 控制台表格格式
+llm-balance tokens --format=json    # 机器可读格式
 ```
 
 > 💡 向后兼容：`llm-balance check` 命令仍然可用，作为 `llm-balance cost` 的别名
@@ -113,6 +133,7 @@ llm-balance config deepseek timeout 30
 
 ### 高级使用示例
 
+#### 余额检查
 ```bash
 # 查看所有平台的美元总余额
 llm-balance cost --currency=USD --format=total
@@ -129,6 +150,24 @@ LLM_BALANCE_RATES='{"USD": 7.5}' llm-balance cost --currency=USD --format=json
 
 # 组合使用多个参数
 llm-balance cost --platform=openai --browser=chrome --currency=GBP --format=markdown
+```
+
+#### Token使用量监控
+```bash
+# 检查所有支持平台的Token使用量
+llm-balance tokens
+
+# 检查火山引擎特定模型的Token使用量
+llm-balance tokens --platform=volcengine --model=deepseek-r1
+
+# 检查智谱AI特定模型的Token使用量
+llm-balance tokens --platform=zhipu --model=glm-4-plus
+
+# 比较多个平台的Token使用量
+llm-balance tokens --platform=volcengine,zhipu --format=table
+
+# 获取Token使用量的详细JSON输出
+llm-balance tokens --platform=volcengine --format=json
 ```
 
 ## 汇率功能
