@@ -86,20 +86,20 @@ llm-balance cost --currency=CNY     # 人民币显示总额（默认）
 #### 检查Token使用量
 ```bash
 # 检查所有支持平台的Token使用量
-llm-balance tokens
+llm-balance package
 
 # 检查特定平台的Token使用量
-llm-balance tokens --platform=volcengine
+llm-balance package --platform=volcengine
 
 # 检查特定模型的Token使用量
-llm-balance tokens --platform=volcengine --model=deepseek-r1
+llm-balance package --platform=volcengine --model=deepseek-r1
 
 # 检查多个平台的Token使用量
-llm-balance tokens --platform=volcengine,zhipu
+llm-balance package --platform=volcengine,zhipu
 
 # Token使用量的不同输出格式
-llm-balance tokens --format=table   # 控制台表格格式
-llm-balance tokens --format=json    # 机器可读格式
+llm-balance package --format=table   # 控制台表格格式
+llm-balance package --format=json    # 机器可读格式
 ```
 
 > 💡 向后兼容：`llm-balance check` 命令仍然可用，作为 `llm-balance cost` 的别名
@@ -155,19 +155,19 @@ llm-balance cost --platform=openai --browser=chrome --currency=GBP --format=mark
 #### Token使用量监控
 ```bash
 # 检查所有支持平台的Token使用量
-llm-balance tokens
+llm-balance package
 
 # 检查火山引擎特定模型的Token使用量
-llm-balance tokens --platform=volcengine --model=deepseek-r1
+llm-balance package --platform=volcengine --model=deepseek-r1
 
 # 检查智谱AI特定模型的Token使用量
-llm-balance tokens --platform=zhipu --model=glm-4-plus
+llm-balance package --platform=zhipu --model=glm-4-plus
 
 # 比较多个平台的Token使用量
-llm-balance tokens --platform=volcengine,zhipu --format=table
+llm-balance package --platform=volcengine,zhipu --format=table
 
 # 获取Token使用量的详细JSON输出
-llm-balance tokens --platform=volcengine --format=json
+llm-balance package --platform=volcengine --format=json
 ```
 
 ## 汇率功能

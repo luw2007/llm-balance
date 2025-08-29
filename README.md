@@ -95,25 +95,25 @@ llm-balance cost --currency=CNY     # Show total in CNY (default)
 #### Check Token Usage
 ```bash
 # Check token usage for all supported platforms
-llm-balance tokens
+llm-balance package
 
 # Check token usage for specific platform
-llm-balance tokens --platform=volcengine
+llm-balance package --platform=volcengine
 
 # Check token usage for specific model
-llm-balance tokens --platform=volcengine --model=deepseek-r1
+llm-balance package --platform=volcengine --model=deepseek-r1
 
 # Check token usage for multiple platforms
-llm-balance tokens --platform=volcengine,zhipu
+llm-balance package --platform=volcengine,zhipu
 
 # Filter by model name (supports partial matching)
-llm-balance tokens --platform=volcengine --model=deepseek
-llm-balance tokens --platform=zhipu --model=glm-4
+llm-balance package --platform=volcengine --model=deepseek
+llm-balance package --platform=zhipu --model=glm-4
 
 # Different output formats for tokens
-llm-balance tokens --format=table   # Console table format
-llm-balance tokens --format=json    # Machine-readable format
-llm-balance tokens --format=markdown # Document-friendly format
+llm-balance package --format=table   # Console table format
+llm-balance package --format=json    # Machine-readable format
+llm-balance package --format=markdown # Document-friendly format
 ```
 
 > 💡 Backward compatibility: `llm-balance check` command is still available as an alias for `llm-balance cost`
@@ -122,7 +122,7 @@ llm-balance tokens --format=markdown # Document-friendly format
 | Command | Description | Example |
 |---------|-------------|---------|
 | `llm-balance cost` | Check account balance | `llm-balance cost --platform=volcengine` |
-| `llm-balance tokens` | Check token usage | `llm-balance tokens --platform=zhipu --model=glm-4` |
+| `llm-balance package` | Check token usage | `llm-balance package --platform=zhipu --model=glm-4` |
 | `llm-balance list` | List all platforms | `llm-balance list` |
 | `llm-balance enable/disable` | Manage platform status | `llm-balance enable volcengine` |
 
@@ -194,26 +194,26 @@ llm-balance cost --platform=zhipu --browser=chrome
 #### Token Usage Monitoring
 ```bash
 # Check token usage across all supported platforms
-llm-balance tokens
+llm-balance package
 
 # Check token usage for specific model on Volcengine
-llm-balance tokens --platform=volcengine --model=deepseek-r1
+llm-balance package --platform=volcengine --model=deepseek-r1
 
 # Check token usage for Zhipu AI with specific model
-llm-balance tokens --platform=zhipu --model=glm-4-plus
+llm-balance package --platform=zhipu --model=glm-4-plus
 
 # Compare token usage across multiple platforms
-llm-balance tokens --platform=volcengine,zhipu --format=table
+llm-balance package --platform=volcengine,zhipu --format=table
 
 # Get detailed JSON output for token usage
-llm-balance tokens --platform=volcengine --format=json
+llm-balance package --platform=volcengine --format=json
 
 # Filter models by partial name matching
-llm-balance tokens --platform=volcengine --model=deepseek
-llm-balance tokens --platform=zhipu --model=glm-4
+llm-balance package --platform=volcengine --model=deepseek
+llm-balance package --platform=zhipu --model=glm-4
 
 # Check token usage in different currencies
-llm-balance tokens --currency=USD --format=table
+llm-balance package --currency=USD --format=table
 ```
 
 ## Exchange Rate Features
