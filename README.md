@@ -306,7 +306,7 @@ platforms:
 |----------|----------------|--------|-------------|
 | **OpenAI** | Admin API | ❌ | Currently not supported for balance queries |
 
-### 🇨🇳 Chinese Platforms (6)
+### 🇨🇳 Chinese Platforms (7)
 
 | Platform | Authentication | Status | Description | Token Usage |
 |----------|----------------|--------|-------------|-------------|
@@ -316,10 +316,11 @@ platforms:
 | **Aliyun** | Official SDK | ✅ | Requires ALIYUN_ACCESS_KEY_ID + SECRET_KEY | ❌ Not Available |
 | **Tencent** | SDK | ✅ | Requires TENCENT_API_KEY (SecretId:SecretKey) | ❌ Not Available |
 | **Zhipu** | Cookie | ✅ | Requires login to https://open.bigmodel.cn | ✅ Full Support |
+| **SiliconFlow** | API Key | ✅ | Requires SILICONFLOW_API_KEY | ❌ Not Available |
 
 ### 📊 Platform Status Summary
 
-**Production-Ready (6 platforms)**: All platforms listed above are fully tested and ready for production use.
+**Production-Ready (7 platforms)**: All platforms listed above are fully tested and ready for production use.
 
 **Development Status**: Additional platforms (Claude, Google Gemini, Azure OpenAI, Lingyi, MiniMax) are available in the `dev` branch and under active development.
 
@@ -353,6 +354,9 @@ export ALIYUN_ACCESS_KEY_SECRET="your_access_key_secret"
 
 # Moonshot
 export MOONSHOT_API_KEY="sk-xxxxxxxxxxxxxxxxxxxxxxxx"
+
+# SiliconFlow
+export SILICONFLOW_API_KEY="your_siliconflow_api_key"
 ```
 
 #### 🍪 Cookie Authentication
