@@ -133,7 +133,7 @@ class ConfigManager:
         """Get platform configuration directly from handler"""
         from .platform_handlers import (
             DeepSeekHandler, MoonshotHandler, VolcengineHandler,
-            AliyunHandler, TencentHandler, ZhipuHandler
+            AliyunHandler, TencentHandler, ZhipuHandler, SiliconFlowHandler
         )
         
         handler_map = {
@@ -143,6 +143,7 @@ class ConfigManager:
             'aliyun': AliyunHandler,
             'tencent': TencentHandler,
             'zhipu': ZhipuHandler,
+            'siliconflow': SiliconFlowHandler,
         }
         
         if platform_name not in handler_map:
@@ -186,7 +187,7 @@ class ConfigManager:
     
     def get_all_platforms(self) -> List[str]:
         """Get all available platform names"""
-        return ['deepseek', 'moonshot', 'volcengine', 'aliyun', 'tencent', 'zhipu']
+        return ['deepseek', 'moonshot', 'volcengine', 'aliyun', 'tencent', 'zhipu', 'siliconflow']
     
     def get_enabled_platforms(self) -> List[PlatformConfig]:
         """Get enabled platform configurations"""
@@ -245,7 +246,7 @@ class ConfigManager:
         # Get configurations from handlers
         from .platform_handlers import (
             DeepSeekHandler, MoonshotHandler, VolcengineHandler,
-            AliyunHandler, TencentHandler, ZhipuHandler
+            AliyunHandler, TencentHandler, ZhipuHandler, SiliconFlowHandler
         )
         
         handler_map = {
@@ -255,6 +256,7 @@ class ConfigManager:
             'aliyun': AliyunHandler,
             'tencent': TencentHandler,
             'zhipu': ZhipuHandler,
+            'siliconflow': SiliconFlowHandler,
         }
         
         for name, handler_class in handler_map.items():

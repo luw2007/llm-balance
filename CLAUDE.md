@@ -150,3 +150,4 @@ llm-balance generate_config
 # View/edit platform config
 llm-balance config volcengine auth_type sdk
 ```
+- SiliconFlow 不支持package.
