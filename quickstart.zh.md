@@ -1,6 +1,6 @@
 # LLM Balance Checker 快速参考
 
-**支持7个生产就绪的LLM平台**
+**支持8个生产就绪的LLM平台**
 
 ## 基本命令
 
@@ -17,6 +17,7 @@ llm-balance cost --platform=volcengine  # 火山引擎 ✅
 llm-balance cost --platform=aliyun      # 阿里云 ✅
 llm-balance cost --platform=tencent     # 腾讯云 ✅
 llm-balance cost --platform=zhipu       # 智谱AI ✅
+llm-balance cost --platform=siliconflow # 硅基流动 ✅
 
 # 同时查看多个平台（逗号分隔）
 llm-balance cost --platform=volcengine,aliyun,deepseek
@@ -163,6 +164,7 @@ export ALIYUN_ACCESS_KEY_SECRET="your_secret_key"  # 阿里云
 export TENCENT_API_KEY="your_tencent_api_key"       # 腾讯云
 export LINGYI_API_KEY="your_lingyi_api_key"         # 零一万物
 export MINIMAX_API_KEY="your_minimax_api_key"       # MiniMax
+export SILICONFLOW_API_KEY="your_siliconflow_api_key" # 硅基流动
 
 # 配置文件路径
 export LLM_BALANCE_CONFIG_FILE="/path/to/config.yaml"
@@ -199,7 +201,7 @@ export LLM_BALANCE_CONFIG_FILE="/path/to/config.yaml"
 | Gemini | API密钥 | `GEMINI_API_KEY` |
 | Azure OpenAI | 访问令牌 | `AZURE_ACCESS_TOKEN` |
 
-### 🇨🇳 中国平台 (8个)
+### 🇨🇳 中国平台 (9个)
 | 平台 | 认证方式 | 环境变量 |
 |------|----------|----------|
 | DeepSeek | API密钥 | `DEEPSEEK_API_KEY` |
@@ -210,6 +212,7 @@ export LLM_BALANCE_CONFIG_FILE="/path/to/config.yaml"
 | 零一万物 | API密钥 | `LINGYI_API_KEY` |
 | MiniMax | API密钥 | `MINIMAX_API_KEY` |
 | 智谱AI | Cookie认证 | 需要浏览器登录 |
+| 硅基流动 | API密钥 | `SILICONFLOW_API_KEY` |
 
 ### 最常用命令
 ```bash

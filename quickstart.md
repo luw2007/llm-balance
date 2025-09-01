@@ -163,6 +163,7 @@ export ALIYUN_ACCESS_KEY_SECRET="your_secret_key"  # Alibaba Cloud
 export TENCENT_API_KEY="your_tencent_api_key"       # Tencent Cloud
 export LINGYI_API_KEY="your_lingyi_api_key"         # Lingyi Wanwu
 export MINIMAX_API_KEY="your_minimax_api_key"       # MiniMax
+export SILICONFLOW_API_KEY="your_siliconflow_api_key" # SiliconFlow
 
 # Configuration file path
 export LLM_BALANCE_CONFIG_FILE="/path/to/config.yaml"
@@ -199,7 +200,7 @@ export LLM_BALANCE_CONFIG_FILE="/path/to/config.yaml"
 | Gemini | API Key | `GEMINI_API_KEY` |
 | Azure OpenAI | Access Token | `AZURE_ACCESS_TOKEN` |
 
-### 🇨🇳 Chinese Platforms (8)
+### 🇨🇳 Chinese Platforms (9)
 | Platform | Auth Method | Key Variables |
 |----------|-------------|----------------|
 | DeepSeek | API Key | `DEEPSEEK_API_KEY` |
@@ -210,6 +211,7 @@ export LLM_BALANCE_CONFIG_FILE="/path/to/config.yaml"
 | Lingyi | API Key | `LINGYI_API_KEY` |
 | MiniMax | API Key | `MINIMAX_API_KEY` |
 | Zhipu | Cookie | Browser login required |
+| SiliconFlow | API Key | `SILICONFLOW_API_KEY` |
 
 ### Most Common Commands
 ```bash
