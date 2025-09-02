@@ -160,8 +160,8 @@ class ZhipuHandler(BasePlatformHandler):
             rows = response.get('rows', [])
         
         for row in rows:
-            # Skip expired packages regardless of type
-            if row.get('status') == 'EXPIRED':
+            # Only process effective packages
+            if row.get('status') != 'EFFECTIVE':
                 continue
             
             # Extract package information - always use resourcePackageName for display
@@ -173,14 +173,21 @@ class ZhipuHandler(BasePlatformHandler):
             # Get available balance - handle both availableBalance and remaining tokens
             available_balance = float(row.get('availableBalance', row.get('remaining', 0)))
             
-            # Get total balance - handle both tokenBalance and total tokens
-            token_balance = float(row.get('tokenBalance', row.get('total', available_balance)))
+            # Always extract total from package name since API returns remaining as "total"
+            extracted_total, unit = self._extract_tokens_from_package_name(package_name)
             
-            # Always display packages, even when both balances are 0
-            # This ensures we show all resource packages including used ones
-            
-            # Calculate used tokens
-            used_tokens = max(0, token_balance - available_balance)
+            if extracted_total > 0:
+                token_balance = extracted_total
+                # For usage-based packages (次), available is the count, total is the original
+                if unit == '次':
+                    used_tokens = max(0, token_balance - available_balance)
+                else:
+                    # For token-based packages, calculate used from the difference
+                    used_tokens = max(0, token_balance - available_balance)
+            else:
+                # Fallback to API values if extraction fails
+                token_balance = float(row.get('tokenBalance', row.get('total', available_balance)))
+                used_tokens = max(0, token_balance - available_balance)
             
             # Create model token info with package name as primary identifier
             model_info = ModelTokenInfo(
@@ -196,6 +203,91 @@ class ZhipuHandler(BasePlatformHandler):
         models.sort(key=lambda x: x.remaining_tokens, reverse=True)
         
         return models
+    
+    def _extract_tokens_from_package_name(self, package_name: str) -> tuple[float, str]:
+        """Extract token count and unit from Chinese package names like '1亿GLM-4.5资源包' or '100次视频资源包'"""
+        import re
+        
+        # Chinese number mappings
+        chinese_numbers = {
+            '一': 1, '二': 2, '三': 3, '四': 4, '五': 5, '六': 6, '七': 7, '八': 8, '九': 9, '十': 10,
+            '百': 100, '千': 1000, '万': 10000, '亿': 100000000
+        }
+        
+        # First check for 次 (times) unit
+        times_patterns = [
+            r'(\d+)次',           # 100次, 50次
+            r'(\d+)次',           # 100次 (with Chinese)
+        ]
+        
+        for pattern in times_patterns:
+            match = re.search(pattern, package_name)
+            if match:
+                number_str = match.group(1)
+                try:
+                    return float(number_str), '次'
+                except ValueError:
+                    continue
+        
+        # Patterns for token counts: 1亿, 1000万, 200万, etc.
+        token_patterns = [
+            r'(\d+)亿',           # 1亿, 100亿
+            r'(\d+)万',           # 1000万, 200万
+            r'(\d+)千',           # 1000千
+            r'(\d+)百',           # 200百
+            r'(\d+)',             # plain numbers like 200
+        ]
+        
+        for pattern in token_patterns:
+            match = re.search(pattern, package_name)
+            if match:
+                number_str = match.group(1)
+                try:
+                    base_number = float(number_str)
+                    
+                    # Check for unit suffixes
+                    if '亿' in package_name:
+                        return base_number * 100000000, 'tokens'
+                    elif '万' in package_name:
+                        return base_number * 10000, 'tokens'
+                    elif '千' in package_name:
+                        return base_number * 1000, 'tokens'
+                    elif '百' in package_name:
+                        return base_number * 100, 'tokens'
+                    else:
+                        return base_number, 'tokens'
+                except ValueError:
+                    continue
+        
+        # Handle Chinese character numbers like "二百" or "一千"
+        chinese_pattern = r'([一二三四五六七八九十百千万亿]+)'
+        match = re.search(chinese_pattern, package_name)
+        if match:
+            chinese_str = match.group(1)
+            try:
+                # Simple conversion for common patterns
+                if '亿' in chinese_str:
+                    return 100000000, 'tokens'
+                elif '万' in chinese_str:
+                    # Extract the number before 万
+                    num_match = re.search(r'(\d+|[一二三四五六七八九十])万', chinese_str)
+                    if num_match:
+                        num_str = num_match.group(1)
+                        if num_str.isdigit():
+                            return float(num_str) * 10000, 'tokens'
+                        else:
+                            return chinese_numbers.get(num_str, 1) * 10000, 'tokens'
+                    return 10000, 'tokens'  # Default 1万
+                elif '千' in chinese_str:
+                    return 1000, 'tokens'
+                elif '百' in chinese_str:
+                    return 100, 'tokens'
+                else:
+                    return 2000000, 'tokens'  # Default 200万 for common packages
+            except:
+                pass
+        
+        return 0, 'tokens'
     
     def _extract_balance(self, response: Dict[str, Any]) -> Optional[float]:
         """Extract balance from Zhipu AI API response"""
