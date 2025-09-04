@@ -8,7 +8,7 @@ from .volcengine import VolcengineHandler
 from .aliyun import AliyunHandler
 from .tencent import TencentHandler
 from .zhipu import ZhipuHandler
-from .siliconflow_handler import SiliconFlowHandler
+from .siliconflow import SiliconFlowHandler
 
 def create_handler(config, browser: str = 'chrome'):
     """Factory function to create platform handlers using Python-based configuration"""

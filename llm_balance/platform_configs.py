@@ -30,6 +30,9 @@ class PlatformConfig:
     
     # Authentication configuration
     cookie_domain: Optional[str] = None
+    cookie_api_url: Optional[str] = None
+    projects_api_url: Optional[str] = None
+    cookie_org_id_url: Optional[str] = None
     region: Optional[str] = None
     
     # Legacy compatibility fields
@@ -80,7 +83,12 @@ class PlatformConfig:
             
         if self.cookie_domain:
             result['cookie_domain'] = self.cookie_domain
-            
+        if self.cookie_api_url:
+            result['cookie_api_url'] = self.cookie_api_url
+        if self.projects_api_url:
+            result['projects_api_url'] = self.projects_api_url
+        if self.cookie_org_id_url:
+            result['cookie_org_id_url'] = self.cookie_org_id_url
         if self.region:
             result['region'] = self.region
             

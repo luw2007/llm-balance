@@ -134,16 +134,22 @@ def _format_table(balances: List[Dict[str, Any]], target_currency: str = 'CNY') 
         except (ValueError, TypeError):
             amount_float = 0.0
             
-        # Ensure spent is a number
-        try:
-            spent_float = float(spent) if spent is not None else 0.0
-        except (ValueError, TypeError):
+        # Ensure spent is a number or handle "-" string
+        if spent == "-" or spent is None:
+            spent_display = "-"
             spent_float = 0.0
+        else:
+            try:
+                spent_float = float(spent)
+                spent_display = f"{spent_float:.2f}"
+            except (ValueError, TypeError):
+                spent_display = "-"
+                spent_float = 0.0
         
         if is_tokens:
             lines.append(f"{platform:<20} {amount_float:<15.2f} {currency:<10}")
         elif has_spent:
-            lines.append(f"{platform:<20} {amount_float:<15.2f} {spent_float:<15.2f} {currency:<10}")
+            lines.append(f"{platform:<20} {amount_float:<15.2f} {spent_display:<15} {currency:<10}")
         else:
             lines.append(f"{platform:<20} {amount_float:<15.2f} {currency:<10}")
         
@@ -199,7 +205,8 @@ def _format_markdown(balances: List[Dict[str, Any]]) -> str:
             currency = balance['currency']
             
             if has_spent:
-                lines.append(f"| {platform} | {amount:.2f} | {spent:.2f} | {currency} |")
+                spent_display = "-" if spent == "-" else f"{spent:.2f}"
+                lines.append(f"| {platform} | {amount:.2f} | {spent_display} | {currency} |")
             else:
                 lines.append(f"| {platform} | {amount:.2f} | {currency} |")
     

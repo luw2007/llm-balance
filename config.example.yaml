@@ -32,6 +32,10 @@ platforms:
     headers:
       User-Agent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
       Accept: "application/json"
+    # Cookie authentication for accurate spent amount
+    cookie_domain: "kimi.moonshot.cn"
+    cookie_api_url: "https://kimi.moonshot.cn/api/user/info"
+    projects_api_url: "https://kimi.moonshot.cn/api/billing/list_projects"
   
     
     

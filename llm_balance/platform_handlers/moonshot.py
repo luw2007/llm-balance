@@ -2,7 +2,6 @@
 Moonshot platform handler
 """
 
-import json
 import os
 from typing import Dict, Any, Optional, List
 from .base import BasePlatformHandler, CostInfo, PlatformTokenInfo, ModelTokenInfo
@@ -25,8 +24,7 @@ class MoonshotHandler(BasePlatformHandler):
             },
             "params": {},
             "data": {},
-            "enabled": True,
-            "cookie_domain": None
+            "enabled": True
         }
     
     def __init__(self, config: PlatformConfig, browser: str = 'chrome'):
@@ -38,7 +36,7 @@ class MoonshotHandler(BasePlatformHandler):
         if not self.config.api_url:
             raise ValueError("No API URL configured for Moonshot")
         
-        # Get API key from environment variable
+        # Get API key
         api_key = os.getenv('MOONSHOT_API_KEY')
         if not api_key:
             raise ValueError("Moonshot API key required. Set MOONSHOT_API_KEY environment variable.")
@@ -67,15 +65,15 @@ class MoonshotHandler(BasePlatformHandler):
         voucher_balance = data.get('voucher_balance', 0.0)
         cash_balance = data.get('cash_balance', 0.0)
         
-        # Calculate spent amount (estimated as total added - current balance)
-        spent = self._calculate_spent_amount(response)
+        # Moonshot doesn't support spent tracking
+        spent = "-"
         
         return CostInfo(
             platform=self.get_platform_name(),
             balance=available_balance,
             currency='CNY',  # Moonshot uses CNY
             spent=spent,
-            spent_currency='CNY',
+            spent_currency="-",
             raw_data={
                 'available_balance': available_balance,
                 'voucher_balance': voucher_balance,
@@ -83,21 +81,6 @@ class MoonshotHandler(BasePlatformHandler):
                 'full_response': response
             }
         )
-    
-    def _calculate_spent_amount(self, response: Dict[str, Any]) -> float:
-        """Calculate spent amount (estimated)"""
-        try:
-            data = response.get('data', {})
-            available_balance = data.get('available_balance', 0.0)
-            voucher_balance = data.get('voucher_balance', 0.0)
-            cash_balance = data.get('cash_balance', 0.0)
-            
-            # Estimate spent as total balance - available balance
-            total_balance = voucher_balance + cash_balance
-            spent = total_balance - available_balance
-            return max(0, spent)
-        except Exception:
-            return 0.0
     
     def get_platform_name(self) -> str:
         """Get platform display name"""
