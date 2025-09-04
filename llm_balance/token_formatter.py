@@ -30,7 +30,9 @@ def _format_model_table(platform_tokens: List[Dict[str, Any]], target_currency: 
     lines.append(f"{'Platform':<15} {'Model':<30} {'Total':<12} {'Used':<12} {'Remaining':<12} {'Package':<20}")
     lines.append("-" * 100)
     
-    total_tokens = 0
+    total_all_tokens = 0
+    total_used_tokens = 0
+    total_remaining_tokens = 0
     
     for platform_data in platform_tokens:
         platform = platform_data['platform']
@@ -49,10 +51,12 @@ def _format_model_table(platform_tokens: List[Dict[str, Any]], target_currency: 
             
             lines.append(f"{platform:<15} {model:<30} {total:<12.0f} {used:<12.0f} {remaining:<12.0f} {package:<20}")
             
-            total_tokens += remaining
+            total_all_tokens += total
+            total_used_tokens += used
+            total_remaining_tokens += remaining
     
     lines.append("-" * 100)
-    lines.append(f"{'Total Tokens':<45} {total_tokens:<12.0f}")
+    lines.append(f"{'Total Tokens':<45} {total_all_tokens:<12.0f} {total_used_tokens:<12.0f} {total_remaining_tokens:<12.0f}")
     lines.append("=" * 100)
     
     return '\n'.join(lines)
