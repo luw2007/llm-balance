@@ -62,6 +62,10 @@ llm-balance package
 llm-balance package --platform=volcengine
 llm-balance package --platform=zhipu --model=glm-4
 
+# Package table output shows Total/Used/Remaining summary
+# The table format includes detailed model information with totals at the bottom
+llm-balance package --format=table
+
 # Multi-currency testing
 llm-balance cost --currency=USD
 llm-balance rates
