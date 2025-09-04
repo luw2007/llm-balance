@@ -2,7 +2,6 @@
 Zhipu AI (智谱AI) platform handler
 """
 
-import json
 from typing import Dict, Any, Optional, List
 from .base import BasePlatformHandler, CostInfo, PlatformTokenInfo, ModelTokenInfo
 from ..config import PlatformConfig
