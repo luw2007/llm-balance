@@ -1,32 +1,32 @@
 """
-Volcengine platform handler using official SDK
+Volcengine platform handler
 """
 
 import os
 from typing import Dict, Any, Optional, List
+from datetime import datetime, date, timedelta
 from .base import BasePlatformHandler, CostInfo, PlatformTokenInfo, ModelTokenInfo
 from ..config import PlatformConfig
 
 class VolcengineHandler(BasePlatformHandler):
-    """Volcengine platform cost handler using official SDK"""
+    """Volcengine platform cost handler"""
     
     @classmethod
     def get_default_config(cls) -> dict:
         """Get default configuration for Volcengine platform"""
         return {
-            "api_url": "https://api.volcengine.com/api/billing/2022-01-01/QueryBalanceAcct",
-            "method": "POST",
+            "api_url": "https://billing.volcengineapi.com",
+            "method": "GET",
             "auth_type": "sdk",
-            "env_var": "VOLCENGINE_ACCESS_KEY",
+            "region": "cn-beijing",
             "headers": {
                 "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
-                "Accept": "application/json",
-                "Content-Type": "application/json"
+                "Accept": "application/json"
             },
             "params": {},
             "data": {},
             "enabled": True,
-            "region": "cn-beijing"
+            "cookie_domain": "console.volcengine.com"
         }
     
     def __init__(self, config: PlatformConfig, browser: str = 'chrome'):
@@ -34,11 +34,27 @@ class VolcengineHandler(BasePlatformHandler):
         self.config = config
     
     def get_balance(self) -> CostInfo:
-        """Get cost information from Volcengine using official SDK"""
-        return self._get_balance_with_sdk()
+        """Get cost information from Volcengine"""
+        try:
+            # Try SDK authentication first
+            return self._get_balance_with_sdk()
+        except Exception as e:
+            # Fallback to cookie authentication
+            try:
+                return self._get_balance_with_cookies()
+            except Exception as e2:
+                # Return error info if both methods fail
+                return CostInfo(
+                    platform=self.get_platform_name(),
+                    balance=0.0,
+                    currency='CNY',
+                    spent=0.0,
+                    spent_currency='CNY',
+                    raw_data={'error': f"SDK auth failed: {str(e)}, Cookie auth failed: {str(e2)}"}
+                )
     
     def _get_balance_with_sdk(self) -> CostInfo:
-        """Get balance using official Volcengine SDK with QueryBalanceAcct API"""
+        """Get balance using Volcengine official SDK"""
         try:
             import os
             from volcenginesdkcore.rest import ApiException
@@ -65,72 +81,45 @@ class VolcengineHandler(BasePlatformHandler):
                 configuration.region = self.config.region or "cn-beijing"
                 volcenginesdkcore.Configuration.set_default(configuration)
                 
-                # Use official billing API
+                # Create API instance
                 api_instance = volcenginesdkbilling.BILLINGApi()
-                query_balance_acct_request = QueryBalanceAcctRequest()
                 
-                # Call QueryBalanceAcct API
-                resp = api_instance.query_balance_acct(query_balance_acct_request)
+                # Create balance query request
+                query_balance_request = QueryBalanceAcctRequest()
                 
-                # Parse response from official SDK
-                if not resp:
-                    raise ValueError("No response from Volcengine SDK")
+                # Call API to get balance
+                resp = api_instance.query_balance_acct(query_balance_request)
                 
-                # Extract balance and currency from official response
-                balance = 0.0
-                currency = 'CNY'
-                
-                # Handle QueryBalanceAcct response format
-                if hasattr(resp, 'available_balance'):
-                    balance = float(resp.available_balance)
-                elif hasattr(resp, 'available_cash_amount'):
-                    balance = float(resp.available_cash_amount)
-                elif hasattr(resp, 'cash_balance'):
-                    balance = float(resp.cash_balance)
-                elif hasattr(resp, 'result') and resp.result:
-                    result = resp.result
-                    if hasattr(result, 'available_balance'):
-                        balance = float(result.available_balance)
-                    elif hasattr(result, 'available_cash_amount'):
-                        balance = float(result.available_cash_amount)
-                    elif hasattr(result, 'cash_balance'):
-                        balance = float(result.cash_balance)
-                
-                # Currency is typically CNY for Volcengine
-                currency = 'CNY'
-                
-                # Calculate spent amount from token packages
-                spent = self._calculate_spent_amount()
-                
-                return CostInfo(
-                    platform=self.get_platform_name(),
-                    balance=balance,
-                    currency=currency,
-                    spent=spent,
-                    spent_currency=currency,
-                    raw_data=resp.__dict__ if hasattr(resp, '__dict__') else str(resp)
-                )
-                
+                                
+                if resp:
+                    # Extract balance and calculate spent from billing data
+                    balance = self._extract_balance(resp)
+                    spent = self._calculate_spent_amount(resp)
+                    
+                                        
+                    return CostInfo(
+                        platform=self.get_platform_name(),
+                        balance=balance or 0.0,
+                        currency='CNY',
+                        spent=spent,
+                        spent_currency='CNY',
+                        raw_data=resp
+                    )
+                else:
+                    raise ValueError("No response from Volcengine API")
+                    
             except ImportError as e:
-                print(f"Warning: Volcengine SDK import error: {e}")
-                return self._get_balance_with_cookie()
+                return self._get_balance_with_cookies()
             except ApiException as e:
-                print(f"Warning: Volcengine API error: {e}")
-                return self._get_balance_with_cookie()
+                return self._get_balance_with_cookies()
                 
-        except ImportError:
-            # SDK not available, fallback to cookie authentication
-            print("Warning: Volcengine SDK not found, falling back to cookie authentication")
-            return self._get_balance_with_cookie()
         except Exception as e:
-            # SDK authentication failed, fallback to cookie authentication
-            print(f"Warning: Volcengine SDK authentication failed: {e}, falling back to cookie authentication")
-            return self._get_balance_with_cookie()
+            return self._get_balance_with_cookies()
     
-    def _get_balance_with_cookie(self) -> CostInfo:
-        """Get balance using cookie authentication (fallback)"""
+    def _get_balance_with_cookies(self) -> CostInfo:
+        """Get balance using browser cookies"""
         if not self.config.api_url:
-            raise ValueError("No API URL configured for Volcengine cookie authentication")
+            raise ValueError("No API URL configured for Volcengine")
         
         # Get cookies
         cookies = {}
@@ -139,15 +128,7 @@ class VolcengineHandler(BasePlatformHandler):
         
         # Check if we have necessary cookies for authentication
         if not cookies:
-            print(f"Warning: No authentication cookies found for {self.config.cookie_domain}. Please ensure you are logged in to Volcengine Console in {self.browser} browser.")
-            return CostInfo(
-                platform=self.get_platform_name(),
-                balance=0.0,
-                currency='CNY',
-                spent=0.0,
-                spent_currency='CNY',
-                raw_data={'error': 'No authentication cookies found'}
-            )
+            raise ValueError("No authentication cookies found")
         
         try:
             # Prepare headers with CSRF token
@@ -160,8 +141,6 @@ class VolcengineHandler(BasePlatformHandler):
                 csrf_token = self._get_csrf_token_from_page()
                 if csrf_token:
                     headers['X-CSRF-Token'] = csrf_token
-                else:
-                    print(f"Warning: No CSRF token found for Volcengine. The request might fail due to missing CSRF protection.")
             
             # Make API request
             response = self._make_request(
@@ -175,31 +154,20 @@ class VolcengineHandler(BasePlatformHandler):
             if not response:
                 raise ValueError("No response from Volcengine API")
             
-            # Extract balance and currency from response
+            # Extract balance and calculate spent
             balance = self._extract_balance(response)
-            currency = self._extract_currency(response)
-            
-            # Calculate spent amount from token packages
-            spent = self._calculate_spent_amount()
+            spent = self._calculate_spent_amount(response)
             
             return CostInfo(
                 platform=self.get_platform_name(),
                 balance=balance or 0.0,
-                currency=currency or 'CNY',
+                currency='CNY',
                 spent=spent,
-                spent_currency=currency or 'CNY',
+                spent_currency='CNY',
                 raw_data=response
             )
         except Exception as e:
-            print(f"Warning: Volcengine cookie authentication failed: {e}")
-            return CostInfo(
-                platform=self.get_platform_name(),
-                balance=0.0,
-                currency='CNY',
-                spent=0.0,
-                spent_currency='CNY',
-                raw_data={'error': str(e)}
-            )
+            raise ValueError(f"Volcengine cookie authentication failed: {e}")
     
     def get_platform_name(self) -> str:
         """Get platform display name"""
@@ -208,13 +176,47 @@ class VolcengineHandler(BasePlatformHandler):
     def _extract_balance(self, response: Dict[str, Any]) -> Optional[float]:
         """Extract balance from Volcengine API response"""
         try:
-            # Extract from Result.InvoiceAccount.AvailableAmount
-            if 'Result' in response and 'InvoiceAccount' in response['Result']:
-                invoice_account = response['Result']['InvoiceAccount']
-                balance = invoice_account.get('AvailableAmount') or invoice_account.get('TotalAmount')
-                if balance:
-                    return float(balance)
-        except (ValueError, TypeError, KeyError):
+            # Handle SDK response object - check for balance_acct_result first (legacy)
+            if hasattr(response, 'balance_acct_result'):
+                result = response.balance_acct_result
+                
+                if hasattr(result, 'available_amount'):
+                    return float(result.available_amount)
+                elif hasattr(result, 'AvailableAmount'):
+                    return float(result.AvailableAmount)
+                elif hasattr(result, 'total_amount'):
+                    return float(result.total_amount)
+                elif hasattr(result, 'TotalAmount'):
+                    return float(result.TotalAmount)
+            
+            # Try direct attributes on response - check for new API structure
+            balance_attributes = [
+                'available_balance', 'AvailableBalance',
+                'cash_balance', 'CashBalance',
+                'available_amount', 'AvailableAmount',
+                'total_amount', 'TotalAmount',
+                'balance', 'Balance'
+            ]
+            
+            for attr in balance_attributes:
+                if hasattr(response, attr):
+                    value = getattr(response, attr)
+                    if value is not None and value != '-':
+                        try:
+                            return float(value)
+                        except (ValueError, TypeError):
+                            continue
+            
+            # Handle dict response (legacy format)
+            if isinstance(response, dict):
+                # Extract from Result.InvoiceAccount.AvailableAmount
+                if 'Result' in response and 'InvoiceAccount' in response['Result']:
+                    invoice_account = response['Result']['InvoiceAccount']
+                    balance = invoice_account.get('AvailableAmount') or invoice_account.get('TotalAmount')
+                    if balance:
+                        return float(balance)
+            
+        except (ValueError, TypeError, KeyError) as e:
             pass
         
         return None
@@ -247,56 +249,48 @@ class VolcengineHandler(BasePlatformHandler):
                 import volcenginesdkcore
                 import volcenginesdkbilling
                 from volcenginesdkbilling.models import ListResourcePackagesRequest
-                
+
                 # Configure SDK
                 configuration = volcenginesdkcore.Configuration()
                 configuration.ak = access_key
                 configuration.sk = secret_key
                 configuration.region = self.config.region or "cn-beijing"
                 volcenginesdkcore.Configuration.set_default(configuration)
-                
-                # Use ListResourcePackages API for actual model-level token data
+
+                # Use billing API to get actual resource package data
                 api_instance = volcenginesdkbilling.BILLINGApi()
-                list_resource_packages_request = volcenginesdkbilling.ListResourcePackagesRequest(
-                    max_results="20",
-                    resource_type="Package",
-                )
+
+                # Create request for resource packages
+                list_packages_request = ListResourcePackagesRequest()
+
                 # Call ListResourcePackages API
-                resp = api_instance.list_resource_packages(list_resource_packages_request)
-                
-                # Parse response from official SDK
-                if not resp:
-                    raise ValueError("No response from Volcengine SDK")
-                
-                # Extract actual model-level token data from response
-                model_tokens = self._extract_model_tokens_from_packages(resp)
-                
-                return PlatformTokenInfo(
-                    platform=self.get_platform_name(),
-                    models=model_tokens,
-                    raw_data=resp.__dict__ if hasattr(resp, '__dict__') else str(resp)
-                )
-                
-            except ImportError as e:
-                print(f"Warning: Volcengine SDK import error: {e}")
-                return self._get_model_tokens_with_cookie()
+                resp = api_instance.list_resource_packages(list_packages_request)
+
+                if resp:
+                    # Extract model-level token data
+                    model_tokens = self._extract_model_tokens_from_packages(resp)
+                    
+                    return PlatformTokenInfo(
+                        platform=self.get_platform_name(),
+                        models=model_tokens,
+                        raw_data=resp
+                    )
+                else:
+                    raise ValueError("No response from Volcengine API")
+
+            except ImportError:
+                return self._get_model_tokens_with_cookies()
             except ApiException as e:
-                print(f"Warning: Volcengine API error: {e}")
-                return self._get_model_tokens_with_cookie()
-                
-        except ImportError:
-            # SDK not available, fallback to cookie authentication
-            print("Warning: Volcengine SDK not found, falling back to cookie authentication")
-            return self._get_model_tokens_with_cookie()
+                return self._get_model_tokens_with_cookies()
+
         except Exception as e:
-            # SDK authentication failed, fallback to cookie authentication
-            print(f"Warning: Volcengine SDK authentication failed: {e}, falling back to cookie authentication")
-            return self._get_model_tokens_with_cookie()
+            # Fallback to cookie authentication if SDK fails
+            return self._get_model_tokens_with_cookies()
     
-    def _get_model_tokens_with_cookie(self) -> PlatformTokenInfo:
-        """Get model-level tokens using cookie authentication (fallback)"""
+    def _get_model_tokens_with_cookies(self) -> PlatformTokenInfo:
+        """Get model-level tokens using browser cookies"""
         if not self.config.api_url:
-            raise ValueError("No API URL configured for Volcengine cookie authentication")
+            raise ValueError("No API URL configured for Volcengine")
         
         # Get cookies
         cookies = {}
@@ -397,14 +391,14 @@ class VolcengineHandler(BasePlatformHandler):
                 elif hasattr(package, 'AvailableAmount'):
                     available_amount = float(package.AvailableAmount)
                 elif isinstance(package, dict):
-                    available_amount = float(package.get('available_amount', 0) or package.get('AvailableAmount', 0))
+                    available_amount = float(package.get('available_amount') or package.get('AvailableAmount') or 0)
                 
                 if hasattr(package, 'total_amount'):
                     total_amount = float(package.total_amount)
                 elif hasattr(package, 'TotalAmount'):
                     total_amount = float(package.TotalAmount)
                 elif isinstance(package, dict):
-                    total_amount = float(package.get('total_amount', 0) or package.get('TotalAmount', 0))
+                    total_amount = float(package.get('total_amount') or package.get('TotalAmount') or 0)
                 
                 if hasattr(package, 'unit'):
                     unit = package.unit
@@ -420,67 +414,146 @@ class VolcengineHandler(BasePlatformHandler):
                 elif isinstance(package, dict):
                     status = package.get('status') or package.get('Status')
                 
-                # Only process token-based packages that are effective and have remaining tokens
-                if unit != "token" or available_amount <= 0:
-                    continue
-                
-                # Skip used-up packages
-                if status and str(status).upper() == "USEDUP":
-                    continue
-                
-                # Extract package/model name from ConfigurationName using regex
-                import re
-                package_name = config_name or "Unknown Model"
-                model_name = config_name or "Unknown Model"
+                # Only add packages with configuration names (model packages)
                 if config_name:
-                    # Extract English prefix from ConfigurationName
-                    match = re.search(r'^([A-Za-z0-9\-]+(?:\.[A-Za-z0-9\-]+)*)', config_name)
-                    if match:
-                        model_name = match.group(1)
-                
-                
-                # Calculate used tokens
-                used_tokens = max(0, total_amount - available_amount)
-                
-                models.append(ModelTokenInfo(
-                    package=package_name,
-                    model=model_name.lower(),
-                    remaining_tokens=available_amount,
-                    used_tokens=used_tokens,
-                    total_tokens=total_amount
-                ))
+                    models.append(ModelTokenInfo(
+                        model_name=config_name,
+                        available_tokens=available_amount,
+                        total_tokens=total_amount,
+                        unit=unit or 'tokens',
+                        status=status or 'active'
+                    ))
         
         except Exception as e:
             print(f"Warning: Error extracting model tokens from packages: {e}")
-            # Fallback to estimation if API data extraction fails
-            return self._extract_model_tokens(response)
         
         return models
     
-    def _calculate_spent_amount(self) -> float:
-        """Calculate spent amount from token packages"""
+    def _calculate_spent_amount(self, response: Dict[str, Any]) -> float:
+        """Calculate spent amount from Volcengine billing API"""
         try:
-            # Get token information to calculate spent amount
-            token_info = self.get_model_tokens()
-            total_spent = 0.0
-            
-            for model in token_info.models:
-                # Calculate spent tokens for each package
-                spent_tokens = model.used_tokens
-                
-                # Convert tokens to monetary value (rough estimation)
-                # This is a simplified calculation - in practice, you'd need actual pricing
-                if model.total_tokens > 0:
-                    # Estimate cost based on token usage (assuming ~$0.002 per 1K tokens as rough estimate)
-                    spent_amount = (spent_tokens / 1000) * 0.002 * 7.2  # Convert to CNY
-                    total_spent += spent_amount
-            
-            return total_spent
+            # Use the billing API to get actual consumption data
+            return self._get_spent_from_billing_api()
         except Exception:
-            # If calculation fails, return 0
+            # Fallback to simple calculation if billing API fails
+            return 0.0
+    
+    def _get_spent_from_billing_api(self) -> float:
+        """Get spent amount from Volcengine billing API using ListBillOverviewByCategory"""
+        try:
+            import os
+            from volcenginesdkcore.rest import ApiException
+            
+            # Get credentials from environment variables
+            access_key = os.getenv('VOLCENGINE_ACCESS_KEY')
+            secret_key = os.getenv('VOLCENGINE_SECRET_KEY')
+            
+            if not access_key or not secret_key:
+                return 0.0
+            
+            try:
+                # Import official SDK
+                import volcenginesdkcore
+                import volcenginesdkbilling
+                
+                # Configure SDK
+                configuration = volcenginesdkcore.Configuration()
+                configuration.ak = access_key
+                configuration.sk = secret_key
+                configuration.region = self.config.region or "cn-beijing"
+                volcenginesdkcore.Configuration.set_default(configuration)
+                
+                # Use billing API to get actual consumption data
+                api_instance = volcenginesdkbilling.BILLINGApi()
+                
+                total_spent = 0.0
+                
+                # Use ListBillOverviewByCategory API as specified
+                try:
+                    from volcenginesdkbilling.models import ListBillOverviewByCategoryRequest
+                    
+                    # Try current month and previous months
+                    current_date = datetime.now()
+                    months_to_try = []
+                    
+                    # Add current month and previous 5 months
+                    for i in range(6):
+                        month_date = current_date - timedelta(days=30 * i)
+                        months_to_try.append(month_date.strftime("%Y-%m"))
+                    
+                    for month in months_to_try:
+                        try:
+                            list_bill_overview_request = ListBillOverviewByCategoryRequest(
+                                bill_period=month
+                            )
+                            
+                            # Call ListBillOverviewByCategory API
+                            resp = api_instance.list_bill_overview_by_category(list_bill_overview_request)
+                            
+                            if resp and hasattr(resp, 'list') and resp.list:
+                                # The response has a nested structure: resp.list[0].list contains actual bill items
+                                overview_items = []
+                                for convert_item in resp.list:
+                                    if hasattr(convert_item, 'list') and convert_item.list:
+                                        # Add actual bill items from the nested list
+                                        for bill_item in convert_item.list:
+                                            overview_items.append(bill_item)
+                                
+                                # Sum up amounts from consumption items, skip total items
+                                for item in overview_items:
+                                    # Only add amounts for "消费" (consumption) items, skip "合计" (total) items
+                                    bill_category = getattr(item, 'bill_category_parent', '')
+                                    
+                                    if bill_category == '合计':
+                                        continue  # Skip total items to avoid double counting
+                                    
+                                    # Try different amount fields based on the actual API response
+                                    amount_fields = [
+                                        'original_bill_amount', 'OriginalBillAmount',
+                                        'paid_amount', 'PaidAmount',
+                                        'pretax_amount', 'PretaxAmount',
+                                        'posttax_amount', 'PosttaxAmount',
+                                        'real_value', 'RealValue',
+                                        'cash_amount', 'CashAmount',
+                                        'amount', 'Amount'
+                                    ]
+                                    
+                                    for field in amount_fields:
+                                        if hasattr(item, field):
+                                            value = getattr(item, field)
+                                            if value and value != '-' and str(value) != '0.00':
+                                                try:
+                                                    amount = float(value)
+                                                    total_spent += amount
+                                                    break
+                                                except (ValueError, TypeError):
+                                                    continue
+                                
+                                # Stop searching if we found spending data
+                                if total_spent > 0:
+                                    break
+                        
+                        except ApiException as e:
+                            # Rate limiting or other API errors, continue to next month
+                            if e.status == 429:  # Too Many Requests
+                                continue
+                            raise
+                            
+                except (ImportError, ApiException) as e:
+                    # Fallback to simple calculation if billing API fails
+                    pass
+                
+                # Return the total spent amount
+                return total_spent
+                
+            except ImportError:
+                return 0.0
+            except ApiException as e:
+                return 0.0
+                
+        except Exception as e:
             return 0.0
     
     def _extract_model_tokens(self, response) -> List[ModelTokenInfo]:
         """Extract model-level token information from Volcengine response using ConfigurationName"""
         return self._extract_model_tokens_from_packages(response)
-    

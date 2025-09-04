@@ -2,7 +2,6 @@
 DeepSeek platform handler
 """
 
-import json
 import os
 from typing import Dict, Any, Optional, List
 from .base import BasePlatformHandler, CostInfo, PlatformTokenInfo, ModelTokenInfo
@@ -25,8 +24,7 @@ class DeepSeekHandler(BasePlatformHandler):
             },
             "params": {},
             "data": {},
-            "enabled": True,
-            "cookie_domain": None
+            "enabled": True
         }
     
     def __init__(self, config: PlatformConfig, browser: str = 'chrome'):
@@ -35,6 +33,10 @@ class DeepSeekHandler(BasePlatformHandler):
     
     def get_balance(self) -> CostInfo:
         """Get cost information from DeepSeek"""
+        return self._get_balance_with_api_key()
+    
+    def _get_balance_with_api_key(self) -> CostInfo:
+        """Get balance using API key authentication"""
         if not self.config.api_url:
             raise ValueError("No API URL configured for DeepSeek")
         
@@ -63,15 +65,15 @@ class DeepSeekHandler(BasePlatformHandler):
         balance = self._extract_balance(response)
         currency = self._extract_currency(response)
         
-        # Calculate spent amount from balance difference
-        spent = self._calculate_spent_amount(response)
+        # DeepSeek doesn't support spent tracking
+        spent = "-"
         
         return CostInfo(
             platform=self.get_platform_name(),
             balance=balance or 0.0,
             currency=currency or 'CNY',
             spent=spent,
-            spent_currency=currency or 'CNY',
+            spent_currency="-",
             raw_data=response
         )
     
@@ -96,22 +98,6 @@ class DeepSeekHandler(BasePlatformHandler):
         if balance_infos:
             return balance_infos[0].get('currency', 'CNY')
         return 'CNY'
-    
-    def _calculate_spent_amount(self, response: Dict[str, Any]) -> float:
-        """Calculate spent amount from balance difference"""
-        try:
-            balance_infos = response.get('balance_infos', [])
-            if balance_infos:
-                total_balance = float(balance_infos[0].get('total_balance', '0'))
-                topped_up_balance = float(balance_infos[0].get('topped_up_balance', '0'))
-                granted_balance = float(balance_infos[0].get('granted_balance', '0'))
-                
-                # Calculate spent as total added - current balance
-                spent = (topped_up_balance + granted_balance) - total_balance
-                return max(0, spent)
-            return 0.0
-        except Exception:
-            return 0.0
     
     def get_model_tokens(self) -> PlatformTokenInfo:
         """Get model-level token information from DeepSeek"""

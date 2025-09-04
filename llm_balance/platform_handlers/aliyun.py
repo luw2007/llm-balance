@@ -12,6 +12,8 @@ try:
     from aliyunsdkcore.client import AcsClient
     from aliyunsdkcore.acs_exception.exceptions import ServerException, ClientException
     from aliyunsdkbssopenapi.request.v20171214.QueryAccountBalanceRequest import QueryAccountBalanceRequest
+    from aliyunsdkbssopenapi.request.v20171214.QueryAccountTransactionsRequest import QueryAccountTransactionsRequest
+    from datetime import datetime, timedelta
     SDK_AVAILABLE = True
 except ImportError:
     SDK_AVAILABLE = False
@@ -97,17 +99,120 @@ class AliyunHandler(BasePlatformHandler):
             raise ValueError(f"Aliyun API error: {e}")
     
     def _calculate_spent_amount(self, response: Dict[str, Any]) -> float:
-        """Calculate spent amount (estimated)"""
+        """Calculate spent amount from actual transaction details"""
         try:
-            # For Aliyun, we'll estimate based on typical usage patterns
-            # This is a simplified calculation
-            balance = self._extract_balance(response)
-            # Estimate spent as a rough percentage (20% of total estimated value)
-            # This is a placeholder - actual implementation would need billing data
-            total_estimated = balance * 1.25  # Assume spent is 20% of total
-            spent = total_estimated - balance
-            return max(0, spent)
-        except Exception:
+            # Use transaction details API to get actual spending
+            return self._get_spent_from_transaction_details()
+        except Exception as e:
+            # Fallback to estimation if transaction API fails
+            try:
+                balance = self._extract_balance(response)
+                total_estimated = balance * 1.25
+                spent = total_estimated - balance
+                return max(0, spent)
+            except Exception:
+                return 0.0
+    
+    def _get_spent_from_transaction_details(self) -> float:
+        """Get actual spent amount from transaction details API"""
+        try:
+            # Create client
+            access_key_id = os.getenv(self.config.env_var or 'ALIYUN_ACCESS_KEY_ID')
+            access_key_secret = os.getenv('ALIYUN_ACCESS_KEY_SECRET')
+            
+            if not access_key_id or not access_key_secret:
+                return 0.0
+            
+            client = AcsClient(access_key_id, access_key_secret, 'cn-hangzhou')
+            
+            # Try to get transaction details for the last 6 months
+            now = datetime.now()
+            total_spent = 0.0
+            processed_transactions = set()  # Track processed transaction numbers to avoid duplicates
+            
+            # Check last 6 months for transactions
+            for i in range(6):
+                # Calculate the target month (i months ago)
+                target_year = now.year
+                target_month = now.month - i
+                
+                # Adjust year if month goes below 1
+                while target_month < 1:
+                    target_month += 12
+                    target_year -= 1
+                
+                # Start date: first day of the target month
+                start_date = datetime(target_year, target_month, 1, 0, 0, 0, 0)
+                
+                # End date: last day of the target month
+                if target_month == 12:
+                    next_month_year = target_year + 1
+                    next_month_month = 1
+                else:
+                    next_month_year = target_year
+                    next_month_month = target_month + 1
+                
+                # Last day of month is day before first day of next month
+                end_date = datetime(next_month_year, next_month_month, 1, 0, 0, 0) - timedelta(seconds=1)
+                try:
+                    # Create transaction details request
+                    request = QueryAccountTransactionsRequest()
+                    request.set_accept_format('json')
+                    
+                    # Set parameters for QueryAccountTransactions
+                    request.set_CreateTimeStart(start_date.strftime('%Y-%m-%d %H:%M:%S'))
+                    request.set_CreateTimeEnd(end_date.strftime('%Y-%m-%d %H:%M:%S'))
+                    request.set_PageNum(1)
+                    request.set_PageSize(100)
+                    # Send request
+                    response = client.do_action_with_exception(request)
+                    response_data = json.loads(response.decode('utf-8'))
+                    # Extract transaction details - use correct path based on actual API response
+                    transactions = []
+                    
+                    # Correct path for QueryAccountTransactions API
+                    data = response_data.get('Data', {})
+                    account_transactions_list = data.get('AccountTransactionsList', {})
+                    transactions = account_transactions_list.get('AccountTransactionsList', [])
+                    
+                    # Handle if transactions is not a list (sometimes API returns single object)
+                    if transactions and not isinstance(transactions, list):
+                        transactions = [transactions]
+                    
+                    if transactions:
+                        # Sum up all expense transactions
+                        month_spent = 0.0
+                        for transaction in transactions:
+                            try:
+                                # Get transaction number for deduplication
+                                transaction_number = transaction.get('TransactionNumber')
+                                
+                                # Skip if already processed
+                                if transaction_number in processed_transactions:
+                                    continue
+                                
+                                # Use TransactionFlow field to identify expenses
+                                transaction_flow = transaction.get('TransactionFlow', '')
+                                amount = float(transaction.get('Amount', 0))
+                                
+                                # Count if it's an expense transaction
+                                if transaction_flow == 'Expense':
+                                    month_spent += amount
+                                    processed_transactions.add(transaction_number)
+                                    
+                            except (ValueError, TypeError):
+                                continue
+                        
+                        total_spent += month_spent
+                    
+                except Exception:
+                    # Continue to next month if current month fails
+                    continue
+            
+            return total_spent
+            
+        except Exception as e:
+            # If transaction API fails, return 0.0 (will fall back to estimation)
             return 0.0
     
     def get_platform_name(self) -> str:

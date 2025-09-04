@@ -311,15 +311,15 @@ platforms:
 
 ### 🇨🇳 Chinese Platforms (7)
 
-| Platform | Authentication | Status | Description | Token Usage |
-|----------|----------------|--------|-------------|-------------|
-| **DeepSeek** | API Key | ✅ | Requires DEEPSEEK_API_KEY | ❌ Not Available |
-| **Moonshot** | API Key | ✅ | Requires MOONSHOT_API_KEY | ❌ Not Available |
-| **Volcengine** | SDK/Cookie | ✅ | Requires VOLCENGINE_ACCESS_KEY + SECRET_KEY or browser login | ✅ Full Support |
-| **Aliyun** | Official SDK | ✅ | Requires ALIYUN_ACCESS_KEY_ID + SECRET_KEY | ❌ Not Available |
-| **Tencent** | SDK | ✅ | Requires TENCENT_API_KEY (SecretId:SecretKey) | ❌ Not Available |
-| **Zhipu** | Cookie | ✅ | Requires login to https://open.bigmodel.cn | ✅ Full Support |
-| **SiliconFlow** | API Key | ✅ | Requires SILICONFLOW_API_KEY | ❌ Not Available |
+| Platform | Authentication | Status | Description | Token Usage | Spent Tracking |
+|----------|----------------|--------|-------------|-------------|---------------|
+| **DeepSeek** | API Key | ✅ | Requires DEEPSEEK_API_KEY | ❌ Not Available | ❌ Not Supported |
+| **Moonshot** | API Key | ✅ | Requires MOONSHOT_API_KEY | ❌ Not Available | ❌ Not Supported |
+| **Volcengine** | SDK/Cookie | ✅ | Requires VOLCENGINE_ACCESS_KEY + SECRET_KEY or browser login | ✅ Full Support | ✅ Full Support |
+| **Aliyun** | Official SDK | ✅ | Requires ALIYUN_ACCESS_KEY_ID + SECRET_KEY | ❌ Not Available | ✅ Full Support |
+| **Tencent** | SDK | ✅ | Requires TENCENT_API_KEY (SecretId:SecretKey) | ❌ Not Available | ✅ Available |
+| **Zhipu** | Cookie | ✅ | Requires login to https://open.bigmodel.cn | ✅ Full Support | ✅ Full Support |
+| **SiliconFlow** | API Key | ✅ | Requires SILICONFLOW_API_KEY | ❌ Not Available | ✅ Full Support |
 
 ### 📊 Platform Status Summary
 
@@ -339,6 +339,23 @@ Some platforms provide token usage monitoring capabilities:
 | **Moonshot** | ❌ Not Available | - |
 | **Aliyun** | ❌ Not Available | - |
 | **Tencent** | ❌ Not Available | - |
+| **SiliconFlow** | ❌ Not Available | - |
+
+### Spent Amount Tracking
+
+Real-time spent amount tracking across supported platforms:
+
+| Platform | Spent Tracking | Data Source | Accuracy |
+|----------|---------------|-------------|----------|
+| **Volcengine** | ✅ Full Support | Official API | High |
+| **Aliyun** | ✅ Full Support | BSS Transaction API | High |
+| **Zhipu AI** | ✅ Full Support | Billing API | High |
+| **Tencent Cloud** | ✅ Available | Billing API | Medium |
+| **SiliconFlow** | ✅ Full Support | Billing API | High |
+| **DeepSeek** | ❌ Not Supported | N/A | N/A |
+| **Moonshot** | ❌ Not Supported | N/A | N/A |
+
+> **Note**: Platforms marked as "Not Supported" for spent tracking will display "-" instead of a numeric value to clearly distinguish between unsupported functionality and zero spending.
 
 ### Authentication Methods
 

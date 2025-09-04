@@ -81,6 +81,7 @@ llm-balance disable tencent
 # API Key platforms
 export DEEPSEEK_API_KEY="your_key"
 export MOONSHOT_API_KEY="your_key"
+export SILICONFLOW_API_KEY="your_key"
 
 # SDK platforms
 export VOLCENGINE_ACCESS_KEY="your_key"
@@ -93,6 +94,21 @@ export TENCENT_API_KEY="your_key"
 export LLM_BALANCE_CONFIG_FILE="/path/to/config.yaml"
 export LLM_BALANCE_RATES='{"USD": 7.5}'
 ```
+
+### Dependencies & SDK Installation
+
+The project requires specific SDK installations for certain platforms:
+```bash
+# Base dependencies (always required)
+pip install -r requirements.txt
+
+# Optional platform-specific SDKs
+pip install aliyun-python-sdk-bssopenapi>=2.0.0  # Aliyun billing
+pip install volcengine-python-sdk==4.0.13        # Volcengine
+pip install tencentcloud-sdk-python>=3.0.0      # Tencent Cloud
+```
+
+Note: Some SDKs are included in requirements.txt, others may need manual installation based on platform requirements.
 
 ## Key Files & Patterns
 
@@ -108,7 +124,24 @@ export LLM_BALANCE_RATES='{"USD": 7.5}'
 Each handler implements:
 - `get_balance()`: Returns `CostInfo` with balance, currency, raw data
 - `get_platform_name()`: Returns display name
+- `get_model_tokens()`: Optional method for token usage monitoring
 - Authentication logic specific to platform type
+
+### Spent Tracking Implementation
+
+Platforms that support spent tracking should implement one of these approaches:
+- **Direct API**: Use platform's billing/spent API (preferred)
+- **Transaction History**: Query transaction records and sum expenses (Aliyun approach)
+- **Invoice/Recharge**: Calculate as "total_recharge - current_balance" (if recharge API available)
+
+For unsupported platforms, return `"-"` as spent value to distinguish from zero spending.
+
+### Data Class Structures
+
+Key data classes in `base.py`:
+- `CostInfo`: Contains balance, spent, currency, and raw API response data
+- `ModelTokenInfo`: Contains token usage data for specific models
+- `PlatformTokenInfo`: Contains model token info for entire platform
 
 ### Output Formats
 
@@ -135,6 +168,10 @@ llm-balance config deepseek
 
 # Diagnose system
 llm-balance diagnose
+
+# Test specific authentication method
+llm-balance config volcengine auth_type sdk
+llm-balance config volcengine auth_type cookie
 ```
 
 ### Browser Configuration
@@ -144,6 +181,9 @@ llm-balance set-browser chrome
 
 # Override for single command
 llm-balance cost --browser=firefox
+
+# Test cookie-based platforms (Zhipu)
+llm-balance cost --platform=zhipu --browser=chrome
 ```
 
 ### Configuration Management
@@ -153,5 +193,54 @@ llm-balance generate_config
 
 # View/edit platform config
 llm-balance config volcengine auth_type sdk
+
+# Enable/disable platforms
+llm-balance enable moonshot
+llm-balance disable tencent
 ```
-- SiliconFlow 不支持package.
+
+### Development Workflow
+```bash
+# Install in development mode
+pip install -e .
+
+# Run specific platform tests
+python -c "from llm_balance.platform_handlers.deepseek import DeepSeekHandler; print(DeepSeekHandler.get_default_config())"
+
+# Test configuration loading
+python -c "from llm_balance.config import ConfigManager; cm = ConfigManager(); print([p.name for p in cm.get_enabled_platforms()])"
+```
+
+## Technical Implementation Details
+
+### Authentication Flow
+
+1. **API Key Authentication**: Direct HTTP requests with Authorization headers
+2. **SDK Authentication**: Use platform-specific SDKs (Aliyun, Volcengine, Tencent)
+3. **Cookie Authentication**: Extract cookies from browser using pycookiecheat (Zhipu)
+
+### Error Handling
+
+- Platform failures don't stop other platforms from being checked
+- Each handler implements its own error handling and returns appropriate error messages
+- Configuration errors are caught and displayed with helpful guidance
+
+### Configuration Architecture
+
+- **Platform Configs**: Defined in `platform_configs.py` with default settings
+- **User Configs**: Stored in `~/.llm_balance/platforms.yaml` for user overrides
+- **Runtime Configs**: Merged configuration with environment variable support
+
+### Output Formatting
+
+- **Table Format**: Clean console output with proper alignment and totals
+- **JSON Format**: Machine-readable with full raw API responses
+- **Markdown Format**: Documentation-friendly with proper formatting
+- **Total Format**: Single-line summary for scripting
+
+### Special Considerations
+
+- **Spent Tracking**: Some platforms don't support spent queries - return "-" instead of 0
+- **Currency Conversion**: All amounts converted through CNY as intermediate currency
+- **Time Zones**: Transaction queries use proper date alignment to avoid duplicates
+- **Browser Dependencies**: Cookie authentication requires browser login and proper cookie extraction

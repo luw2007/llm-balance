@@ -3,6 +3,7 @@ Tencent Cloud platform handler
 """
 
 from typing import Dict, Any, Optional, List
+from datetime import datetime
 from .base import BasePlatformHandler, CostInfo, PlatformTokenInfo, ModelTokenInfo
 from ..config import PlatformConfig
 
@@ -181,14 +182,45 @@ class TencentHandler(BasePlatformHandler):
         return 'CNY'
     
     def _calculate_spent_amount(self, response: Dict[str, Any]) -> float:
-        """Calculate spent amount for Tencent Cloud"""
-        # For now, return a simple estimate based on typical usage
-        # This can be enhanced later with actual spending data from the API
+        """Calculate spent amount for Tencent Cloud using actual billing API"""
         try:
-            response_data = response.get('Response', response)
-            balance = float(response_data.get('Balance', 0)) / 100.0
-            # Simple estimation: spent is 20% of total available balance
-            # This is a placeholder for actual spending calculation
-            return balance * 0.2
+            # Try to get actual spending data from DescribeBillSummary API
+            import os
+            secret_id = os.getenv('TENCENT_SECRET_ID')
+            secret_key = os.getenv('TENCENT_SECRET_KEY')
+            
+            if secret_id and secret_key:
+                try:
+                    from tencentcloud.common import credential
+                    from tencentcloud.billing.v20180709 import billing_client, models
+                    
+                    cred = credential.Credential(secret_id, secret_key)
+                    client = billing_client.BillingClient(cred, "ap-beijing")
+                    
+                    # Get current month's spending
+                    req = models.DescribeBillSummaryRequest()
+                    current_date = datetime.now()
+                    req.Month = current_date.strftime("%Y-%m")
+                    req.GroupType = "SummaryByProduct"  # Required parameter
+                    
+                    resp = client.DescribeBillSummary(req)
+                    import json
+                    summary_response = json.loads(resp.to_json_string())
+                    
+                    # Extract actual spending amount
+                    summary_data = summary_response.get('SummaryDetail', [])
+                    if summary_data:
+                        total_spent = 0.0
+                        for item in summary_data:
+                            spent = float(item.get('RealCost', 0)) / 100.0  # Convert from fen to yuan
+                            total_spent += spent
+                        return total_spent
+                    
+                except Exception:
+                    pass  # Silently fall back if API fails
+            
+            # Fallback: return 0 since we can't get actual spending
+            return 0.0
+            
         except (ValueError, TypeError, KeyError):
             return 0.0

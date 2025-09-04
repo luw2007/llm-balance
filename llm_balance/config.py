@@ -19,7 +19,20 @@ class ConfigManager:
     
     def get_platform(self, name: str) -> Optional[PlatformConfig]:
         """Get platform configuration by name"""
-        return self.platform_config_manager.get_platform_config(name)
+        config_dict = self.platform_config_manager.get_platform_config(name)
+        if config_dict is None:
+            return None
+        
+        # Convert dict to PlatformConfig
+        return PlatformConfig(
+            name=config_dict.get('name', name),
+            display_name=config_dict.get('display_name', name.title()),
+            handler_class=config_dict.get('handler_class', f'{name.title()}Handler'),
+            description=config_dict.get('description', f'{name.title()} platform'),
+            auth_type=config_dict.get('auth_type', 'api_key'),
+            enabled=config_dict.get('enabled', True),
+            **{k: v for k, v in config_dict.items() if k not in ['name', 'display_name', 'handler_class', 'description', 'auth_type', 'enabled']}
+        )
     
     def update_platform(self, name: str, config: Dict[str, Any]):
         """Update platform configuration"""
