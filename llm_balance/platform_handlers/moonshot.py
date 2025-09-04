@@ -67,10 +67,15 @@ class MoonshotHandler(BasePlatformHandler):
         voucher_balance = data.get('voucher_balance', 0.0)
         cash_balance = data.get('cash_balance', 0.0)
         
+        # Calculate spent amount (estimated as total added - current balance)
+        spent = self._calculate_spent_amount(response)
+        
         return CostInfo(
             platform=self.get_platform_name(),
             balance=available_balance,
             currency='CNY',  # Moonshot uses CNY
+            spent=spent,
+            spent_currency='CNY',
             raw_data={
                 'available_balance': available_balance,
                 'voucher_balance': voucher_balance,
@@ -78,6 +83,21 @@ class MoonshotHandler(BasePlatformHandler):
                 'full_response': response
             }
         )
+    
+    def _calculate_spent_amount(self, response: Dict[str, Any]) -> float:
+        """Calculate spent amount (estimated)"""
+        try:
+            data = response.get('data', {})
+            available_balance = data.get('available_balance', 0.0)
+            voucher_balance = data.get('voucher_balance', 0.0)
+            cash_balance = data.get('cash_balance', 0.0)
+            
+            # Estimate spent as total balance - available balance
+            total_balance = voucher_balance + cash_balance
+            spent = total_balance - available_balance
+            return max(0, spent)
+        except Exception:
+            return 0.0
     
     def get_platform_name(self) -> str:
         """Get platform display name"""

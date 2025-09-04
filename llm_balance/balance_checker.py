@@ -31,6 +31,8 @@ class BalanceChecker:
                     'platform': balance_info.platform,
                     'balance': balance_info.balance,
                     'currency': balance_info.currency,
+                    'spent': balance_info.spent,
+                    'spent_currency': balance_info.spent_currency,
                     'raw_data': balance_info.raw_data
                 })
             except Exception as e:
@@ -39,7 +41,7 @@ class BalanceChecker:
         
         return balances
     
-    def check_platform_balance(self, platform_name: str) -> Optional[Dict[str, Any]]:
+    def check_platform_balance(self, platform_name: str) -> Optional[CostInfo]:
         """Check balance for a specific platform"""
         platform_config = self.config_manager.get_platform(platform_name)
         if not platform_config:
@@ -60,13 +62,7 @@ class BalanceChecker:
                 )
             
             handler = self._get_handler(platform_config)
-            balance_info = handler.get_balance()
-            return {
-                'platform': balance_info.platform,
-                'balance': balance_info.balance,
-                'currency': balance_info.currency,
-                'raw_data': balance_info.raw_data
-            }
+            return handler.get_balance()
         except Exception as e:
             print(f"Error checking {platform_name}: {e}")
             return None

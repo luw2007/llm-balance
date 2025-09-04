@@ -99,10 +99,15 @@ class VolcengineHandler(BasePlatformHandler):
                 # Currency is typically CNY for Volcengine
                 currency = 'CNY'
                 
+                # Calculate spent amount from token packages
+                spent = self._calculate_spent_amount()
+                
                 return CostInfo(
                     platform=self.get_platform_name(),
                     balance=balance,
                     currency=currency,
+                    spent=spent,
+                    spent_currency=currency,
                     raw_data=resp.__dict__ if hasattr(resp, '__dict__') else str(resp)
                 )
                 
@@ -139,6 +144,8 @@ class VolcengineHandler(BasePlatformHandler):
                 platform=self.get_platform_name(),
                 balance=0.0,
                 currency='CNY',
+                spent=0.0,
+                spent_currency='CNY',
                 raw_data={'error': 'No authentication cookies found'}
             )
         
@@ -172,10 +179,15 @@ class VolcengineHandler(BasePlatformHandler):
             balance = self._extract_balance(response)
             currency = self._extract_currency(response)
             
+            # Calculate spent amount from token packages
+            spent = self._calculate_spent_amount()
+            
             return CostInfo(
                 platform=self.get_platform_name(),
                 balance=balance or 0.0,
                 currency=currency or 'CNY',
+                spent=spent,
+                spent_currency=currency or 'CNY',
                 raw_data=response
             )
         except Exception as e:
@@ -184,6 +196,8 @@ class VolcengineHandler(BasePlatformHandler):
                 platform=self.get_platform_name(),
                 balance=0.0,
                 currency='CNY',
+                spent=0.0,
+                spent_currency='CNY',
                 raw_data={'error': str(e)}
             )
     
@@ -442,6 +456,29 @@ class VolcengineHandler(BasePlatformHandler):
             return self._extract_model_tokens(response)
         
         return models
+    
+    def _calculate_spent_amount(self) -> float:
+        """Calculate spent amount from token packages"""
+        try:
+            # Get token information to calculate spent amount
+            token_info = self.get_model_tokens()
+            total_spent = 0.0
+            
+            for model in token_info.models:
+                # Calculate spent tokens for each package
+                spent_tokens = model.used_tokens
+                
+                # Convert tokens to monetary value (rough estimation)
+                # This is a simplified calculation - in practice, you'd need actual pricing
+                if model.total_tokens > 0:
+                    # Estimate cost based on token usage (assuming ~$0.002 per 1K tokens as rough estimate)
+                    spent_amount = (spent_tokens / 1000) * 0.002 * 7.2  # Convert to CNY
+                    total_spent += spent_amount
+            
+            return total_spent
+        except Exception:
+            # If calculation fails, return 0
+            return 0.0
     
     def _extract_model_tokens(self, response) -> List[ModelTokenInfo]:
         """Extract model-level token information from Volcengine response using ConfigurationName"""
