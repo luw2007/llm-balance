@@ -2,6 +2,7 @@
 Zhipu AI (智谱AI) platform handler
 """
 
+import json
 from typing import Dict, Any, Optional, List
 from .base import BasePlatformHandler, CostInfo, PlatformTokenInfo, ModelTokenInfo
 from ..config import PlatformConfig
@@ -72,6 +73,7 @@ class ZhipuHandler(BasePlatformHandler):
         if not response:
             raise ValueError("No response from Zhipu AI API")
         
+          
         # Extract balance and currency from response
         balance = self._extract_balance(response)
         currency = self._extract_currency(response)
@@ -306,11 +308,71 @@ class ZhipuHandler(BasePlatformHandler):
         return None
     
     def _calculate_spent_amount(self, response: Dict[str, Any]) -> float:
-        """Calculate spent amount from API response"""
-        # Zhipu API does not provide direct spent amount information
-        # Return 0.0 to indicate no spent data available
-        # This is more accurate than estimating based on tokens
-        return 0.0
+        """Calculate spent amount from Zhipu billing API"""
+        try:
+            # Use the billing API to get spent amount
+            billing_api_url = "https://www.bigmodel.cn/api/finance/monthlyBill/aggregatedMonthlyBills"
+            
+            # Calculate date range for last 6 months
+            from datetime import datetime, date
+            today = date.today()
+            end_month = today.strftime("%Y-%m")
+            
+            # Calculate start month (6 months ago)
+            start_year = today.year
+            start_month = today.month - 5
+            if start_month <= 0:
+                start_year -= 1
+                start_month += 12
+            start_month_str = f"{start_year}-{start_month:02d}"
+            
+            params = {
+                'billingMonthStart': start_month_str,
+                'billingMonthEnd': end_month,
+                'pageNum': 1,
+                'pageSize': 10
+            }
+            
+            # Prepare authentication
+            headers = self.config.headers.copy()
+            cookies = {}
+            if self.config.cookie_domain:
+                cookies = self._get_cookies(self.config.cookie_domain)
+            
+            if cookies:
+                auth_cookie = None
+                for cookie_name in ['bigmodel_token_production', 'token', 'session_token', 'auth_token']:
+                    if cookie_name in cookies:
+                        auth_cookie = cookies[cookie_name]
+                        break
+                if auth_cookie:
+                    headers['authorization'] = auth_cookie
+            
+            # Make billing API request
+            billing_response = self._make_request(
+                url=billing_api_url,
+                method='GET',
+                headers=headers,
+                params=params
+            )
+            
+            if billing_response and billing_response.get('code') == 200:
+                rows = billing_response.get('rows', [])
+                total_spent = 0.0
+                
+                # Sum up paid amounts from all billing periods
+                for row in rows:
+                    paid_amount = row.get('paidAmount', 0)
+                    if paid_amount:
+                        total_spent += float(paid_amount)
+                
+                return total_spent
+            
+            return 0.0
+            
+        except Exception as e:
+            # If billing API fails, return 0.0
+            return 0.0
     
     def _extract_currency(self, response: Dict[str, Any]) -> Optional[str]:
         """Extract currency from Zhipu AI API response"""
