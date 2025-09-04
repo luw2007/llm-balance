@@ -12,6 +12,7 @@ A Python CLI tool for checking balance and usage across multiple LLM platforms. 
 - ⚙️ **Flexible Configuration**: YAML configuration file with dynamic enable/disable
 - 🔧 **Easy to Extend**: Modular design for easy platform addition
 - 💰 **Real-time Monitoring**: Unified balance and usage query interface
+- 💸 **Spent Amount Tracking**: Display both current balance and spent amount across all platforms
 - 🛡️ **Error Tolerance**: Single platform failure doesn't affect others
 - 🏢 **Enterprise Ready**: Official SDK support for automated deployment
 
@@ -62,9 +63,9 @@ export TENCENT_API_KEY="your_tencent_api_key"
 
 ### Basic Commands
 
-#### Check Balance
+#### Check Balance & Spent Amount
 ```bash
-# Check all platform balance
+# Check all platform balance and spent amount
 llm-balance cost
 
 # Check specific platform
@@ -83,7 +84,7 @@ llm-balance set-browser chrome
 # Different output formats
 llm-balance cost --format=json      # Machine-readable format
 llm-balance cost --format=markdown  # Document-friendly format
-llm-balance cost --format=table     # Console table format
+llm-balance cost --format=table     # Console table format (default)
 llm-balance cost --format=total     # Show total only
 
 # Specify currency
@@ -91,6 +92,8 @@ llm-balance cost --currency=USD     # Show total in USD
 llm-balance cost --currency=EUR     # Show total in EUR
 llm-balance cost --currency=CNY     # Show total in CNY (default)
 ```
+
+> 💡 **New Feature**: The cost command now displays both current balance and spent amount for all platforms, providing a complete financial overview of your LLM usage.
 
 #### Check Token Usage
 ```bash
