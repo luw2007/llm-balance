@@ -63,10 +63,15 @@ class DeepSeekHandler(BasePlatformHandler):
         balance = self._extract_balance(response)
         currency = self._extract_currency(response)
         
+        # Calculate spent amount from balance difference
+        spent = self._calculate_spent_amount(response)
+        
         return CostInfo(
             platform=self.get_platform_name(),
             balance=balance or 0.0,
             currency=currency or 'CNY',
+            spent=spent,
+            spent_currency=currency or 'CNY',
             raw_data=response
         )
     
@@ -91,6 +96,22 @@ class DeepSeekHandler(BasePlatformHandler):
         if balance_infos:
             return balance_infos[0].get('currency', 'CNY')
         return 'CNY'
+    
+    def _calculate_spent_amount(self, response: Dict[str, Any]) -> float:
+        """Calculate spent amount from balance difference"""
+        try:
+            balance_infos = response.get('balance_infos', [])
+            if balance_infos:
+                total_balance = float(balance_infos[0].get('total_balance', '0'))
+                topped_up_balance = float(balance_infos[0].get('topped_up_balance', '0'))
+                granted_balance = float(balance_infos[0].get('granted_balance', '0'))
+                
+                # Calculate spent as total added - current balance
+                spent = (topped_up_balance + granted_balance) - total_balance
+                return max(0, spent)
+            return 0.0
+        except Exception:
+            return 0.0
     
     def get_model_tokens(self) -> PlatformTokenInfo:
         """Get model-level token information from DeepSeek"""

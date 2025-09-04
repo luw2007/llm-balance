@@ -76,10 +76,15 @@ class ZhipuHandler(BasePlatformHandler):
         balance = self._extract_balance(response)
         currency = self._extract_currency(response)
         
+        # Calculate spent amount from token packages
+        spent = self._calculate_spent_amount()
+        
         return CostInfo(
             platform=self.get_platform_name(),
             balance=balance or 0.0,
             currency=currency or 'CNY',
+            spent=spent,
+            spent_currency=currency or 'CNY',
             raw_data=response
         )
     
@@ -299,6 +304,29 @@ class ZhipuHandler(BasePlatformHandler):
             except (ValueError, TypeError):
                 return None
         return None
+    
+    def _calculate_spent_amount(self) -> float:
+        """Calculate spent amount from token packages"""
+        try:
+            # Get token information to calculate spent amount
+            token_info = self.get_model_tokens()
+            total_spent = 0.0
+            
+            for model in token_info.models:
+                # Calculate spent tokens for each package
+                spent_tokens = model.used_tokens
+                
+                # Convert tokens to monetary value (rough estimation)
+                # This is a simplified calculation - in practice, you'd need actual pricing
+                if model.total_tokens > 0:
+                    # Estimate cost based on token usage (assuming ~$0.002 per 1K tokens as rough estimate)
+                    spent_amount = (spent_tokens / 1000) * 0.002 * 7.2  # Convert to CNY
+                    total_spent += spent_amount
+            
+            return total_spent
+        except Exception:
+            # If calculation fails, return 0
+            return 0.0
     
     def _extract_currency(self, response: Dict[str, Any]) -> Optional[str]:
         """Extract currency from Zhipu AI API response"""

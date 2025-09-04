@@ -162,19 +162,6 @@ class ConfigManager:
             print(f"Error getting config for {platform_name}: {e}")
             return None
     
-    def load_user_config(self):
-        """Load user configuration from file"""
-        try:
-            with open(self.config_file, 'r', encoding='utf-8') as f:
-                config = yaml.safe_load(f) or {}
-                self.user_config = config.get('platforms', {})
-                self.global_config['browser'] = config.get('browser', 'chrome')
-        except FileNotFoundError:
-            self.user_config = {}
-        except Exception as e:
-            print(f"Error loading user config: {e}")
-            self.user_config = {}
-    
     def save_config(self):
         """Save configuration to file"""
         config = {

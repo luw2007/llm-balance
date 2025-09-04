@@ -12,6 +12,8 @@ class CostInfo:
     balance: float
     currency: str
     raw_data: Dict[str, Any]
+    spent: float = 0.0
+    spent_currency: str = None
 
 @dataclass
 class ModelTokenInfo:
