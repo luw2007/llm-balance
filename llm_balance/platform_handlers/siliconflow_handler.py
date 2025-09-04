@@ -2,7 +2,6 @@
 SiliconFlow (硅基流动) platform handler
 """
 
-import json
 import os
 from typing import Dict, Any, Optional, List
 from .base import BasePlatformHandler, CostInfo, PlatformTokenInfo, ModelTokenInfo
@@ -59,6 +58,7 @@ class SiliconFlowHandler(BasePlatformHandler):
         if not response:
             raise ValueError("No response from SiliconFlow API")
         
+              
         # Extract balance and currency from response
         balance = self._extract_balance(response)
         currency = self._extract_currency(response)
@@ -101,13 +101,8 @@ class SiliconFlowHandler(BasePlatformHandler):
     
     def _calculate_spent_amount(self, response: Dict[str, Any]) -> float:
         """Calculate spent amount for SiliconFlow"""
-        # For now, return a simple estimate based on typical usage
-        # This can be enhanced later with actual spending data from the API
-        try:
-            data = response.get('data', {})
-            balance = float(data.get('totalBalance', 0))
-            # Simple estimation: spent is 15% of current balance
-            # This is a placeholder for actual spending calculation
-            return balance * 0.15
-        except (ValueError, TypeError, KeyError):
-            return 0.0
+        # SiliconFlow API does not provide spending information
+        # The user info API only returns balance data, no billing/transaction records
+        # Return 0.0 to indicate no spent data available
+        # This is more accurate than estimating based on balance percentage
+        return 0.0
