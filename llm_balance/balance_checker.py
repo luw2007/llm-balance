@@ -84,4 +84,16 @@ class BalanceChecker:
     def format_balances(self, balances: List[Dict[str, Any]], format_type: str = 'table', target_currency: str = 'CNY') -> str:
         """Format balances in specified format"""
         return format_output(balances, format_type, target_currency)
+    
+    def format_balance(self, balance: CostInfo, format_type: str = 'table', target_currency: str = 'CNY') -> str:
+        """Format a single balance in specified format"""
+        balance_dict = {
+            'platform': balance.platform,
+            'balance': balance.balance,
+            'currency': balance.currency,
+            'spent': balance.spent,
+            'spent_currency': balance.spent_currency,
+            'raw_data': balance.raw_data
+        }
+        return format_output([balance_dict], format_type, target_currency)
 

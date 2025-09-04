@@ -76,8 +76,8 @@ class ZhipuHandler(BasePlatformHandler):
         balance = self._extract_balance(response)
         currency = self._extract_currency(response)
         
-        # Calculate spent amount from token packages
-        spent = self._calculate_spent_amount()
+        # Calculate spent amount from API response
+        spent = self._calculate_spent_amount(response)
         
         return CostInfo(
             platform=self.get_platform_name(),
@@ -305,28 +305,12 @@ class ZhipuHandler(BasePlatformHandler):
                 return None
         return None
     
-    def _calculate_spent_amount(self) -> float:
-        """Calculate spent amount from token packages"""
-        try:
-            # Get token information to calculate spent amount
-            token_info = self.get_model_tokens()
-            total_spent = 0.0
-            
-            for model in token_info.models:
-                # Calculate spent tokens for each package
-                spent_tokens = model.used_tokens
-                
-                # Convert tokens to monetary value (rough estimation)
-                # This is a simplified calculation - in practice, you'd need actual pricing
-                if model.total_tokens > 0:
-                    # Estimate cost based on token usage (assuming ~$0.002 per 1K tokens as rough estimate)
-                    spent_amount = (spent_tokens / 1000) * 0.002 * 7.2  # Convert to CNY
-                    total_spent += spent_amount
-            
-            return total_spent
-        except Exception:
-            # If calculation fails, return 0
-            return 0.0
+    def _calculate_spent_amount(self, response: Dict[str, Any]) -> float:
+        """Calculate spent amount from API response"""
+        # Zhipu API does not provide direct spent amount information
+        # Return 0.0 to indicate no spent data available
+        # This is more accurate than estimating based on tokens
+        return 0.0
     
     def _extract_currency(self, response: Dict[str, Any]) -> Optional[str]:
         """Extract currency from Zhipu AI API response"""

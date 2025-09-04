@@ -49,19 +49,35 @@ class LLMBalanceCLI:
             if not platforms:
                 return "No valid platforms specified"
                 
-            balances = []
-            
-            for p in platforms:
-                balance = checker.check_platform_balance(p)
+            if len(platforms) == 1:
+                # Single platform - use format_balance
+                balance = checker.check_platform_balance(platforms[0])
                 if balance:
-                    balances.append(balance)
+                    return checker.format_balance(balance, format, currency)
                 else:
-                    return f"Platform '{p}' not found or could not retrieve balance"
+                    return f"Platform '{platforms[0]}' not found or could not retrieve balance"
+            else:
+                # Multiple platforms - convert to dict list
+                balances = []
+                for p in platforms:
+                    balance = checker.check_platform_balance(p)
+                    if balance:
+                        balances.append({
+                            'platform': balance.platform,
+                            'balance': balance.balance,
+                            'currency': balance.currency,
+                            'spent': balance.spent,
+                            'spent_currency': balance.spent_currency,
+                            'raw_data': balance.raw_data
+                        })
+                    else:
+                        return f"Platform '{p}' not found or could not retrieve balance"
+                
+                return checker.format_balances(balances, format, currency)
         else:
             # Check all platforms
             balances = checker.check_all_balances()
-        
-        return checker.format_balances(balances, format, currency)
+            return checker.format_balances(balances, format, currency)
     
     def package(self, platform: Optional[str] = None, 
                format: str = 'table', 
