@@ -1,20 +1,17 @@
 # LLM Balance Checker
 
-A Python CLI tool for checking balance and usage across multiple LLM platforms. Supports multiple authentication methods, multi-currency conversion, global browser configuration, and provides real-time balance monitoring with flexible output formats.
+**A unified CLI tool for monitoring costs and usage across multiple LLM platforms**
 
-## Features
+## Key Features
 
-- 🔑 **Multiple Authentication**: API Key, browser cookie, official SDK, and proxy service authentication
-- 🌐 **Multi-Platform Support**: Integrated with 7 major LLM platforms (production-ready)
-- 📊 **Multiple Output Formats**: JSON, Markdown, table, total-only
-- 💱 **Multi-Currency Support**: Support for CNY, USD, EUR and more
-- 🌍 **Global Browser Configuration**: Single browser setting for all cookie-based platforms
-- ⚙️ **Flexible Configuration**: YAML configuration file with dynamic enable/disable
-- 🔧 **Easy to Extend**: Modular design for easy platform addition
-- 💰 **Real-time Monitoring**: Unified balance and usage query interface
-- 💸 **Spent Amount Tracking**: Display both current balance and spent amount across all platforms
-- 🛡️ **Error Tolerance**: Single platform failure doesn't affect others
-- 🏢 **Enterprise Ready**: Official SDK support for automated deployment
+- **🔑 Multiple Authentication**: API Key, browser cookie, official SDK support
+- **🌐 7 Platforms Supported**: DeepSeek, Moonshot, Volcengine, Aliyun, Tencent, Zhipu, SiliconFlow
+- **💰 Real-time Balance & Spent**: Track both current balance and actual spending
+- **📊 Flexible Output**: Table, JSON, Markdown, and total-only formats
+- **💱 Multi-Currency**: Automatic conversion between CNY, USD, EUR, and more
+- **🎯 Token Monitoring**: Detailed token usage for supported platforms
+- **🛡️ Fault Tolerant**: Single platform failures won't break the entire tool
+- **⚙️ Easy Configuration**: Simple setup with environment variables
 
 ## Quick Start
 
@@ -23,7 +20,7 @@ A Python CLI tool for checking balance and usage across multiple LLM platforms. 
 ```bash
 # Clone the repository
 git clone <repository-url>
-cd llm-cost-checker
+cd llm_balance
 
 # Install dependencies (includes Volcengine SDK)
 pip install -r requirements.txt
@@ -36,98 +33,144 @@ llm-balance --help
 llm-balance rates
 ```
 
-### Environment Variables
+### Platform Setup
 
-Configure environment variables based on the platforms you use:
+Choose the platforms you want to use and configure their authentication:
+
+#### API Key Platforms (Quick Setup)
+```bash
+# DeepSeek (API Key)
+export DEEPSEEK_API_KEY="sk-your-deepseek-api-key"
+
+# Moonshot (API Key)
+export MOONSHOT_API_KEY="sk-your-moonshot-api-key"
+
+# SiliconFlow (API Key)
+export SILICONFLOW_API_KEY="your-siliconflow-api-key"
+```
+
+#### SDK Platforms (Enterprise Setup)
+```bash
+# Volcengine (Official SDK)
+export VOLCENGINE_ACCESS_KEY="your-volcengine-access-key"
+export VOLCENGINE_SECRET_KEY="your-volcengine-secret-key"
+
+# Aliyun (Official SDK)
+export ALIYUN_ACCESS_KEY_ID="your-aliyun-access-key-id"
+export ALIYUN_ACCESS_KEY_SECRET="your-aliyun-access-key-secret"
+
+# Tencent Cloud (SDK)
+export TENCENT_API_KEY="your-tencent-secret-id:your-tencent-secret-key"
+```
+
+#### Browser-based Platforms
+```bash
+# Zhipu AI (Requires browser login)
+# 1. Login to https://open.bigmodel.cn
+# 2. Set global browser for cookie extraction
+llm-balance set-browser chrome
+# Or override per command: llm-balance cost --browser=chrome
+```
+
+### First Use
 
 ```bash
-# API Key authentication platforms
-export DEEPSEEK_API_KEY="your_deepseek_api_key"
-export OPENAI_ADMIN_KEY="your_openai_admin_key"
-export MOONSHOT_API_KEY="your_moonshot_api_key"
+# Test a single platform (choose one you configured)
+llm-balance cost --platform=deepseek
 
-# Official SDK authentication platforms
-export VOLCENGINE_ACCESS_KEY="your_volcengine_access_key"
-export VOLCENGINE_SECRET_KEY="your_volcengine_secret_key"
-export ALIYUN_ACCESS_KEY_ID="your_aliyun_access_key_id"
-export ALIYUN_ACCESS_KEY_SECRET="your_aliyun_access_key_secret"
+# Check all configured platforms
+llm-balance cost
 
-# Chinese platforms (API Key authentication)
-export TENCENT_API_KEY="your_tencent_api_key"
-
-# Cookie authentication platforms (require browser login)
-# Zhipu requires login to https://open.bigmodel.cn
+# View results in different formats
+llm-balance cost --format=table    # Clean console output
+llm-balance cost --format=json     # Machine-readable
+llm-balance cost --format=total    # Just the totals
 ```
+
+### Quick Troubleshooting
+
+If you encounter issues, try these steps:
+
+```bash
+# Check if environment variables are set
+echo $DEEPSEEK_API_KEY
+echo $VOLCENGINE_ACCESS_KEY
+
+# Test individual platform with debug output
+llm-balance cost --platform=deepseek --format=json
+
+# Verify configuration
+llm-balance list
+
+# Check browser setting for cookie-based platforms
+llm-balance set-browser chrome
+
+# Test network connectivity
+curl -I https://api.deepseek.com
+```
+
+**Common Issues:**
+- **API Key not found**: Make sure environment variables are set correctly
+- **Browser authentication failed**: Ensure you're logged into the platform website
+- **Permission denied**: Check API key permissions and account status
+- **Network timeout**: Verify internet connection and platform API status
 
 ## Usage
 
-### Basic Commands
+### Essential Commands
 
-#### Check Balance & Spent Amount
+#### Balance & Spent Monitoring
 ```bash
-# Check all platform balance and spent amount
+# Check all configured platforms
 llm-balance cost
 
 # Check specific platform
-llm-balance cost --platform=openai
+llm-balance cost --platform=deepseek
 
-# Check multiple platforms (comma-separated)
+# Multiple platforms (comma-separated)
 llm-balance cost --platform=volcengine,aliyun
-llm-balance cost --platform="deepseek, moonshot, tencent"
 
-# Specify browser (for cookie authentication)
-llm-balance cost --browser=chrome
+# Browser override for cookie-based platforms
+llm-balance cost --platform=zhipu --browser=chrome
 
-# Set global browser for all cookie-based platforms
-llm-balance set-browser chrome
+# Output formats
+llm-balance cost --format=table     # Clean console view (default)
+llm-balance cost --format=json      # Machine-readable
+llm-balance cost --format=total     # Just the totals
 
-# Different output formats
-llm-balance cost --format=json      # Machine-readable format
-llm-balance cost --format=markdown  # Document-friendly format
-llm-balance cost --format=table     # Console table format (default)
-llm-balance cost --format=total     # Show total only
-
-# Specify currency
-llm-balance cost --currency=USD     # Show total in USD
-llm-balance cost --currency=EUR     # Show total in EUR
-llm-balance cost --currency=CNY     # Show total in CNY (default)
+# Currency conversion
+llm-balance cost --currency=USD     # Convert to USD
+llm-balance cost --currency=EUR     # Convert to EUR
 ```
 
 > 💡 **New Feature**: The cost command now displays both current balance and spent amount for all platforms, providing a complete financial overview of your LLM usage.
 
-#### Check Token Usage
+#### Token Usage Monitoring
 ```bash
-# Check token usage for all supported platforms
+# Check token usage for supported platforms
 llm-balance package
 
-# Check token usage for specific platform
-llm-balance package --platform=volcengine
-
-# Check token usage for specific model
+# Specific platform and model
 llm-balance package --platform=volcengine --model=deepseek-r1
 
-# Check token usage for multiple platforms
+# Multiple platforms
 llm-balance package --platform=volcengine,zhipu
 
-# Filter by model name (supports partial matching)
-llm-balance package --platform=volcengine --model=deepseek
-llm-balance package --platform=zhipu --model=glm-4
-
-# Different output formats for tokens
-llm-balance package --format=table   # Console table format
-llm-balance package --format=json    # Machine-readable format
-llm-balance package --format=markdown # Document-friendly format
+# Different output formats
+llm-balance package --format=table   # Console view
+llm-balance package --format=json    # Machine-readable
 ```
 
-> 💡 Backward compatibility: `llm-balance check` command is still available as an alias for `llm-balance cost`
+> **Note**: Token monitoring is available for Volcengine and Zhipu platforms only
 
-#### Command Summary
-| Command | Description | Example |
-|---------|-------------|---------|
-| `llm-balance cost` | Check account balance | `llm-balance cost --platform=volcengine` |
-| `llm-balance package` | Check token usage | `llm-balance package --platform=zhipu --model=glm-4` |
-| `llm-balance list` | List all platforms | `llm-balance list` |
-| `llm-balance enable/disable` | Manage platform status | `llm-balance enable volcengine` |
+#### Quick Reference
+| Command | Purpose | Example |
+|---------|---------|---------|
+| `llm-balance cost` | Check balance & spent | `llm-balance cost --platform=volcengine` |
+| `llm-balance package` | Check token usage | `llm-balance package --platform=zhipu` |
+| `llm-balance list` | List platforms | `llm-balance list` |
+| `llm-balance enable` | Enable platform | `llm-balance enable deepseek` |
+| `llm-balance disable` | Disable platform | `llm-balance disable tencent` |
 
 ### Platform Management
 
