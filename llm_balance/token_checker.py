@@ -77,6 +77,9 @@ class TokenChecker:
             try:
                 token_info = handler.get_model_tokens()
                 # Convert PlatformTokenInfo to dict format for backward compatibility
+                # Filter out non-serializable objects from raw_data
+                filtered_raw_data = self._clean_raw_data_for_json(token_info.raw_data)
+                
                 return {
                     'platform': token_info.platform,
                     'models': [
@@ -89,7 +92,7 @@ class TokenChecker:
                         }
                         for model in token_info.models
                     ],
-                    'raw_data': token_info.raw_data
+                    'raw_data': filtered_raw_data
                 }
             except NotImplementedError:
                 # Platform doesn't support token checking
@@ -97,6 +100,33 @@ class TokenChecker:
         except Exception as e:
             # Skip platforms that don't support tokens or have errors
             return None
+    
+    def _clean_raw_data_for_json(self, raw_data):
+        """Clean raw data to make it JSON serializable"""
+        if not raw_data:
+            return {}
+        
+        def clean_value(value):
+            """Recursively clean values"""
+            if isinstance(value, dict):
+                return {k: clean_value(v) for k, v in value.items()}
+            elif isinstance(value, list):
+                return [clean_value(item) for item in value]
+            elif hasattr(value, '__dict__'):
+                # Convert object to dict, skipping Configuration objects
+                obj_name = value.__class__.__name__
+                if obj_name == 'Configuration':
+                    return f"<{obj_name} object>"
+                return {k: clean_value(v) for k, v in value.__dict__.items()}
+            else:
+                try:
+                    # Test if the value is JSON serializable
+                    json.dumps(value)
+                    return value
+                except (TypeError, ValueError):
+                    return f"<{value.__class__.__name__} object>"
+        
+        return clean_value(raw_data)
     
     def _get_handler(self, config: PlatformConfig) -> BasePlatformHandler:
         """Get handler instance for platform configuration"""

@@ -5,6 +5,26 @@ Token formatting utilities for model-level token statistics
 import json
 from typing import Dict, Any, List, Optional
 
+def _clean_for_json(data):
+    """Clean data to make it JSON serializable"""
+    if isinstance(data, dict):
+        return {k: _clean_for_json(v) for k, v in data.items()}
+    elif isinstance(data, list):
+        return [_clean_for_json(item) for item in data]
+    elif hasattr(data, '__dict__'):
+        # Convert object to dict, skipping Configuration objects
+        obj_name = data.__class__.__name__
+        if obj_name == 'Configuration':
+            return f"<{obj_name} object>"
+        return {k: _clean_for_json(v) for k, v in data.__dict__.items()}
+    else:
+        try:
+            # Test if the value is JSON serializable
+            json.dumps(data)
+            return data
+        except (TypeError, ValueError):
+            return f"<{data.__class__.__name__} object>"
+
 def format_model_tokens(platform_tokens: List[Dict[str, Any]], format_type: str = 'table', target_currency: str = 'CNY', model: Optional[str] = None) -> str:
     """Format model-level token information"""
     if not platform_tokens:
@@ -63,7 +83,9 @@ def _format_model_table(platform_tokens: List[Dict[str, Any]], target_currency: 
 
 def _format_model_json(platform_tokens: List[Dict[str, Any]]) -> str:
     """Format model tokens as JSON"""
-    return json.dumps(platform_tokens, indent=2, ensure_ascii=False)
+    # Clean the data to make it JSON serializable
+    cleaned_tokens = _clean_for_json(platform_tokens)
+    return json.dumps(cleaned_tokens, indent=2, ensure_ascii=False)
 
 def _format_model_markdown(platform_tokens: List[Dict[str, Any]]) -> str:
     """Format model tokens as markdown table"""
