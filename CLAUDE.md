@@ -44,6 +44,24 @@ pip install -r requirements.txt
 llm-balance --help
 ```
 
+### Automated Testing
+```bash
+# Run comprehensive tests
+python test_llm_balance.py
+
+# Run with verbose output
+python test_llm_balance.py --verbose
+
+# Test specific platforms only
+python test_llm_balance.py --platforms deepseek volcengine
+
+# Generate JSON report for analysis
+python test_llm_balance.py --json-report
+
+# Fast fail on first error
+python test_llm_balance.py --fail-fast
+```
+
 ### Testing Commands
 ```bash
 # Check all platforms
@@ -109,6 +127,26 @@ pip install tencentcloud-sdk-python>=3.0.0      # Tencent Cloud
 ```
 
 Note: Some SDKs are included in requirements.txt, others may need manual installation based on platform requirements.
+
+### Important Development Notes
+
+#### Recent Bug Fixes
+- **Volcengine Package API**: Fixed `ListResourcePackages` parameter format (requires string `"20"` not integer `100`)
+- **ModelTokenInfo Constructor**: Updated parameter names to match current data structure
+- **Cost Total Type Error**: Fixed int/str type mismatch in spent calculation
+- **JSON Serialization**: Added cleanup for non-serializable Configuration objects
+
+#### Testing Framework
+The automated test script (`test_llm_balance.py`) provides comprehensive testing:
+- **16 test cases** covering all platforms and output formats
+- **Environment validation** and dependency checking
+- **Detailed reporting** with JSON export capability
+- **Platform-specific testing** for isolated debugging
+
+#### Known Issues
+- Some platforms return `"-"` for spent values when tracking is not supported
+- Volcengine SDK requires specific parameter formatting (strings vs integers)
+- Configuration objects may need JSON serialization cleanup
 
 ## Key Files & Patterns
 
@@ -244,3 +282,19 @@ python -c "from llm_balance.config import ConfigManager; cm = ConfigManager(); p
 - **Currency Conversion**: All amounts converted through CNY as intermediate currency
 - **Time Zones**: Transaction queries use proper date alignment to avoid duplicates
 - **Browser Dependencies**: Cookie authentication requires browser login and proper cookie extraction
+
+### Testing Architecture
+
+The test suite (`test_llm_balance.py`) follows a comprehensive approach:
+- **Environment Validation**: Checks CLI availability and required environment variables
+- **Multi-Format Testing**: Validates table, JSON, total, and markdown output formats
+- **Platform Coverage**: Tests all 7 platforms individually and collectively
+- **Error Handling**: Gracefully handles platform failures and provides detailed error reporting
+- **Performance Tracking**: Measures execution time for each test case
+- **Report Generation**: Creates detailed JSON reports for analysis and debugging
+
+#### Test Structure
+- **Cost Command Tests**: Validate balance checking across all formats
+- **Package Command Tests**: Verify token usage monitoring functionality
+- **Platform-Specific Tests**: Isolate individual platform issues
+- **Integration Tests**: Ensure overall system reliability
