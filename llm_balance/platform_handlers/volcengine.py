@@ -35,23 +35,15 @@ class VolcengineHandler(BasePlatformHandler):
     
     def get_balance(self) -> CostInfo:
         """Get cost information from Volcengine"""
-        try:
-            # Try SDK authentication first
-            return self._get_balance_with_sdk()
-        except Exception as e:
-            # Fallback to cookie authentication
+        # 根据配置的认证类型选择方法
+        if self.config.auth_type == 'sdk':
             try:
+                return self._get_balance_with_sdk()
+            except Exception as e:
+                print(f"Warning: Volcengine SDK authentication failed: {e}")
                 return self._get_balance_with_cookies()
-            except Exception as e2:
-                # Return error info if both methods fail
-                return CostInfo(
-                    platform=self.get_platform_name(),
-                    balance=0.0,
-                    currency='CNY',
-                    spent=0.0,
-                    spent_currency='CNY',
-                    raw_data={'error': f"SDK auth failed: {str(e)}, Cookie auth failed: {str(e2)}"}
-                )
+        else:
+            return self._get_balance_with_cookies()
     
     def _get_balance_with_sdk(self) -> CostInfo:
         """Get balance using Volcengine official SDK"""
@@ -227,7 +219,15 @@ class VolcengineHandler(BasePlatformHandler):
     
     def get_model_tokens(self) -> PlatformTokenInfo:
         """Get model-level token information from Volcengine"""
-        return self._get_model_tokens_with_sdk()
+        # 根据配置的认证类型选择方法
+        if self.config.auth_type == 'sdk':
+            try:
+                return self._get_model_tokens_with_sdk()
+            except Exception as e:
+                print(f"Warning: Volcengine SDK authentication failed: {e}")
+                return self._get_model_tokens_with_cookies()
+        else:
+            return self._get_model_tokens_with_cookies()
     
     def _get_model_tokens_with_sdk(self) -> PlatformTokenInfo:
         """Get model-level tokens using official Volcengine SDK with ListResourcePackages API"""
@@ -249,42 +249,50 @@ class VolcengineHandler(BasePlatformHandler):
                 import volcenginesdkcore
                 import volcenginesdkbilling
                 from volcenginesdkbilling.models import ListResourcePackagesRequest
-
+                
                 # Configure SDK
                 configuration = volcenginesdkcore.Configuration()
                 configuration.ak = access_key
                 configuration.sk = secret_key
                 configuration.region = self.config.region or "cn-beijing"
                 volcenginesdkcore.Configuration.set_default(configuration)
-
-                # Use billing API to get actual resource package data
+                
+                # Use ListResourcePackages API for actual model-level token data
                 api_instance = volcenginesdkbilling.BILLINGApi()
-
-                # Create request for resource packages
-                list_packages_request = ListResourcePackagesRequest()
-
+                list_resource_packages_request = volcenginesdkbilling.ListResourcePackagesRequest(
+                    max_results="20",
+                    resource_type="Package",
+                )
                 # Call ListResourcePackages API
-                resp = api_instance.list_resource_packages(list_packages_request)
-
-                if resp:
-                    # Extract model-level token data
-                    model_tokens = self._extract_model_tokens_from_packages(resp)
-                    
-                    return PlatformTokenInfo(
-                        platform=self.get_platform_name(),
-                        models=model_tokens,
-                        raw_data=resp
-                    )
-                else:
-                    raise ValueError("No response from Volcengine API")
-
-            except ImportError:
+                resp = api_instance.list_resource_packages(list_resource_packages_request)
+                
+                # Parse response from official SDK
+                if not resp:
+                    raise ValueError("No response from Volcengine SDK")
+                
+                # Extract actual model-level token data from response
+                model_tokens = self._extract_model_tokens_from_packages(resp)
+                
+                return PlatformTokenInfo(
+                    platform=self.get_platform_name(),
+                    models=model_tokens,
+                    raw_data=resp.__dict__ if hasattr(resp, '__dict__') else str(resp)
+                )
+                
+            except ImportError as e:
+                print(f"Warning: Volcengine SDK import error: {e}")
                 return self._get_model_tokens_with_cookies()
             except ApiException as e:
+                print(f"Warning: Volcengine API error: {e}")
                 return self._get_model_tokens_with_cookies()
-
+                
+        except ImportError:
+            # SDK not available, fallback to cookie authentication
+            print("Warning: Volcengine SDK not found, falling back to cookie authentication")
+            return self._get_model_tokens_with_cookies()
         except Exception as e:
-            # Fallback to cookie authentication if SDK fails
+            # SDK authentication failed, fallback to cookie authentication
+            print(f"Warning: Volcengine SDK authentication failed: {e}, falling back to cookie authentication")
             return self._get_model_tokens_with_cookies()
     
     def _get_model_tokens_with_cookies(self) -> PlatformTokenInfo:
@@ -414,18 +422,39 @@ class VolcengineHandler(BasePlatformHandler):
                 elif isinstance(package, dict):
                     status = package.get('status') or package.get('Status')
                 
-                # Only add packages with configuration names (model packages)
+                # Only process token-based packages that are effective and have remaining tokens
+                if unit != "token" or available_amount <= 0:
+                    continue
+                
+                # Skip used-up packages
+                if status and str(status).upper() == "USEDUP":
+                    continue
+                
+                # Extract package/model name from ConfigurationName using regex
+                import re
+                package_name = config_name or "Unknown Model"
+                model_name = config_name or "Unknown Model"
                 if config_name:
-                    models.append(ModelTokenInfo(
-                        model_name=config_name,
-                        available_tokens=available_amount,
-                        total_tokens=total_amount,
-                        unit=unit or 'tokens',
-                        status=status or 'active'
-                    ))
+                    # Extract English prefix from ConfigurationName
+                    match = re.search(r'^([A-Za-z0-9\-]+(?:\.[A-Za-z0-9\-]+)*)', config_name)
+                    if match:
+                        model_name = match.group(1)
+                
+                # Calculate used tokens
+                used_tokens = max(0, total_amount - available_amount)
+                
+                models.append(ModelTokenInfo(
+                    model=model_name.lower(),
+                    package=package_name,
+                    remaining_tokens=available_amount,
+                    used_tokens=used_tokens,
+                    total_tokens=total_amount
+                ))
         
         except Exception as e:
             print(f"Warning: Error extracting model tokens from packages: {e}")
+            # Fallback to estimation if API data extraction fails
+            return self._extract_model_tokens(response)
         
         return models
     

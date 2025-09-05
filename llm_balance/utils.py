@@ -214,8 +214,8 @@ def _format_markdown(balances: List[Dict[str, Any]]) -> str:
 
 def _format_total(balances: List[Dict[str, Any]], target_currency: str = 'CNY') -> str:
     """Format as total only"""
-    total = 0
-    total_spent = 0
+    total = 0.0
+    total_spent = 0.0
     
     # Check if this is token data or balance data
     is_tokens = any('tokens' in balance for balance in balances)
@@ -234,7 +234,7 @@ def _format_total(balances: List[Dict[str, Any]], target_currency: str = 'CNY') 
             
             total += convert_currency(amount, currency, target_currency)
             
-            if has_spent:
+            if has_spent and isinstance(spent, (int, float)):
                 total_spent += convert_currency(spent, currency, target_currency)
     
     if is_tokens:
