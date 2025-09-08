@@ -255,7 +255,8 @@ class BasePlatformHandler(ABC):
                      headers: Optional[Dict] = None, 
                      cookies: Optional[Dict] = None,
                      data: Optional[Dict] = None,
-                     params: Optional[Dict] = None) -> Optional[Dict]:
+                     params: Optional[Dict] = None,
+                     proxies: Optional[Dict] = None) -> Optional[Dict]:
         """Make HTTP request with error handling"""
         import requests
         
@@ -268,7 +269,8 @@ class BasePlatformHandler(ABC):
                     headers=headers or {},
                     cookies=cookies or {},
                     params=params,
-                    timeout=10
+                    timeout=10,
+                    proxies=proxies
                 )
             elif method.upper() == 'GET' and data:
                 # Fallback for backward compatibility
@@ -278,7 +280,8 @@ class BasePlatformHandler(ABC):
                     headers=headers or {},
                     cookies=cookies or {},
                     params=data,
-                    timeout=10
+                    timeout=10,
+                    proxies=proxies
                 )
             else:
                 response = requests.request(
@@ -287,7 +290,8 @@ class BasePlatformHandler(ABC):
                     headers=headers or {},
                     cookies=cookies or {},
                     json=data,
-                    timeout=10
+                    timeout=10,
+                    proxies=proxies
                 )
             
             # Check for HTTP errors

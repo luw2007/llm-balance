@@ -3,7 +3,7 @@ Utility functions for balance checking
 """
 
 import json
-from typing import Dict, Any, List, Union
+from typing import Dict, Any, List, Union, Optional
 from pathlib import Path
 import os
 
@@ -27,6 +27,11 @@ def get_exchange_rates() -> Dict[str, float]:
         'GBP': 9.1,
         'JPY': 0.048,
         'KRW': 0.0054,
+        'CAD': 5.3,
+        'AUD': 4.7,
+        'CHF': 8.1,
+        'HKD': 0.92,
+        'SGD': 5.4,
         'Points': 0.01  # for platform-specific points
     }
     
@@ -59,6 +64,38 @@ def get_available_currencies() -> List[str]:
     """Get list of available currencies"""
     rates = get_exchange_rates()
     return sorted(rates.keys())
+
+def get_proxy_config() -> Optional[Dict[str, str]]:
+    """Get proxy configuration from environment variables"""
+    proxy_config = {}
+    
+    # Check for various proxy environment variables
+    http_proxy = os.getenv('HTTP_PROXY') or os.getenv('http_proxy')
+    https_proxy = os.getenv('HTTPS_PROXY') or os.getenv('https_proxy')
+    
+    if http_proxy:
+        proxy_config['http'] = http_proxy
+    if https_proxy:
+        proxy_config['https'] = https_proxy
+    
+    return proxy_config if proxy_config else None
+
+def format_proxy_usage() -> str:
+    """Format proxy usage instructions"""
+    return """
+Proxy Configuration:
+Set the following environment variables to use proxy:
+- HTTP_PROXY / http_proxy: Proxy for HTTP requests
+- HTTPS_PROXY / https_proxy: Proxy for HTTPS requests
+
+Example:
+export HTTP_PROXY="http://proxy.example.com:8080"
+export HTTPS_PROXY="http://proxy.example.com:8080"
+
+Or use SOCKS proxy:
+export HTTP_PROXY="socks5://127.0.0.1:1080"
+export HTTPS_PROXY="socks5://127.0.0.1:1080"
+"""
 
 def _clean_for_json(obj):
     """Clean object for JSON serialization"""

@@ -9,6 +9,9 @@ from .aliyun import AliyunHandler
 from .tencent import TencentHandler
 from .zhipu import ZhipuHandler
 from .siliconflow import SiliconFlowHandler
+from .openai import OpenAIHandler
+from .anthropic import AnthropicHandler
+from .gemini import GeminiHandler
 
 def create_handler(config, browser: str = 'chrome'):
     """Factory function to create platform handlers using Python-based configuration"""
@@ -21,6 +24,9 @@ def create_handler(config, browser: str = 'chrome'):
         'tencent': TencentHandler,
         'zhipu': ZhipuHandler,
         'siliconflow': SiliconFlowHandler,
+        'openai': OpenAIHandler,
+        'anthropic': AnthropicHandler,
+        'gemini': GeminiHandler,
     }
     
     # Get handler class from configuration

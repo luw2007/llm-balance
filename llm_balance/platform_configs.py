@@ -141,7 +141,8 @@ class ConfigManager:
         """Get platform configuration directly from handler"""
         from .platform_handlers import (
             DeepSeekHandler, MoonshotHandler, VolcengineHandler,
-            AliyunHandler, TencentHandler, ZhipuHandler, SiliconFlowHandler
+            AliyunHandler, TencentHandler, ZhipuHandler, SiliconFlowHandler,
+            OpenAIHandler, AnthropicHandler, GeminiHandler
         )
         
         handler_map = {
@@ -152,6 +153,9 @@ class ConfigManager:
             'tencent': TencentHandler,
             'zhipu': ZhipuHandler,
             'siliconflow': SiliconFlowHandler,
+            'openai': OpenAIHandler,
+            'anthropic': AnthropicHandler,
+            'gemini': GeminiHandler,
         }
         
         if platform_name not in handler_map:
@@ -182,7 +186,7 @@ class ConfigManager:
     
     def get_all_platforms(self) -> List[str]:
         """Get all available platform names"""
-        return ['deepseek', 'moonshot', 'volcengine', 'aliyun', 'tencent', 'zhipu', 'siliconflow']
+        return ['deepseek', 'moonshot', 'volcengine', 'aliyun', 'tencent', 'zhipu', 'siliconflow', 'openai', 'anthropic', 'gemini']
     
     def get_enabled_platforms(self) -> List[PlatformConfig]:
         """Get enabled platform configurations"""
@@ -241,7 +245,8 @@ class ConfigManager:
         # Get configurations from handlers
         from .platform_handlers import (
             DeepSeekHandler, MoonshotHandler, VolcengineHandler,
-            AliyunHandler, TencentHandler, ZhipuHandler, SiliconFlowHandler
+            AliyunHandler, TencentHandler, ZhipuHandler, SiliconFlowHandler,
+            OpenAIHandler, AnthropicHandler, GeminiHandler
         )
         
         handler_map = {
@@ -252,6 +257,9 @@ class ConfigManager:
             'tencent': TencentHandler,
             'zhipu': ZhipuHandler,
             'siliconflow': SiliconFlowHandler,
+            'openai': OpenAIHandler,
+            'anthropic': AnthropicHandler,
+            'gemini': GeminiHandler,
         }
         
         for name, handler_class in handler_map.items():
