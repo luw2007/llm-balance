@@ -165,56 +165,95 @@ class LLMBalanceCLI:
         return result
     
     def enable(self, platform: str) -> str:
-        """Enable a platform"""
+        """Enable one or more platforms (comma-separated or multiple args)."""
         from .platform_configs import ConfigManager
         
         config_manager = ConfigManager(self.config_file)
+        all_platforms = set(config_manager.get_all_platforms())
         
-        if platform == 'all':
-            # Enable all platforms
-            platforms = config_manager.get_all_platforms()
-            enabled_count = 0
-            
-            for platform_name in platforms:
-                user_config = config_manager.user_config.get(platform_name, {})
-                if not user_config.get('enabled', True):
-                    config_manager.enable_platform(platform_name)
-                    enabled_count += 1
-            
-            return f"Enabled {enabled_count} platforms (all disabled platforms)"
+        # Parse input: support tuple from Fire and comma-separated string
+        if isinstance(platform, tuple):
+            platforms = [p.strip() for p in platform if str(p).strip()]
+        elif isinstance(platform, str):
+            # Accept comma-separated list
+            platforms = [p.strip() for p in platform.split(',') if p.strip()]
         else:
-            # Enable specific platform
-            if platform not in config_manager.get_all_platforms():
-                return f"Platform {platform} not found"
-            
-            config_manager.enable_platform(platform)
-            return f"Enabled {platform}"
+            platforms = [str(platform).strip()] if str(platform).strip() else []
+        
+        if not platforms:
+            return "No valid platforms specified"
+        
+        # Special case: 'all'
+        if any(p.lower() == 'all' for p in platforms):
+            enabled_count = 0
+            for name in all_platforms:
+                user_config = config_manager.user_config.get(name, {})
+                if not user_config.get('enabled', True):
+                    config_manager.enable_platform(name)
+                    enabled_count += 1
+            return f"Enabled {enabled_count} platforms (all disabled platforms)"
+        
+        # Enable listed platforms
+        enabled = []
+        not_found = []
+        for name in platforms:
+            if name in all_platforms:
+                config_manager.enable_platform(name)
+                enabled.append(name)
+            else:
+                not_found.append(name)
+        
+        parts = []
+        if enabled:
+            parts.append(f"Enabled {len(enabled)}: {', '.join(enabled)}")
+        if not_found:
+            parts.append(f"Not found: {', '.join(not_found)}")
+        return "; ".join(parts) if parts else "No changes"
     
     def disable(self, platform: str) -> str:
-        """Disable a platform"""
+        """Disable one or more platforms (comma-separated or multiple args)."""
         from .platform_configs import ConfigManager
         
         config_manager = ConfigManager(self.config_file)
+        all_platforms = set(config_manager.get_all_platforms())
         
-        if platform == 'all':
-            # Disable all platforms
-            platforms = config_manager.get_all_platforms()
-            disabled_count = 0
-            
-            for platform_name in platforms:
-                user_config = config_manager.user_config.get(platform_name, {})
-                if user_config.get('enabled', True):
-                    config_manager.disable_platform(platform_name)
-                    disabled_count += 1
-            
-            return f"Disabled {disabled_count} platforms (all enabled platforms)"
+        # Parse input: support tuple from Fire and comma-separated string
+        if isinstance(platform, tuple):
+            platforms = [p.strip() for p in platform if str(p).strip()]
+        elif isinstance(platform, str):
+            platforms = [p.strip() for p in platform.split(',') if p.strip()]
         else:
-            # Disable specific platform
-            if platform not in config_manager.get_all_platforms():
-                return f"Platform {platform} not found"
-            
-            config_manager.disable_platform(platform)
-            return f"Disabled {platform}"
+            platforms = [str(platform).strip()] if str(platform).strip() else []
+        
+        if not platforms:
+            return "No valid platforms specified"
+        
+        # Special case: 'all'
+        if any(p.lower() == 'all' for p in platforms):
+            disabled_count = 0
+            for name in all_platforms:
+                user_config = config_manager.user_config.get(name, {})
+                if user_config.get('enabled', True):
+                    config_manager.disable_platform(name)
+                    disabled_count += 1
+            return f"Disabled {disabled_count} platforms (all enabled platforms)"
+        
+        # Disable listed platforms
+        disabled = []
+        not_found = []
+        for name in platforms:
+            if name in all_platforms:
+                config_manager.disable_platform(name)
+                disabled.append(name)
+            else:
+                not_found.append(name)
+        
+        parts = []
+        if disabled:
+            parts.append(f"Disabled {len(disabled)}: {', '.join(disabled)}")
+        if not_found:
+            parts.append(f"Not found: {', '.join(not_found)}")
+        return "; ".join(parts) if parts else "No changes"
     
     def config(self, platform: str, key: str = None, value: str = None) -> str:
         """

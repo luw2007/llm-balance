@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.2] - 2025-09-16
+
+### Fixed
+- CLI: `enable`/`disable` now accept multiple platforms via comma-separated values or multiple args (e.g., `llm-balance enable gemini,openai`).
+
 ## [0.2.1] - 2025-09-16
 
 ### Added
@@ -21,4 +26,3 @@ All notable changes to this project will be documented in this file.
 
 ### Docs
 - README.md/README.zh.md and quickstart.md/quickstart.zh.md updated with FoxCode usage and notes.
-
