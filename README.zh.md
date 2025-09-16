@@ -5,7 +5,7 @@
 ## 功能特性
 
 - 🔑 **多重认证**: 支持API Key、浏览器Cookie和代理服务认证
-- 🌐 **多平台支持**: 集成7个主流LLM平台（生产就绪）
+- 🌐 **多平台支持**: 集成7个主流LLM平台（生产就绪）+ 第三方中转（FoxCode）
 - 📊 **多种输出格式**: JSON、Markdown、表格、仅总额
 - 💱 **多货币支持**: 支持CNY、USD、EUR等多种货币显示
 - ⚙️ **灵活配置**: YAML配置文件，支持动态启用/禁用平台
@@ -294,6 +294,27 @@ export MOONSHOT_API_KEY="sk-xxxxxxxxxxxxxxxxxxxxxxxx"
 使用特殊访问方式的平台：
 - 智谱AI使用浏览器Cookie认证
 - 需要登录 https://open.bigmodel.cn
+
+### 第三方中转：FoxCode
+
+FoxCode 为基于浏览器 Cookie 的中转服务，支持从控制台页面读取套餐与支出信息。
+
+- 认证：浏览器 Cookie（域名 `foxcode.rjj.cc`），读取 `auth_token`，以 `Authorization: Bearer <token>` 请求 `https://foxcode.rjj.cc/api/user/dashboard`。
+- package：使用 `data.subscription.active`。
+  - Total = 计划 `quotaLimit`
+  - Remaining = `quotaRemaining`（缺失时回退 `plan.duration`）
+  - Used = Total - Remaining
+  - Package 列显示 `plan.name`
+- cost：Balance 显示 `-`（中转站无充值），Spent = ∑ `data.subscription.history[*].plan.price`（单位 CNY）。
+
+示例：
+```bash
+llm-balance package --platform=foxcode
+llm-balance cost --platform=foxcode
+# 如需指定浏览器
+llm-balance package --platform=foxcode --browser=chrome
+llm-balance cost --platform=foxcode --browser=chrome
+```
 
 ## 浏览器支持
 

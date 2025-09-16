@@ -1,6 +1,6 @@
 # LLM Balance Checker Quick Reference
 
-**Supporting 7 production-ready LLM platforms**
+**Supporting 7 production-ready LLM platforms + third-party relay (FoxCode)**
 
 ## Basic Commands
 
@@ -189,6 +189,26 @@ export LLM_BALANCE_CONFIG_FILE="/path/to/config.yaml"
 - Slack
 
 > 💡 **Note**: Zhipu AI requires browser login to open.bigmodel.cn
+
+## Third-Party Relay: FoxCode
+
+- Auth: Browser cookie (domain `foxcode.rjj.cc`). Read `auth_token` and call `https://foxcode.rjj.cc/api/user/dashboard` with header `Authorization: Bearer <token>`.
+- Models: reported as `claude,gpt-5`.
+- package: parse `data.subscription.active`. Total = plan `quotaLimit`; Remaining = `quotaRemaining` (fallback to `plan.duration`); Used = Total - Remaining; Package shows `plan.name`.
+- cost: Balance is shown as `-` (no top-up on this relay); Spent = sum of `data.subscription.history[*].plan.price` in CNY.
+
+Examples:
+```bash
+# Check FoxCode packages/quotas only
+llm-balance package --platform=foxcode
+
+# Check FoxCode costs (Balance '-', Spent from summed history.plan.price)
+llm-balance cost --platform=foxcode
+
+# Specify browser if needed (default: chrome)
+llm-balance package --platform=foxcode --browser=chrome
+llm-balance cost --platform=foxcode --browser=chrome
+```
 
 ## Quick Platform Reference
 

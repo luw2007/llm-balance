@@ -142,7 +142,7 @@ class ConfigManager:
         from .platform_handlers import (
             DeepSeekHandler, MoonshotHandler, VolcengineHandler,
             AliyunHandler, TencentHandler, ZhipuHandler, SiliconFlowHandler,
-            OpenAIHandler, AnthropicHandler, GeminiHandler
+            OpenAIHandler, AnthropicHandler, GeminiHandler, FoxCodeHandler
         )
         
         handler_map = {
@@ -156,6 +156,7 @@ class ConfigManager:
             'openai': OpenAIHandler,
             'anthropic': AnthropicHandler,
             'gemini': GeminiHandler,
+            'foxcode': FoxCodeHandler,
         }
         
         if platform_name not in handler_map:
@@ -186,7 +187,7 @@ class ConfigManager:
     
     def get_all_platforms(self) -> List[str]:
         """Get all available platform names"""
-        return ['deepseek', 'moonshot', 'volcengine', 'aliyun', 'tencent', 'zhipu', 'siliconflow', 'openai', 'anthropic', 'gemini']
+        return ['deepseek', 'moonshot', 'volcengine', 'aliyun', 'tencent', 'zhipu', 'siliconflow', 'openai', 'anthropic', 'gemini', 'foxcode']
     
     def get_enabled_platforms(self) -> List[PlatformConfig]:
         """Get enabled platform configurations"""
@@ -246,7 +247,7 @@ class ConfigManager:
         from .platform_handlers import (
             DeepSeekHandler, MoonshotHandler, VolcengineHandler,
             AliyunHandler, TencentHandler, ZhipuHandler, SiliconFlowHandler,
-            OpenAIHandler, AnthropicHandler, GeminiHandler
+            OpenAIHandler, AnthropicHandler, GeminiHandler, FoxCodeHandler
         )
         
         handler_map = {
@@ -260,6 +261,7 @@ class ConfigManager:
             'openai': OpenAIHandler,
             'anthropic': AnthropicHandler,
             'gemini': GeminiHandler,
+            'foxcode': FoxCodeHandler,
         }
         
         for name, handler_class in handler_map.items():

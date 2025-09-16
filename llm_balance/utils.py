@@ -158,18 +158,26 @@ def _format_table(balances: List[Dict[str, Any]], target_currency: str = 'CNY') 
         if 'tokens' in balance:
             amount = balance['tokens']
             currency = balance['currency']
-            has_spent = False
+            row_has_spent = False
         else:
             amount = balance.get('balance', 0)
             currency = balance['currency']
             spent = balance.get('spent', 0)
-            has_spent = 'spent' in balance
+            row_has_spent = 'spent' in balance
         
-        # Ensure amount is a number
+        # Ensure amount is a number and prepare display
+        amount_is_dash = (amount == '-')
+        amount_is_numeric = True
         try:
-            amount_float = float(amount) if amount is not None else 0.0
+            amount_float = float(amount) if not amount_is_dash and amount is not None else 0.0
         except (ValueError, TypeError):
             amount_float = 0.0
+            amount_is_numeric = False
+        # If not numeric (e.g., None or non-number), display '-'
+        if amount_is_dash or not amount_is_numeric:
+            amount_display = '-'
+        else:
+            amount_display = f"{amount_float:.2f}"
             
         # Ensure spent is a number or handle "-" string
         if spent == "-" or spent is None:
@@ -185,17 +193,17 @@ def _format_table(balances: List[Dict[str, Any]], target_currency: str = 'CNY') 
         
         if is_tokens:
             lines.append(f"{platform:<20} {amount_float:<15.2f} {currency:<10}")
-        elif has_spent:
-            lines.append(f"{platform:<20} {amount_float:<15.2f} {spent_display:<15} {currency:<10}")
+        elif row_has_spent:
+            lines.append(f"{platform:<20} {amount_display:<15} {spent_display:<15} {currency:<10}")
         else:
-            lines.append(f"{platform:<20} {amount_float:<15.2f} {currency:<10}")
+            lines.append(f"{platform:<20} {amount_display:<15} {currency:<10}")
         
         # Convert to target currency for total
         if amount_float > 0:  # Only add to total if we have valid data
             total += convert_currency(amount_float, currency, target_currency)
         
         # Add spent to total spent
-        if has_spent and spent_float > 0:
+        if row_has_spent and spent_float > 0:
             total_spent += convert_currency(spent_float, currency, target_currency)
     
     lines.append("-" * 80)
@@ -241,11 +249,22 @@ def _format_markdown(balances: List[Dict[str, Any]]) -> str:
             spent = balance.get('spent', 0)
             currency = balance['currency']
             
+            # Prepare display strings
+            amount_is_dash = (amount == '-')
+            amount_is_numeric = True
+            try:
+                amount_float = float(amount) if not amount_is_dash and amount is not None else 0.0
+            except (ValueError, TypeError):
+                amount_float = 0.0
+                amount_is_numeric = False
+            amount_display = '-' if (amount_is_dash or not amount_is_numeric) else f"{amount_float:.2f}"
+
+            spent_display = "-" if spent == "-" else f"{float(spent):.2f}" if isinstance(spent, (int, float)) else "-"
+            
             if has_spent:
-                spent_display = "-" if spent == "-" else f"{spent:.2f}"
-                lines.append(f"| {platform} | {amount:.2f} | {spent_display} | {currency} |")
+                lines.append(f"| {platform} | {amount_display} | {spent_display} | {currency} |")
             else:
-                lines.append(f"| {platform} | {amount:.2f} | {currency} |")
+                lines.append(f"| {platform} | {amount_display} | {currency} |")
     
     return '\n'.join(lines)
 
@@ -269,10 +288,12 @@ def _format_total(balances: List[Dict[str, Any]], target_currency: str = 'CNY') 
             spent = balance.get('spent', 0)
             currency = balance['currency']
             
-            total += convert_currency(amount, currency, target_currency)
+            # Only include numeric amounts in totals
+            if isinstance(amount, (int, float)):
+                total += convert_currency(float(amount), currency, target_currency)
             
             if has_spent and isinstance(spent, (int, float)):
-                total_spent += convert_currency(spent, currency, target_currency)
+                total_spent += convert_currency(float(spent), currency, target_currency)
     
     if is_tokens:
         return f"Total tokens: {total:.2f} {target_currency}"

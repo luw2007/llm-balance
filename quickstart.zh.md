@@ -1,6 +1,6 @@
 # LLM Balance Checker 快速参考
 
-**支持8个生产就绪的LLM平台**
+**支持8个生产就绪的LLM平台 + 第三方中转（FoxCode）**
 
 ## 基本命令
 
@@ -190,6 +190,26 @@ export LLM_BALANCE_CONFIG_FILE="/path/to/config.yaml"
 - Slack
 
 > 💡 **说明**: 智谱AI需要在浏览器中登录 open.bigmodel.cn
+
+## 第三方中转：FoxCode
+
+- 认证：浏览器 Cookie（域名 `foxcode.rjj.cc`），从 Cookie 中读取 `auth_token`，以 `Authorization: Bearer <auth_token>` 请求 `https://foxcode.rjj.cc/api/user/dashboard`。
+- 模型：标注为 `claude,gpt-5`。
+- package：解析 `data.subscription.active`，Total=计划 `quotaLimit`，Remaining=`quotaRemaining`（缺失时回退 `plan.duration`），Used=Total-Remaining，Package 显示 `plan.name`。
+- cost：Balance 显示为 `-`（该平台无充值），Spent=∑ `data.subscription.history[*].plan.price`（CNY）。
+
+示例：
+```bash
+# 仅检查 FoxCode 的包/额度
+llm-balance package --platform=foxcode
+
+# 查看 FoxCode 的支出（Balance 显示为 -，Spent 累加 history.plan.price）
+llm-balance cost --platform=foxcode
+
+# 如需指定浏览器（默认 chrome）
+llm-balance package --platform=foxcode --browser=chrome
+llm-balance cost --platform=foxcode --browser=chrome
+```
 
 ## 快速平台参考
 

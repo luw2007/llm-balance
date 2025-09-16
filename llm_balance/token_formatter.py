@@ -63,14 +63,55 @@ def _format_model_table(platform_tokens: List[Dict[str, Any]], target_currency: 
             continue
         
         for model_info in models:
-            model = model_info['model'][:30]
-            package = model_info.get('package', model)
-            total = model_info['total_tokens']
-            used = model_info['used_tokens']
-            remaining = model_info['remaining_tokens']
-            
+            model = str(model_info.get('model', ''))[:30]
+
+            # Normalize package for display; if dict, prefer human-readable name
+            raw_package = model_info.get('package', model)
+            if isinstance(raw_package, dict):
+                pkg_name = (
+                    raw_package.get('name')
+                    or raw_package.get('title')
+                    or raw_package.get('plan_name')
+                    or raw_package.get('plan')
+                    or raw_package.get('id')
+                    or 'Subscription'
+                )
+                package = str(pkg_name)
+            else:
+                package = str(raw_package)
+
+            # Take numbers from model_info, but allow override from package dict for FoxCode-like schemas
+            def _num(v) -> float:
+                try:
+                    if v is None:
+                        return 0.0
+                    if isinstance(v, (int, float)):
+                        return float(v)
+                    s = str(v).strip().replace(',', '')
+                    return float(s)
+                except Exception:
+                    return 0.0
+
+            total = _num(model_info.get('total_tokens'))
+            used = _num(model_info.get('used_tokens'))
+            remaining = _num(model_info.get('remaining_tokens'))
+
+            # If package dict has quotaLimit/duration, map: Total=quotaLimit, Remaining=duration, Used=Total-Remaining
+            if isinstance(raw_package, dict):
+                pkg_total = _num(raw_package.get('quotaLimit'))
+                pkg_remaining = _num(raw_package.get('duration'))
+                if pkg_total or pkg_remaining:
+                    total = pkg_total or total
+                    remaining = pkg_remaining or remaining
+                    if total and remaining and used == 0.0:
+                        used = max(0.0, total - remaining)
+                    elif total and used and not remaining:
+                        remaining = max(0.0, total - used)
+                    elif used and remaining and not total:
+                        total = used + remaining
+
             lines.append(f"{platform:<15} {model:<30} {total:<12.0f} {used:<12.0f} {remaining:<12.0f} {package:<20}")
-            
+
             total_all_tokens += total
             total_used_tokens += used
             total_remaining_tokens += remaining

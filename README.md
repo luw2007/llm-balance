@@ -5,7 +5,7 @@
 ## Key Features
 
 - **🔑 Multiple Authentication**: API Key, browser cookie, official SDK support
-- **🌐 7 Platforms Supported**: DeepSeek, Moonshot, Volcengine, Aliyun, Tencent, Zhipu, SiliconFlow
+- **🌐 7 Platforms Supported**: DeepSeek, Moonshot, Volcengine, Aliyun, Tencent, Zhipu, SiliconFlow (+ third-party relay: FoxCode)
 - **💰 Real-time Balance & Spent**: Track both current balance and actual spending
 - **📊 Flexible Output**: Table, JSON, Markdown, and total-only formats
 - **💱 Multi-Currency**: Automatic conversion between CNY, USD, EUR, and more
@@ -162,6 +162,7 @@ llm-balance package --format=json    # Machine-readable
 ```
 
 > **Note**: Token monitoring is available for Volcengine and Zhipu platforms only
+> Plus, FoxCode relay exposes package/quotas via dashboard (see below).
 
 #### Quick Reference
 | Command | Purpose | Example |
@@ -432,6 +433,27 @@ For platforms requiring browser sessions:
 Some platforms use special access methods:
 - Zhipu uses cookie authentication via browser login
 - Requires login to https://open.bigmodel.cn
+
+### Third-Party Relay: FoxCode
+
+FoxCode is a cookie-authenticated relay with dashboard-based package and cost information.
+
+- Auth: Browser cookie on `foxcode.rjj.cc`. Read `auth_token` and query `https://foxcode.rjj.cc/api/user/dashboard` with `Authorization: Bearer <token>`.
+- package: Uses `data.subscription.active` entries.
+  - Total = plan `quotaLimit`
+  - Remaining = `quotaRemaining` (fallback to plan `duration`)
+  - Used = Total - Remaining
+  - Package column shows `plan.name`
+- cost: Balance is shown as `-` (no top-up on this relay); Spent = sum of `data.subscription.history[*].plan.price` in CNY.
+
+Examples:
+```bash
+llm-balance package --platform=foxcode
+llm-balance cost --platform=foxcode
+# Specify browser if needed
+llm-balance package --platform=foxcode --browser=chrome
+llm-balance cost --platform=foxcode --browser=chrome
+```
 
 ## Browser Support
 
