@@ -46,9 +46,9 @@ def format_model_tokens(platform_tokens: List[Dict[str, Any]], format_type: str 
 def _format_model_table(platform_tokens: List[Dict[str, Any]], target_currency: str = 'CNY') -> str:
     """Format model tokens as detailed table"""
     lines = []
-    lines.append("=" * 100)
-    lines.append(f"{'Platform':<15} {'Model':<30} {'Total':<12} {'Used':<12} {'Remaining':<12} {'Package':<20}")
-    lines.append("-" * 100)
+    lines.append("=" * 115)
+    lines.append(f"{'Platform':<15} {'Model':<30} {'Total':<12} {'Used':<12} {'Remaining':<12} {'Progress %':<11} {'Package':<20}")
+    lines.append("-" * 115)
     
     total_all_tokens = 0
     total_used_tokens = 0
@@ -59,7 +59,7 @@ def _format_model_table(platform_tokens: List[Dict[str, Any]], target_currency: 
         models = platform_data.get('models', [])
         
         if not models:
-            lines.append(f"{platform:<15} {'No data':<30} {'-':<12} {'-':<12} {'-':<12} {'-':<20}")
+            lines.append(f"{platform:<15} {'No data':<30} {'-':<12} {'-':<12} {'-':<12} {'-':<11} {'-':<20}")
             continue
         
         for model_info in models:
@@ -110,15 +110,31 @@ def _format_model_table(platform_tokens: List[Dict[str, Any]], target_currency: 
                     elif used and remaining and not total:
                         total = used + remaining
 
-            lines.append(f"{platform:<15} {model:<30} {total:<12.0f} {used:<12.0f} {remaining:<12.0f} {package:<20}")
+            # Calculate progress percentage or display "-"
+            if total > 0:
+                progress_value = used / total * 100
+                # Remove .0 if it's an integer
+                if progress_value.is_integer():
+                    if progress_value == 100:
+                        progress_display = " - "
+                    elif progress_value == 0:
+                        progress_display = "0        "
+                    else:
+                        progress_display = f"{int(progress_value):<9}"
+                else:
+                    progress_display = f"{progress_value:<9.1f}"
+            else:
+                progress_display = " - "
+
+            lines.append(f"{platform:<15} {model:<30} {total:<12.0f} {used:<12.0f} {remaining:<12.0f} {progress_display:<11} {package:<20}")
 
             total_all_tokens += total
             total_used_tokens += used
             total_remaining_tokens += remaining
     
-    lines.append("-" * 100)
-    lines.append(f"{'Total Tokens':<45} {total_all_tokens:<12.0f} {total_used_tokens:<12.0f} {total_remaining_tokens:<12.0f}")
-    lines.append("=" * 100)
+    lines.append("-" * 115)
+    lines.append(f"{'Total Tokens':<45} {total_all_tokens:<12.0f} {total_used_tokens:<12.0f} {total_remaining_tokens:<12.0f} {'-':<11} {'-':<20}")
+    lines.append("=" * 115)
     
     return '\n'.join(lines)
 
@@ -138,8 +154,8 @@ def _format_model_markdown(platform_tokens: List[Dict[str, Any]]) -> str:
         
         if models:
             lines.append(f"## {platform}\n")
-            lines.append("| Platform | Model | Total | Used | Remaining | Package |")
-            lines.append("|----------|-------|-------|------|-----------|---------|")
+            lines.append("| Platform | Model | Total | Used | Remaining | Progress % | Package |")
+            lines.append("|----------|-------|-------|------|-----------|------------|---------|")
             
             for model_info in models:
                 model = model_info['model']
@@ -147,8 +163,24 @@ def _format_model_markdown(platform_tokens: List[Dict[str, Any]]) -> str:
                 total = model_info['total_tokens']
                 used = model_info['used_tokens']
                 remaining = model_info['remaining_tokens']
-                
-                lines.append(f"| {platform} | {model} | {total:.0f} | {used:.0f} | {remaining:.0f} | {package} |")
+
+                # Calculate progress percentage or display "-"
+                if total > 0:
+                    progress_value = used / total * 100
+                    # Remove .0 if it's an integer
+                    if progress_value.is_integer():
+                        if progress_value == 100:
+                            progress_pct = "-"
+                        elif progress_value == 0:
+                            progress_pct = "0"
+                        else:
+                            progress_pct = f"{int(progress_value)}"
+                    else:
+                        progress_pct = f"{progress_value:.1f}"
+                else:
+                    progress_pct = "-"
+
+                lines.append(f"| {platform} | {model} | {total:.0f} | {used:.0f} | {remaining:.0f} | {progress_pct} | {package} |")
             
             lines.append("")
     
