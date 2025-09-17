@@ -156,7 +156,7 @@ class ConfigManager:
             'siliconflow': SiliconFlowHandler,
             'openai': OpenAIHandler,
             'anthropic': AnthropicHandler,
-            'gemini': GeminiHandler,
+            'google': GoogleHandler,
             'foxcode': FoxCodeHandler,
             'duckcoding': DuckCodingHandler,
         }
@@ -189,7 +189,7 @@ class ConfigManager:
     
     def get_all_platforms(self) -> List[str]:
         """Get all available platform names"""
-        return ['deepseek', 'moonshot', 'volcengine', 'aliyun', 'tencent', 'zhipu', 'siliconflow', 'openai', 'anthropic', 'gemini', 'foxcode', 'duckcoding']
+        return ['deepseek', 'moonshot', 'volcengine', 'aliyun', 'tencent', 'zhipu', 'siliconflow', 'openai', 'anthropic', 'google', 'foxcode', 'duckcoding']
     
     def get_enabled_platforms(self) -> List[PlatformConfig]:
         """Get enabled platform configurations"""
@@ -262,7 +262,7 @@ class ConfigManager:
             'siliconflow': SiliconFlowHandler,
             'openai': OpenAIHandler,
             'anthropic': AnthropicHandler,
-            'gemini': GeminiHandler,
+            'google': GoogleHandler,
             'foxcode': FoxCodeHandler,
             'duckcoding': DuckCodingHandler,
         }

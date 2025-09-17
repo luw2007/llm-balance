@@ -1,5 +1,5 @@
 """
-Google Gemini platform handler
+Google platform handler
 """
 
 import os
@@ -9,12 +9,12 @@ from .base import BasePlatformHandler, CostInfo, PlatformTokenInfo, ModelTokenIn
 from ..config import PlatformConfig
 from ..utils import get_proxy_config
 
-class GeminiHandler(BasePlatformHandler):
-    """Google Gemini platform cost handler"""
+class GoogleHandler(BasePlatformHandler):
+    """Google platform cost handler"""
     
     @classmethod
     def get_default_config(cls) -> dict:
-        """Get default configuration for Google Gemini platform"""
+        """Get default configuration for Google platform"""
         return {
             "api_url": "https://generativelanguage.googleapis.com/v1beta/models",
             "method": "GET",
@@ -35,13 +35,13 @@ class GeminiHandler(BasePlatformHandler):
         self.config = config
     
     def get_balance(self) -> CostInfo:
-        """Get cost information from Google Gemini"""
+        """Get cost information from Google"""
         return self._get_balance_with_api_key()
     
     def _get_balance_with_api_key(self) -> CostInfo:
         """Get balance using API key authentication"""
         if not self.config.api_url:
-            raise ValueError("No API URL configured for Google Gemini")
+            raise ValueError("No API URL configured for Google")
         
         # Get API key from environment variable
         api_key = os.getenv(self.config.env_var or 'GOOGLE_API_KEY')
@@ -91,8 +91,8 @@ class GeminiHandler(BasePlatformHandler):
     
     def get_platform_name(self) -> str:
         """Get platform display name"""
-        return "Google Gemini"
+        return "Google"
     
     def get_model_tokens(self) -> PlatformTokenInfo:
-        """Get model-level token information from Google Gemini"""
+        """Get model-level token information from Google"""
         raise NotImplementedError(f"Model token checking not implemented for {self.get_platform_name()}")

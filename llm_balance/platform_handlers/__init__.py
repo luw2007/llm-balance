@@ -11,7 +11,7 @@ from .zhipu import ZhipuHandler
 from .siliconflow import SiliconFlowHandler
 from .openai import OpenAIHandler
 from .anthropic import AnthropicHandler
-from .gemini import GeminiHandler
+from .google import GoogleHandler
 from .foxcode import FoxCodeHandler
 from .duckcoding import DuckCodingHandler
 
@@ -28,7 +28,7 @@ def create_handler(config, browser: str = 'chrome'):
         'siliconflow': SiliconFlowHandler,
         'openai': OpenAIHandler,
         'anthropic': AnthropicHandler,
-        'gemini': GeminiHandler,
+        'google': GoogleHandler,
         'foxcode': FoxCodeHandler,
         'duckcoding': DuckCodingHandler,
     }

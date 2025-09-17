@@ -14,7 +14,7 @@ llm-balance cost --platform=deepseek      # DeepSeek ✅
 llm-balance cost --platform=moonshot     # Moonshot AI ✅
 llm-balance cost --platform=openai       # OpenAI ✅
 llm-balance cost --platform=anthropic    # Anthropic ✅
-llm-balance cost --platform=gemini       # Gemini ✅
+llm-balance cost --platform=google       # Gemini ✅
 llm-balance cost --platform=volcengine   # 火山引擎 ✅
 llm-balance cost --platform=aliyun       # 阿里云 ✅
 llm-balance cost --platform=tencent      # 腾讯云 ✅
@@ -159,7 +159,7 @@ llm-balance cost --platform=openai --browser=chrome --currency=GBP --format=mark
 # 国际平台
 # export OPENAI_ADMIN_KEY="your_openai_admin_key"      # OpenAI (当前不支持)
 export ANTHROPIC_API_KEY="your_anthropic_api_key"   # Anthropic Claude
-export GEMINI_API_KEY="your_gemini_api_key"         # Google Gemini
+export GEMINI_API_KEY="your_google_api_key"         # Google Gemini
 export AZURE_ACCESS_TOKEN="your_azure_token"        # Azure OpenAI
 
 # 中国平台

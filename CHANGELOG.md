@@ -38,7 +38,7 @@ All notable changes to this project will be documented in this file.
 ## [0.2.2] - 2025-09-16
 
 ### Fixed
-- CLI: `enable`/`disable` now accept multiple platforms via comma-separated values or multiple args (e.g., `llm-balance enable gemini,openai`).
+- CLI: `enable`/`disable` now accept multiple platforms via comma-separated values or multiple args (e.g., `llm-balance enable google,openai`).
 
 ## [0.2.1] - 2025-09-16
 

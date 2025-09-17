@@ -5,7 +5,7 @@
 ## Key Features
 
 - **🔑 Multiple Authentication**: API Key, browser cookie, official SDK support
-- **🌐 12 Platforms Supported**: DeepSeek, Moonshot, Volcengine, Aliyun, Tencent, Zhipu, SiliconFlow, OpenAI, Anthropic, Gemini (+ third-party relays: FoxCode, DuckCoding)
+- **🌐 12 Platforms Supported**: DeepSeek, Moonshot, Volcengine, Aliyun, Tencent, Zhipu, SiliconFlow, OpenAI, Anthropic, Google (+ third-party relays: FoxCode, DuckCoding)
 - **💰 Real-time Balance & Spent**: Track both current balance and actual spending
 - **📊 Flexible Output**: Table, JSON, Markdown, and total-only formats
 - **💱 Multi-Currency**: Automatic conversion between CNY, USD, EUR, and more
@@ -376,7 +376,7 @@ platforms:
 |----------|----------------|--------|-------------|-------------|---------------|
 | **OpenAI** | Admin API | ✅ | Requires OPENAI_ADMIN_KEY | ❌ Not Available | ✅ Full Support |
 | **Anthropic** | Admin API | ✅ | Requires ANTHROPIC_ADMIN_KEY | ❌ Not Available | ✅ Full Support |
-| **Gemini** | API Key | ✅ | Requires GOOGLE_API_KEY | ❌ Not Available | ✅ Full Support |
+| **Google** | API Key | ✅ | Requires GOOGLE_API_KEY | ❌ Not Available | ✅ Full Support |
 
 ### 🇨🇳 Chinese Platforms (7)
 
@@ -619,7 +619,7 @@ src/llm_balance/
     ├── siliconflow.py     # SiliconFlow handler ✅
     ├── openai.py          # OpenAI handler ✅
     ├── anthropic.py       # Anthropic handler ✅
-    ├── gemini.py          # Gemini handler ✅
+    ├── google.py          # Google handler ✅
     ├── foxcode.py         # FoxCode relay handler ✅
     └── duckcoding.py      # DuckCoding relay handler ✅
 ```

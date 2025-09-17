@@ -140,7 +140,7 @@ platforms:
       User-Agent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
       Accept: "application/json"
 
-  gemini:
+  google:
     # Gemini API configuration
     api_url: "https://generativelanguage.googleapis.com/v1/models"
     method: "GET"

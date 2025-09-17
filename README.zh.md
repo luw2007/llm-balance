@@ -262,7 +262,7 @@ platforms:
 |------|----------|------|------|-----------|-----------|
 | **OpenAI** | Admin API | ✅ | 需要 OPENAI_ADMIN_KEY | ❌ 不支持 | ✅ 完整支持 |
 | **Anthropic** | Admin API | ✅ | 需要 ANTHROPIC_ADMIN_KEY | ❌ 不支持 | ✅ 完整支持 |
-| **Gemini** | API Key | ✅ | 需要 GOOGLE_API_KEY | ❌ 不支持 | ✅ 完整支持 |
+| **Google** | API Key | ✅ | 需要 GOOGLE_API_KEY | ❌ 不支持 | ✅ 完整支持 |
 
 ### 🇨🇳 中国平台 (7)
 
