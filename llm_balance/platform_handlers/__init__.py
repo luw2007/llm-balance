@@ -13,6 +13,7 @@ from .openai import OpenAIHandler
 from .anthropic import AnthropicHandler
 from .gemini import GeminiHandler
 from .foxcode import FoxCodeHandler
+from .duckcoding import DuckCodingHandler
 
 def create_handler(config, browser: str = 'chrome'):
     """Factory function to create platform handlers using Python-based configuration"""
@@ -29,6 +30,7 @@ def create_handler(config, browser: str = 'chrome'):
         'anthropic': AnthropicHandler,
         'gemini': GeminiHandler,
         'foxcode': FoxCodeHandler,
+        'duckcoding': DuckCodingHandler,
     }
     
     # Get handler class from configuration

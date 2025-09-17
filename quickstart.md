@@ -1,6 +1,6 @@
 # LLM Balance Checker Quick Reference
 
-**Supporting 7 production-ready LLM platforms + third-party relay (FoxCode)**
+**Supporting 12 production-ready LLM platforms + third-party relays (FoxCode, DuckCoding)**
 
 ## Basic Commands
 
@@ -10,13 +10,18 @@
 llm-balance cost
 
 # Check specific platform (production-ready)
-llm-balance cost --platform=deepseek   # DeepSeek ✅
-llm-balance cost --platform=moonshot    # Moonshot AI ✅
-llm-balance cost --platform=openai      # OpenAI ✅
-llm-balance cost --platform=volcengine  # Volcengine ✅
-llm-balance cost --platform=aliyun      # Alibaba Cloud ✅
-llm-balance cost --platform=tencent     # Tencent Cloud ✅
-llm-balance cost --platform=zhipu       # Zhipu AI ✅
+llm-balance cost --platform=deepseek      # DeepSeek ✅
+llm-balance cost --platform=moonshot     # Moonshot AI ✅
+llm-balance cost --platform=openai       # OpenAI ✅
+llm-balance cost --platform=anthropic    # Anthropic ✅
+llm-balance cost --platform=gemini       # Gemini ✅
+llm-balance cost --platform=volcengine   # Volcengine ✅
+llm-balance cost --platform=aliyun       # Alibaba Cloud ✅
+llm-balance cost --platform=tencent      # Tencent Cloud ✅
+llm-balance cost --platform=zhipu        # Zhipu AI ✅
+llm-balance cost --platform=siliconflow # SiliconFlow ✅
+llm-balance cost --platform=foxcode      # FoxCode Relay ✅
+llm-balance cost --platform=duckcoding   # DuckCoding Relay ✅
 
 # Check multiple platforms at once (comma-separated)
 llm-balance cost --platform=volcengine,aliyun,deepseek
@@ -88,6 +93,10 @@ llm-balance config deepseek enabled true
 
 # Set timeout
 llm-balance config deepseek timeout 30
+
+# Independent configuration for special platforms
+llm-balance platform_config duckcoding api_user_id 10801
+llm-balance platform_config duckcoding  # View config
 ```
 
 ## Exchange Rate Management

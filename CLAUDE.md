@@ -10,7 +10,7 @@ A Python CLI tool for checking costs and balances across multiple LLM platforms.
 
 ### Core Components
 
-- **CLI Layer** (`cli.py`): Fire-based CLI interface with commands like `cost`, `tokens`, `list`, `enable`, `disable`
+- **CLI Layer** (`cli.py`): Fire-based CLI interface with commands like `cost`, `package`, `list`, `enable`, `disable`
 - **BalanceChecker** (`balance_checker.py`): Main orchestrator that manages platform checking and formatting
 - **TokenChecker** (`token_checker.py`): Token usage monitoring for supported platforms
 - **ConfigManager** (`config.py`): YAML configuration management with global browser settings
@@ -19,16 +19,40 @@ A Python CLI tool for checking costs and balances across multiple LLM platforms.
 
 ### Authentication Methods
 
-1. **API Key**: Bearer token authentication (DeepSeek, Moonshot)
+1. **API Key**: Bearer token authentication (DeepSeek, Moonshot, SiliconFlow)
 2. **Browser Cookies**: Automatic cookie extraction via pycookiecheat (Zhipu)
 3. **Official SDK**: Enterprise SDK integration (Aliyun, Volcengine, Tencent)
+4. **Third-party Relays**: Cookie-based authentication for third-party services (FoxCode, DuckCoding)
 
 ### Configuration System
 
-- **Location**: `~/.llm_balance/platforms.yaml`
+- **Location**: `~/.llm_balance/config.yaml`
 - **Global Settings**: Single browser configuration for all cookie-based platforms
 - **Per-Platform**: Enable/disable, authentication type, API endpoints
 - **Dynamic Updates**: Runtime configuration changes via CLI commands
+- **Independent Configs**: Special platforms use separate config files to avoid global pollution
+
+#### Independent Configuration Architecture
+
+Some platforms (like DuckCoding) require special configuration that should not pollute the global config:
+
+1. **Environment Variables**: `DUCKCODING_API_USER_ID` (highest priority)
+2. **Separate Config Files**: `~/.llm_balance/duckcoding_config.yaml` (medium priority)
+3. **Global Config**: `~/.llm_balance/config.yaml` (lowest priority, only for `enabled` flag)
+
+#### Platform Configuration Commands
+
+```bash
+# View DuckCoding configuration
+llm-balance platform_config duckcoding
+
+# Set DuckCoding configuration
+llm-balance platform_config duckcoding api_user_id 10801
+
+# Environment variable override
+export DUCKCODING_API_USER_ID=10801
+llm-balance cost --platform=duckcoding
+```
 
 ## Development Commands
 
@@ -108,6 +132,9 @@ export ALIYUN_ACCESS_KEY_ID="your_key"
 export ALIYUN_ACCESS_KEY_SECRET="your_key"
 export TENCENT_API_KEY="your_key"
 
+# Third-party relay specific
+export DUCKCODING_API_USER_ID="your_user_id"
+
 # Custom configuration
 export LLM_BALANCE_CONFIG_FILE="/path/to/config.yaml"
 export LLM_BALANCE_RATES='{"USD": 7.5}'
@@ -164,6 +191,27 @@ Each handler implements:
 - `get_platform_name()`: Returns display name
 - `get_model_tokens()`: Optional method for token usage monitoring
 - Authentication logic specific to platform type
+- Independent configuration loading (for special platforms like DuckCoding)
+
+#### Independent Configuration Pattern
+
+For platforms requiring special configuration (e.g., DuckCoding):
+
+```python
+def _load_env_config(self):
+    """Load configuration from environment variables or separate config file."""
+    # Try environment variable first
+    env_user_id = os.getenv('DUCKCODING_API_USER_ID')
+    if env_user_id:
+        self.config.api_user_id = env_user_id
+        return
+
+    # Try separate config file
+    config_path = Path.home() / '.llm_balance' / 'duckcoding_config.yaml'
+    if config_path.exists():
+        # Load configuration from file
+        pass
+```
 
 ### Spent Tracking Implementation
 
@@ -256,6 +304,7 @@ python -c "from llm_balance.config import ConfigManager; cm = ConfigManager(); p
 1. **API Key Authentication**: Direct HTTP requests with Authorization headers
 2. **SDK Authentication**: Use platform-specific SDKs (Aliyun, Volcengine, Tencent)
 3. **Cookie Authentication**: Extract cookies from browser using pycookiecheat (Zhipu)
+4. **Third-party Authentication**: Custom cookie extraction for relay services (FoxCode, DuckCoding)
 
 ### Error Handling
 
@@ -266,8 +315,9 @@ python -c "from llm_balance.config import ConfigManager; cm = ConfigManager(); p
 ### Configuration Architecture
 
 - **Platform Configs**: Defined in `platform_configs.py` with default settings
-- **User Configs**: Stored in `~/.llm_balance/platforms.yaml` for user overrides
+- **User Configs**: Stored in `~/.llm_balance/config.yaml` for user overrides
 - **Runtime Configs**: Merged configuration with environment variable support
+- **Independent Configs**: Some platforms use separate config files (e.g., `~/.llm_balance/duckcoding_config.yaml`)
 
 ### Output Formatting
 
@@ -288,7 +338,7 @@ python -c "from llm_balance.config import ConfigManager; cm = ConfigManager(); p
 The test suite (`test_llm_balance.py`) follows a comprehensive approach:
 - **Environment Validation**: Checks CLI availability and required environment variables
 - **Multi-Format Testing**: Validates table, JSON, total, and markdown output formats
-- **Platform Coverage**: Tests all 7 platforms individually and collectively
+- **Platform Coverage**: Tests all 12 platforms individually and collectively
 - **Error Handling**: Gracefully handles platform failures and provides detailed error reporting
 - **Performance Tracking**: Measures execution time for each test case
 - **Report Generation**: Creates detailed JSON reports for analysis and debugging
@@ -298,3 +348,90 @@ The test suite (`test_llm_balance.py`) follows a comprehensive approach:
 - **Package Command Tests**: Verify token usage monitoring functionality
 - **Platform-Specific Tests**: Isolate individual platform issues
 - **Integration Tests**: Ensure overall system reliability
+
+## Platform Handler Patterns
+
+### API Key Authentication (DeepSeek)
+```python
+class DeepSeekHandler(BasePlatformHandler):
+    def get_balance(self) -> CostInfo:
+        # Get API key from environment
+        api_key = os.getenv(self.config.env_var)
+        headers['Authorization'] = f'Bearer {api_key}'
+        # Make request and parse response
+        response = self._make_request(url=self.config.api_url, headers=headers)
+        balance = self._extract_balance(response)
+        return CostInfo(platform=self.get_platform_name(), balance=balance, ...)
+```
+
+### SDK Authentication (Volcengine)
+```python
+class VolcengineHandler(BasePlatformHandler):
+    def _get_balance_with_sdk(self) -> CostInfo:
+        # Initialize SDK with credentials
+        configuration = volcenginesdkcore.Configuration()
+        configuration.ak = os.getenv('VOLCENGINE_ACCESS_KEY')
+        configuration.sk = os.getenv('VOLCENGINE_SECRET_KEY')
+        # Use SDK methods
+        api_instance = volcenginesdkbilling.BILLINGApi()
+        resp = api_instance.query_balance_acct(query_balance_request)
+        return CostInfo(platform=self.get_platform_name(), balance=balance, ...)
+```
+
+### Cookie Authentication (Zhipu)
+```python
+class ZhipuHandler(BasePlatformHandler):
+    def get_balance(self) -> CostInfo:
+        # Extract cookies from browser
+        cookies = self._get_cookies(self.config.cookie_domain)
+        auth_cookie = cookies.get('bigmodel_token_production')
+        headers['authorization'] = auth_cookie
+        # Make request with cookies
+        response = self._make_request(url=self.config.api_url, headers=headers, cookies=cookies)
+        return CostInfo(platform=self.get_platform_name(), balance=balance, ...)
+```
+
+### Third-party Relay (DuckCoding)
+```python
+class DuckCodingHandler(BasePlatformHandler):
+    def __init__(self, config: PlatformConfig, browser: str = 'chrome'):
+        super().__init__(browser)
+        self.config = config
+        self._load_env_config()  # Load from separate config file
+
+    def _load_env_config(self):
+        # Try environment variable first, then separate config file
+        env_user_id = os.getenv('DUCKCODING_API_USER_ID')
+        if not env_user_id:
+            # Load from ~/.llm_balance/duckcoding_config.yaml
+```
+
+## CLI Command Structure
+
+### Main Commands
+- `llm-balance cost`: Check balance and spent across platforms
+- `llm-balance package`: Check token usage for supported platforms
+- `llm-balance list`: List available platforms
+- `llm-balance enable/disable`: Enable or disable platforms
+- `llm-balance config`: View/edit platform configuration
+- `llm-balance set-browser`: Set global browser for cookie-based platforms
+- `llm-balance rates`: Show current exchange rates
+- `llm-balance diagnose`: Run system diagnostics
+- `llm-balance generate_config`: Generate configuration file from handlers
+
+### Platform Selection
+- Single platform: `--platform=deepseek`
+- Multiple platforms: `--platform=deepseek,volcengine`
+- Multiple arguments: `--platform=deepseek --platform=volcengine`
+- All platforms: (no --platform flag)
+
+### Output Formats
+- `--format=table`: Clean console output (default)
+- `--format=json`: Machine-readable with raw data
+- `--format=total`: Single currency total
+- `--format=markdown`: Documentation-friendly
+
+### Currency Support
+- `--currency=USD`: Convert totals to USD
+- `--currency=EUR`: Convert totals to EUR
+- Custom rates via `LLM_BALANCE_RATES` environment variable

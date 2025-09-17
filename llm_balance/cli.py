@@ -287,12 +287,13 @@ class LLMBalanceCLI:
         # Set configuration value
         if key in config:
             # Convert string values to appropriate types
-            if value.lower() in ['true', 'false']:
-                value = value.lower() == 'true'
-            elif value.isdigit():
-                value = int(value)
-            elif value.replace('.', '').isdigit():
-                value = float(value)
+            if isinstance(value, str):
+                if value.lower() in ['true', 'false']:
+                    value = value.lower() == 'true'
+                elif value.isdigit():
+                    value = int(value)
+                elif value.replace('.', '').isdigit():
+                    value = float(value)
             
             if platform not in config_manager.user_config:
                 config_manager.user_config[platform] = {}
@@ -395,15 +396,15 @@ class LLMBalanceCLI:
     def generate_config(self, output: str = None) -> str:
         """
         Generate configuration file from platform handlers
-        
+
         Args:
             output: Output file path (optional, defaults to user config directory)
-        
+
         Returns:
             Generation result
         """
         from .platform_configs import ConfigManager
-        
+
         try:
             config_manager = ConfigManager(self.config_file)
             output_path = config_manager.generate_config_file(output)
@@ -415,13 +416,78 @@ class LLMBalanceCLI:
             result += "   • 配置文件包含所有平台的默认配置\n"
             result += "   • 可以手动编辑此文件来自定义配置\n"
             result += "   • 使用 'llm-balance config <platform>' 查看具体配置\n"
-            
+
         except Exception as e:
             result = f"❌ 配置文件生成失败: {e}\n"
             result += "=" * 30 + "\n\n"
             result += "请检查文件权限和路径\n"
-        
+
         return result
+
+    def platform_config(self, platform: str, key: str = None, value: str = None) -> str:
+        """
+        Manage platform-specific configuration (separate from global config)
+
+        Args:
+            platform: Platform name (currently only supports 'duckcoding')
+            key: Configuration key (optional)
+            value: Configuration value (optional)
+
+        Returns:
+            Configuration status
+        """
+        import yaml
+        from pathlib import Path
+
+        if platform.lower() != 'duckcoding':
+            return f"Platform '{platform}' does not support separate configuration. Use 'llm-balance config {platform}' instead."
+
+        config_path = Path.home() / '.llm_balance' / 'duckcoding_config.yaml'
+
+        # Load existing config
+        config = {}
+        if config_path.exists():
+            try:
+                with open(config_path, 'r', encoding='utf-8') as f:
+                    config = yaml.safe_load(f) or {}
+            except Exception as e:
+                return f"Error loading config: {e}"
+
+        if key is None:
+            # Show all configuration
+            if not config:
+                return "No DuckCoding configuration found. Set DUCKCODING_API_USER_ID environment variable or create ~/.llm_balance/duckcoding_config.yaml"
+
+            import json
+            return json.dumps(config, indent=2, ensure_ascii=False)
+
+        if value is None:
+            # Show specific key
+            if key in config:
+                return f"duckcoding.{key} = {config[key]}"
+            else:
+                return f"Key '{key}' not found in DuckCoding configuration"
+
+        # Set configuration value
+        # Convert string values to appropriate types
+        if isinstance(value, str):
+            if value.lower() in ['true', 'false']:
+                value = value.lower() == 'true'
+            elif value.isdigit():
+                value = int(value)
+            elif value.replace('.', '').isdigit():
+                value = float(value)
+
+        config[key] = value
+
+        # Save config
+        try:
+            config_path.parent.mkdir(exist_ok=True)
+            with open(config_path, 'w', encoding='utf-8') as f:
+                yaml.dump(config, f, default_flow_style=False, allow_unicode=True)
+            return f"Set duckcoding.{key} = {value} (stored in separate config file)"
+        except Exception as e:
+            return f"Error saving config: {e}"
 
 def main():
     """Main CLI entry point"""

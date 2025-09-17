@@ -34,6 +34,7 @@ class PlatformConfig:
     projects_api_url: Optional[str] = None
     cookie_org_id_url: Optional[str] = None
     region: Optional[str] = None
+    api_user_id: Optional[str] = None
     
     # Legacy compatibility fields
     balance_path: Optional[list] = None
@@ -142,7 +143,7 @@ class ConfigManager:
         from .platform_handlers import (
             DeepSeekHandler, MoonshotHandler, VolcengineHandler,
             AliyunHandler, TencentHandler, ZhipuHandler, SiliconFlowHandler,
-            OpenAIHandler, AnthropicHandler, GeminiHandler, FoxCodeHandler
+            OpenAIHandler, AnthropicHandler, GeminiHandler, FoxCodeHandler, DuckCodingHandler
         )
         
         handler_map = {
@@ -157,6 +158,7 @@ class ConfigManager:
             'anthropic': AnthropicHandler,
             'gemini': GeminiHandler,
             'foxcode': FoxCodeHandler,
+            'duckcoding': DuckCodingHandler,
         }
         
         if platform_name not in handler_map:
@@ -187,7 +189,7 @@ class ConfigManager:
     
     def get_all_platforms(self) -> List[str]:
         """Get all available platform names"""
-        return ['deepseek', 'moonshot', 'volcengine', 'aliyun', 'tencent', 'zhipu', 'siliconflow', 'openai', 'anthropic', 'gemini', 'foxcode']
+        return ['deepseek', 'moonshot', 'volcengine', 'aliyun', 'tencent', 'zhipu', 'siliconflow', 'openai', 'anthropic', 'gemini', 'foxcode', 'duckcoding']
     
     def get_enabled_platforms(self) -> List[PlatformConfig]:
         """Get enabled platform configurations"""
@@ -204,7 +206,7 @@ class ConfigManager:
                     description=config.get('description', f'{platform_name.title()} platform'),
                     auth_type=config.get('auth_type', 'api_key'),
                     enabled=config.get('enabled', True),
-                    **{k: v for k, v in config.items() if k not in ['name', 'display_name', 'handler_class', 'description', 'auth_type', 'enabled']}
+                    **{k: v for k, v in config.items() if k not in ['name', 'display_name', 'handler_class', 'description', 'auth_type', 'enabled', 'user_id']}
                 )
                 enabled_platforms.append(platform_config)
         
@@ -247,7 +249,7 @@ class ConfigManager:
         from .platform_handlers import (
             DeepSeekHandler, MoonshotHandler, VolcengineHandler,
             AliyunHandler, TencentHandler, ZhipuHandler, SiliconFlowHandler,
-            OpenAIHandler, AnthropicHandler, GeminiHandler, FoxCodeHandler
+            OpenAIHandler, AnthropicHandler, GeminiHandler, FoxCodeHandler, DuckCodingHandler
         )
         
         handler_map = {
@@ -262,6 +264,7 @@ class ConfigManager:
             'anthropic': AnthropicHandler,
             'gemini': GeminiHandler,
             'foxcode': FoxCodeHandler,
+            'duckcoding': DuckCodingHandler,
         }
         
         for name, handler_class in handler_map.items():

@@ -87,7 +87,7 @@ platforms:
     # export TENCENT_SECRET_KEY="your_secret_key"
   
   
-    
+  
   zhipu:
     # 智谱AI configuration - 使用 Cookie 认证
     auth_type: "cookie"
@@ -100,18 +100,110 @@ platforms:
     headers:
       User-Agent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
       Accept: "application/json"
+
+  siliconflow:
+    # SiliconFlow API configuration
+    api_url: "https://api.siliconflow.cn/v1/user/info"
+    method: "GET"
+    auth_type: "bearer_token"
+    env_var: "SILICONFLOW_API_KEY"
+    # Set environment variable: export SILICONFLOW_API_KEY="your_api_key"
+    enabled: true
+    headers:
+      User-Agent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
+      Accept: "application/json"
+
+  openai:
+    # OpenAI Admin API configuration
+    api_url: "https://api.openai.com/v1/organization/costs"
+    method: "GET"
+    auth_type: "bearer_token"
+    env_var: "OPENAI_ADMIN_KEY"
+    # Set environment variable: export OPENAI_ADMIN_KEY="your_admin_key"
+    enabled: true
+    params:
+      start_time: 1730419200
+      limit: 1
+    headers:
+      User-Agent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
+      Accept: "application/json"
+
+  anthropic:
+    # Anthropic Admin API configuration
+    api_url: "https://api.anthropic.com/v1/messages"
+    method: "GET"
+    auth_type: "bearer_token"
+    env_var: "ANTHROPIC_ADMIN_KEY"
+    # Set environment variable: export ANTHROPIC_ADMIN_KEY="your_admin_key"
+    enabled: true
+    headers:
+      User-Agent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
+      Accept: "application/json"
+
+  gemini:
+    # Gemini API configuration
+    api_url: "https://generativelanguage.googleapis.com/v1/models"
+    method: "GET"
+    auth_type: "bearer_token"
+    env_var: "GOOGLE_API_KEY"
+    # Set environment variable: export GOOGLE_API_KEY="your_api_key"
+    enabled: true
+    headers:
+      User-Agent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
+      Accept: "application/json"
+
+  foxcode:
+    # FoxCode 第三方中转配置 - Cookie 认证
+    auth_type: "cookie"
+    cookie_domain: "foxcode.rjj.cc"
+    method: "GET"
+    enabled: true
+    # 需要在浏览器中登录 https://foxcode.rjj.cc
+    headers:
+      User-Agent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
+      Accept: "application/json"
+
+  duckcoding:
+    # DuckCoding 第三方中转配置 - Cookie 认证 + 独立配置
+    auth_type: "cookie"
+    cookie_domain: "duckcoding.com"
+    method: "GET"
+    enabled: true
+    # 需要在浏览器中登录 https://duckcoding.com
+    # 需要配置 api_user_id，通过环境变量或独立配置文件：
+    # export DUCKCODING_API_USER_ID="your_user_id"
+    # 或创建 ~/.llm_balance/duckcoding_config.yaml
+    headers:
+      User-Agent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
+      Accept: "application/json"
   
 
 # ============================================
 # Platform Status Summary
 # ============================================
-# 
-# Chinese Platforms (6): DeepSeek, Moonshot, Volcengine, Aliyun, Tencent, Zhipu
-# 
+#
+# International Platforms (3): OpenAI, Anthropic, Gemini
+# Chinese Platforms (7): DeepSeek, Moonshot, SiliconFlow, Volcengine, Aliyun, Tencent, Zhipu
+# Third-Party Relays (2): FoxCode, DuckCoding
+#
 # Authentication Types:
-# - API Key: DeepSeek, Moonshot
+# - API Key: DeepSeek, Moonshot, SiliconFlow, OpenAI, Anthropic, Gemini
 # - SDK: Volcengine, Aliyun, Tencent
-# - Cookie: Zhipu
-# 
-# Total: 6 platforms supported (main branch)
+# - Cookie: Zhipu, FoxCode, DuckCoding
+# - Independent Config: DuckCoding
+#
+# Total: 12 platforms supported (main branch)
+# ============================================
+
+# ============================================
+# Special Configuration Notes
+# ============================================
+#
+# DuckCoding requires independent configuration:
+# 1. Environment variable: export DUCKCODING_API_USER_ID="your_user_id"
+# 2. Separate config file: ~/.llm_balance/duckcoding_config.yaml
+#    api_user_id: your_user_id
+# 3. CLI command: llm-balance platform_config duckcoding api_user_id your_user_id
+#
+# This avoids polluting the global configuration with platform-specific settings.
 # ============================================

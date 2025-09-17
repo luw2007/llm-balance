@@ -8,15 +8,15 @@ from ..config import PlatformConfig
 
 
 class FoxCodeHandler(BasePlatformHandler):
-    """FoxCode relay platform handler (only model package query is implemented)."""
+    """FoxCode relay platform handler (balance and package query implemented)."""
 
     @classmethod
     def get_default_config(cls) -> dict:
-        """Default configuration for FoxCode package query via cookie auth."""
+        """Default configuration for FoxCode balance and package query via cookie auth."""
         return {
             "display_name": "FoxCode",
             "handler_class": "FoxCodeHandler",
-            "description": "FoxCode relay (package only)",
+            "description": "FoxCode relay (balance and package)",
             "api_url": "https://foxcode.rjj.cc/api/user/dashboard",
             "method": "GET",
             "auth_type": "cookie",
@@ -41,10 +41,11 @@ class FoxCodeHandler(BasePlatformHandler):
         return "FoxCode"
 
     def get_balance(self) -> CostInfo:
-        """Return cost info using dashboard history as Spent.
+        """Return cost info using history-based calculation with usage ratio.
 
-        - Balance display is not applicable for this relay; we mark it as '-'
-        - Spent = sum of history plan.price (CNY)
+        - Total = sum of history plan.price (CNY)
+        - Spent = total * data.used_quota / data.quota
+        - Balance = total - spent
         """
         if not getattr(self.config, 'api_url', None):
             raise ValueError("No API URL configured for FoxCode")
@@ -93,11 +94,15 @@ class FoxCodeHandler(BasePlatformHandler):
         if not response:
             raise ValueError("No response from FoxCode dashboard API")
 
-        # Extract spent from subscription history
+        # Extract total from subscription history and usage from active packages
+        total = 0.0
+        balance = 0.0
         spent = 0.0
         try:
             data = response.get('data', {}) if isinstance(response, dict) else {}
             subscription = data.get('subscription', {}) if isinstance(data, dict) else {}
+
+            # Step 1: Calculate total from subscription history
             history = subscription.get('history', [])
             if isinstance(history, dict):
                 history = list(history.values())
@@ -109,18 +114,121 @@ class FoxCodeHandler(BasePlatformHandler):
                     price = plan.get('price') if plan else h.get('price')
                     try:
                         if price is not None:
-                            spent += float(str(price).replace(',', '').strip())
+                            total += float(str(price).replace(',', '').strip())
                     except Exception:
                         continue
-        except Exception:
-            spent = 0.0
+                    
+            # Step 2: Extract total_quota and used_quota by merging active and history data with ID deduplication
+            active = subscription.get('active', [])
+            if isinstance(active, dict):
+                active = list(active.values())
 
-        # Balance is not applicable, set '-' (formatters will display '-')
-        balance_placeholder = "-"
+            total_quota = 0.0
+            used_quota = 0.0
+
+            # Helper function to extract numeric value
+            def _num(v) -> float:
+                try:
+                    if v is None:
+                        return 0.0
+                    if isinstance(v, (int, float)):
+                        return float(v)
+                    s = str(v).strip()
+                    s = s.replace(',', '')
+                    return float(s)
+                except Exception:
+                    return 0.0
+
+            # Helper function to extract quota from item
+            def _extract_quota(item) -> float:
+                quota_keys = ['quotaLimit', 'quota', 'total', 'limit', 'tokens', 'credits']
+
+                # Check direct keys
+                for key in quota_keys:
+                    if key in item:
+                        return _num(item[key])
+
+                # Check nested plan object
+                if 'plan' in item and isinstance(item['plan'], dict):
+                    plan = item['plan']
+                    for key in quota_keys:
+                        if key in plan:
+                            return _num(plan[key])
+
+                return 0.0
+
+            # Helper function to extract used quota from item
+            def _extract_used_quota(item) -> float:
+                used_keys = ['quotaUsed', 'used', 'usage', 'consumed']
+
+                for key in used_keys:
+                    if key in item:
+                        return _num(item[key])
+
+                return 0.0
+
+            # Helper function to get item ID
+            def _get_item_id(item) -> str:
+                return str(item.get('id', '') or item.get('plan_id', '') or item.get('subscription_id', ''))
+
+            # Process active items first (priority)
+            active_ids = set()
+            if isinstance(active, list):
+                for item in active:
+                    if not isinstance(item, dict):
+                        continue
+
+                    item_id = _get_item_id(item)
+                    if item_id:
+                        active_ids.add(item_id)
+
+                    # Add quota from active item
+                    total_quota += _extract_quota(item)
+
+                    # Add used quota from active item
+                    used_quota += _extract_used_quota(item)
+
+            # Process history items (only those not in active)
+            history = subscription.get('history', [])
+            if isinstance(history, dict):
+                history = list(history.values())
+
+            if isinstance(history, list):
+                for item in history:
+                    if not isinstance(item, dict):
+                        continue
+
+                    item_id = _get_item_id(item)
+                    if item_id and item_id in active_ids:
+                        # Skip duplicate items already processed in active
+                        continue
+
+                    # For history items, add quota if not already counted
+                    item_quota = _extract_quota(item)
+                    if item_quota > 0:
+                        total_quota += item_quota
+
+                    # For history items without quotaUsed, assume all quota is used
+                    item_used = _extract_used_quota(item)
+                    if item_used > 0:
+                        used_quota += item_used
+                    elif item_quota > 0:
+                        # History item without used_quota means it's fully consumed
+                        used_quota += item_quota
+
+            # Step 3: Calculate spent and balance based on usage ratio
+            if total > 0 and total_quota > 0:
+                usage_ratio = used_quota / total_quota
+                spent = total * usage_ratio
+                balance = total - spent
+
+        except Exception:
+            balance = 0.0
+            spent = 0.0
 
         return CostInfo(
             platform=self.get_platform_name(),
-            balance=balance_placeholder,  # type: ignore
+            balance=balance,
             currency='CNY',
             spent=spent,
             spent_currency='CNY',

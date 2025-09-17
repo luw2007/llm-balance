@@ -1,6 +1,6 @@
 # LLM Balance Checker 快速参考
 
-**支持8个生产就绪的LLM平台 + 第三方中转（FoxCode）**
+**支持12个生产就绪的LLM平台 + 第三方中转（FoxCode、DuckCoding）**
 
 ## 基本命令
 
@@ -10,14 +10,18 @@
 llm-balance cost
 
 # 查看特定平台（生产就绪）
-llm-balance cost --platform=deepseek   # DeepSeek ✅
-llm-balance cost --platform=moonshot    # Moonshot AI ✅
-llm-balance cost --platform=openai      # OpenAI ✅
-llm-balance cost --platform=volcengine  # 火山引擎 ✅
-llm-balance cost --platform=aliyun      # 阿里云 ✅
-llm-balance cost --platform=tencent     # 腾讯云 ✅
-llm-balance cost --platform=zhipu       # 智谱AI ✅
+llm-balance cost --platform=deepseek      # DeepSeek ✅
+llm-balance cost --platform=moonshot     # Moonshot AI ✅
+llm-balance cost --platform=openai       # OpenAI ✅
+llm-balance cost --platform=anthropic    # Anthropic ✅
+llm-balance cost --platform=gemini       # Gemini ✅
+llm-balance cost --platform=volcengine   # 火山引擎 ✅
+llm-balance cost --platform=aliyun       # 阿里云 ✅
+llm-balance cost --platform=tencent      # 腾讯云 ✅
+llm-balance cost --platform=zhipu        # 智谱AI ✅
 llm-balance cost --platform=siliconflow # 硅基流动 ✅
+llm-balance cost --platform=foxcode      # FoxCode 中转 ✅
+llm-balance cost --platform=duckcoding   # DuckCoding 中转 ✅
 
 # 同时查看多个平台（逗号分隔）
 llm-balance cost --platform=volcengine,aliyun,deepseek
@@ -89,6 +93,10 @@ llm-balance config deepseek enabled true
 
 # 设置超时时间
 llm-balance config deepseek timeout 30
+
+# 特殊平台的独立配置
+llm-balance platform_config duckcoding api_user_id 10801
+llm-balance platform_config duckcoding  # 查看配置
 ```
 
 ## 汇率管理

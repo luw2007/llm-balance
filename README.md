@@ -5,13 +5,14 @@
 ## Key Features
 
 - **🔑 Multiple Authentication**: API Key, browser cookie, official SDK support
-- **🌐 7 Platforms Supported**: DeepSeek, Moonshot, Volcengine, Aliyun, Tencent, Zhipu, SiliconFlow (+ third-party relay: FoxCode)
+- **🌐 12 Platforms Supported**: DeepSeek, Moonshot, Volcengine, Aliyun, Tencent, Zhipu, SiliconFlow, OpenAI, Anthropic, Gemini (+ third-party relays: FoxCode, DuckCoding)
 - **💰 Real-time Balance & Spent**: Track both current balance and actual spending
 - **📊 Flexible Output**: Table, JSON, Markdown, and total-only formats
 - **💱 Multi-Currency**: Automatic conversion between CNY, USD, EUR, and more
 - **🎯 Token Monitoring**: Detailed token usage for supported platforms
 - **🛡️ Fault Tolerant**: Single platform failures won't break the entire tool
 - **⚙️ Easy Configuration**: Simple setup with environment variables
+- **🔒 Independent Configuration**: Special platforms use separate config files to avoid global pollution
 
 ## Quick Start
 
@@ -70,6 +71,24 @@ export TENCENT_API_KEY="your-tencent-secret-id:your-tencent-secret-key"
 # 2. Set global browser for cookie extraction
 llm-balance set-browser chrome
 # Or override per command: llm-balance cost --browser=chrome
+```
+
+#### Special Platforms with Independent Configuration
+```bash
+# DuckCoding (Requires independent configuration)
+# Method 1: Environment variable
+export DUCKCODING_API_USER_ID="your_user_id"
+
+# Method 2: Separate config file
+llm-balance platform_config duckcoding api_user_id your_user_id
+
+# Method 3: Manual config file creation
+cat > ~/.llm_balance/duckcoding_config.yaml << EOF
+api_user_id: your_user_id
+EOF
+
+# Then login to https://duckcoding.com and run:
+llm-balance cost --platform=duckcoding
 ```
 
 ### First Use
@@ -188,6 +207,10 @@ llm-balance disable moonshot
 # Switch authentication method (SDK vs Cookie)
 llm-balance config volcengine auth_type sdk    # Use official SDK
 llm-balance config volcengine auth_type cookie  # Use browser cookies
+
+# Independent configuration for special platforms
+llm-balance platform_config duckcoding         # View DuckCoding config
+llm-balance platform_config duckcoding api_user_id 10801  # Set user ID
 ```
 
 ### Configuration Management
@@ -347,11 +370,13 @@ platforms:
 
 ## Supported Platforms
 
-### 🌍 International Platforms (0)
+### 🌍 International Platforms (3)
 
-| Platform | Authentication | Status | Description |
-|----------|----------------|--------|-------------|
-| **OpenAI** | Admin API | ❌ | Currently not supported for balance queries |
+| Platform | Authentication | Status | Description | Token Usage | Spent Tracking |
+|----------|----------------|--------|-------------|-------------|---------------|
+| **OpenAI** | Admin API | ✅ | Requires OPENAI_ADMIN_KEY | ❌ Not Available | ✅ Full Support |
+| **Anthropic** | Admin API | ✅ | Requires ANTHROPIC_ADMIN_KEY | ❌ Not Available | ✅ Full Support |
+| **Gemini** | API Key | ✅ | Requires GOOGLE_API_KEY | ❌ Not Available | ✅ Full Support |
 
 ### 🇨🇳 Chinese Platforms (7)
 
@@ -365,11 +390,20 @@ platforms:
 | **Zhipu** | Cookie | ✅ | Requires login to https://open.bigmodel.cn | ✅ Full Support | ✅ Full Support |
 | **SiliconFlow** | API Key | ✅ | Requires SILICONFLOW_API_KEY | ❌ Not Available | ✅ Full Support |
 
+### 🔄 Third-Party Relay Platforms (2)
+
+| Platform | Authentication | Status | Description | Token Usage | Spent Tracking | Independent Config |
+|----------|----------------|--------|-------------|-------------|---------------|-------------------|
+| **FoxCode** | Cookie | ✅ | Relay service with dashboard access | ✅ Full Support | ✅ Full Support | ❌ No |
+| **DuckCoding** | Cookie | ✅ | Relay service with token packages | ✅ Full Support | ✅ Full Support | ✅ Yes |
+
 ### 📊 Platform Status Summary
 
-**Production-Ready (7 platforms)**: All platforms listed above are fully tested and ready for production use.
+**Production-Ready (12 platforms)**: All platforms listed above are fully tested and ready for production use.
 
-**Development Status**: Additional platforms (Claude, Google Gemini, Azure OpenAI, Lingyi, MiniMax) are available in the `dev` branch and under active development.
+**Independent Configuration**: DuckCoding uses separate configuration files to avoid polluting global settings.
+
+**Development Status**: Additional platforms (Azure OpenAI, Lingyi, MiniMax) are available in the `dev` branch and under active development.
 
 ### Token Usage Support
 
@@ -455,6 +489,47 @@ llm-balance package --platform=foxcode --browser=chrome
 llm-balance cost --platform=foxcode --browser=chrome
 ```
 
+### Third-Party Relay: DuckCoding
+
+DuckCoding is a cookie-authenticated relay with token-based package and cost information, using independent configuration.
+
+- Auth: Browser cookie on `duckcoding.com`. Query `https://duckcoding.com/api/user/self` with `new-api-user` header.
+- Configuration: Requires `api_user_id` setting via environment variable or separate config file.
+- package: Uses `data.quota` and `data.used_quota` from user info.
+  - Total = `quota` (in tokens)
+  - Used = `used_quota` (in tokens)
+  - Remaining = Total - Used
+  - Package column shows "DuckCoding 按量计费(不到期)"
+- cost: Balance and spent calculated from quota data.
+  - Balance = `quota / 500000` (in CNY)
+  - Spent = `used_quota / 500000` (in CNY)
+
+Configuration Options:
+```bash
+# Method 1: Environment variable
+export DUCKCODING_API_USER_ID="10801"
+
+# Method 2: CLI command
+llm-balance platform_config duckcoding api_user_id 10801
+
+# Method 3: Manual config file
+cat > ~/.llm_balance/duckcoding_config.yaml << EOF
+api_user_id: 10801
+EOF
+```
+
+Examples:
+```bash
+# Check balance and spent
+llm-balance cost --platform=duckcoding
+# Check token usage
+llm-balance package --platform=duckcoding
+# View configuration
+llm-balance platform_config duckcoding
+# Configure user ID
+llm-balance platform_config duckcoding api_user_id 10801
+```
+
 ## Browser Support
 
 ### 🌍 Global Browser Configuration
@@ -527,22 +602,29 @@ src/llm_balance/
 ├── cli.py                  # CLI command interface
 ├── balance_checker.py      # Main business logic
 ├── config.py              # Configuration file management
+├── platform_configs.py     # Platform configuration management
 ├── error_handler.py       # Error handling
 ├── utils.py               # Utility functions
+├── token_checker.py       # Token usage monitoring
+├── token_formatter.py     # Token output formatting
 └── platform_handlers/     # Platform handlers
     ├── __init__.py         # Handler factory
     ├── base.py            # Base handler class
     ├── aliyun.py          # Aliyun handler ✅
     ├── deepseek.py        # DeepSeek handler ✅
-    ├── openai.py          # OpenAI handler ✅
     ├── moonshot.py        # Moonshot handler ✅
     ├── volcengine.py      # Volcengine handler ✅
     ├── tencent.py         # Tencent handler ✅
     ├── zhipu.py           # Zhipu handler ✅
-    └── generic.py         # Generic handler
+    ├── siliconflow.py     # SiliconFlow handler ✅
+    ├── openai.py          # OpenAI handler ✅
+    ├── anthropic.py       # Anthropic handler ✅
+    ├── gemini.py          # Gemini handler ✅
+    ├── foxcode.py         # FoxCode relay handler ✅
+    └── duckcoding.py      # DuckCoding relay handler ✅
 ```
 
-**Note**: Additional platform handlers (Claude, Gemini, Azure OpenAI, Lingyi, MiniMax) are available in the `dev` branch.
+**Note**: Additional platform handlers (Azure OpenAI, Lingyi, MiniMax) are available in the `dev` branch.
 
 ### Adding New Platforms
 
