@@ -199,7 +199,7 @@ def _format_table(balances: List[Dict[str, Any]], target_currency: str = 'CNY') 
             lines.append(f"{platform:<20} {amount_display:<15} {currency:<10}")
         
         # Convert to target currency for total
-        if amount_float > 0:  # Only add to total if we have valid data
+        if not amount_is_dash and amount_is_numeric:  # Add to total if we have valid numeric data (including negative)
             total += convert_currency(amount_float, currency, target_currency)
         
         # Add spent to total spent
@@ -288,8 +288,8 @@ def _format_total(balances: List[Dict[str, Any]], target_currency: str = 'CNY') 
             spent = balance.get('spent', 0)
             currency = balance['currency']
             
-            # Only include numeric amounts in totals
-            if isinstance(amount, (int, float)):
+            # Only include numeric amounts in totals (including negative)
+            if isinstance(amount, (int, float)) and amount != 0:
                 total += convert_currency(float(amount), currency, target_currency)
             
             if has_spent and isinstance(spent, (int, float)):

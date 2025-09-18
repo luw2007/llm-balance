@@ -35,6 +35,9 @@ class PlatformConfig:
     cookie_org_id_url: Optional[str] = None
     region: Optional[str] = None
     api_user_id: Optional[str] = None
+    console_token: Optional[str] = None
+    org_id: Optional[str] = None
+    ingress_cookie: Optional[str] = None
     
     # Legacy compatibility fields
     balance_path: Optional[list] = None

@@ -85,10 +85,11 @@ class SiliconFlowHandler(BasePlatformHandler):
         if data:
             total_balance = data.get('totalBalance', 0)
             try:
-                return float(total_balance)
+                balance_float = float(total_balance)
+                return self._validate_balance(balance_float, "totalBalance")
             except (ValueError, TypeError):
                 return None
-        return None
+        return 0.0
     
     def _extract_currency(self, response: Dict[str, Any]) -> Optional[str]:
         """Extract currency from SiliconFlow API response"""

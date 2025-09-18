@@ -31,9 +31,32 @@ class PlatformTokenInfo:
 
 class BasePlatformHandler(ABC):
     """Base class for platform cost handlers"""
-    
+
     def __init__(self, browser='chrome'):
         self.browser = browser
+
+    def _validate_balance(self, balance: float, field_name: str = "balance") -> float:
+        """验证余额值，确保其合理性"""
+        if balance is None:
+            return 0.0
+
+        try:
+            balance_float = float(balance)
+        except (ValueError, TypeError):
+            print(f"Warning: Invalid {field_name} value: {balance}, using 0.0")
+            return 0.0
+
+        # 处理负数余额
+        if balance_float < 0:
+            print(f"Warning: Negative {field_name} detected: {balance_float}, using 0.0")
+            return 0.0
+
+        # 处理异常大值（超过100万）
+        if balance_float > 1000000:
+            print(f"Warning: Extremely large {field_name} detected: {balance_float}, using 0.0")
+            return 0.0
+
+        return balance_float
         
     @abstractmethod
     def get_balance(self) -> CostInfo:

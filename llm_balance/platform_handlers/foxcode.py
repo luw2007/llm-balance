@@ -220,11 +220,15 @@ class FoxCodeHandler(BasePlatformHandler):
             if total > 0 and total_quota > 0:
                 usage_ratio = used_quota / total_quota
                 spent = total * usage_ratio
-                balance = total - spent
+                balance = max(0.0, total - spent)  # Ensure balance is not negative
 
         except Exception:
             balance = 0.0
             spent = 0.0
+
+        # Validate final balance and spent
+        balance = self._validate_balance(balance, "balance")
+        spent = self._validate_balance(spent, "spent")
 
         return CostInfo(
             platform=self.get_platform_name(),

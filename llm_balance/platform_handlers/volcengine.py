@@ -171,34 +171,38 @@ class VolcengineHandler(BasePlatformHandler):
             # Handle SDK response object - check for balance_acct_result first (legacy)
             if hasattr(response, 'balance_acct_result'):
                 result = response.balance_acct_result
-                
+
                 if hasattr(result, 'available_amount'):
-                    return float(result.available_amount)
+                    return self._validate_balance(float(result.available_amount), "available_amount")
                 elif hasattr(result, 'AvailableAmount'):
-                    return float(result.AvailableAmount)
+                    return self._validate_balance(float(result.AvailableAmount), "AvailableAmount")
                 elif hasattr(result, 'total_amount'):
-                    return float(result.total_amount)
+                    return self._validate_balance(float(result.total_amount), "total_amount")
                 elif hasattr(result, 'TotalAmount'):
-                    return float(result.TotalAmount)
-            
+                    return self._validate_balance(float(result.TotalAmount), "TotalAmount")
+
             # Try direct attributes on response - check for new API structure
+            # Define field priority (available > cash > total)
             balance_attributes = [
                 'available_balance', 'AvailableBalance',
                 'cash_balance', 'CashBalance',
                 'available_amount', 'AvailableAmount',
-                'total_amount', 'TotalAmount',
-                'balance', 'Balance'
+                'balance', 'Balance',
+                'total_amount', 'TotalAmount'
             ]
-            
+
             for attr in balance_attributes:
                 if hasattr(response, attr):
                     value = getattr(response, attr)
                     if value is not None and value != '-':
                         try:
-                            return float(value)
+                            balance_float = float(value)
+                            validated_balance = self._validate_balance(balance_float, attr)
+                            if validated_balance > 0:
+                                return validated_balance
                         except (ValueError, TypeError):
                             continue
-            
+
             # Handle dict response (legacy format)
             if isinstance(response, dict):
                 # Extract from Result.InvoiceAccount.AvailableAmount
@@ -206,12 +210,12 @@ class VolcengineHandler(BasePlatformHandler):
                     invoice_account = response['Result']['InvoiceAccount']
                     balance = invoice_account.get('AvailableAmount') or invoice_account.get('TotalAmount')
                     if balance:
-                        return float(balance)
-            
+                        return self._validate_balance(float(balance), "AvailableAmount")
+
         except (ValueError, TypeError, KeyError) as e:
             pass
-        
-        return None
+
+        return 0.0
     
     def _extract_currency(self, response: Dict[str, Any]) -> Optional[str]:
         """Extract currency from Volcengine API response"""
