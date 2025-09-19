@@ -1,5 +1,5 @@
 """
-YouAPI third-party relay handler (balance query only)
+YourAPI third-party relay handler (balance query only)
 """
 
 import os
@@ -10,16 +10,16 @@ from .base import BasePlatformHandler, PlatformTokenInfo, ModelTokenInfo, CostIn
 from ..config import PlatformConfig
 
 
-class YouAPIHandler(BasePlatformHandler):
-    """YouAPI relay platform handler (only balance query is implemented)."""
+class YourAPIHandler(BasePlatformHandler):
+    """YourAPI relay platform handler (only balance query is implemented)."""
 
     @classmethod
     def get_default_config(cls) -> dict:
-        """Default configuration for YouAPI balance query via cookie auth."""
+        """Default configuration for YourAPI balance query via cookie auth."""
         return {
-            "display_name": "YouAPI",
-            "handler_class": "YouAPIHandler",
-            "description": "YouAPI relay (balance only)",
+            "display_name": "YourAPI",
+            "handler_class": "YourAPIHandler",
+            "description": "YourAPI relay (balance only)",
             "api_url": "https://yourapi.cn/api/user/self",
             "method": "GET",
             "auth_type": "cookie",
@@ -55,24 +55,24 @@ class YouAPIHandler(BasePlatformHandler):
     def _load_env_config(self):
         """Load configuration from environment variables or separate config file."""
         # Try environment variable first
-        env_new_api_user = os.getenv('YOUAPI_NEW_API_USER')
+        env_new_api_user = os.getenv('YOURAPI_NEW_API_USER')
         if env_new_api_user:
             self.config.new_api_user = env_new_api_user
             return
 
         # Try separate config file
-        config_path = Path.home() / '.llm_balance' / 'youapi_config.yaml'
+        config_path = Path.home() / '.llm_balance' / 'yourapi_config.yaml'
         if config_path.exists():
             try:
                 with open(config_path, 'r', encoding='utf-8') as f:
-                    youapi_config = yaml.safe_load(f) or {}
+                    yourapi_config = yaml.safe_load(f) or {}
                     if 'new_api_user' in youapi_config:
                         self.config.new_api_user = youapi_config['new_api_user']
             except Exception:
                 pass
 
     def get_platform_name(self) -> str:
-        return "YouAPI"
+        return "YourAPI"
 
     def get_balance(self) -> CostInfo:
         """Return cost info using quota data from API.
@@ -81,7 +81,7 @@ class YouAPIHandler(BasePlatformHandler):
         - Spent = used_quota (consumed tokens)
         """
         if not getattr(self.config, 'api_url', None):
-            raise ValueError("No API URL configured for YouAPI")
+            raise ValueError("No API URL configured for YourAPI")
 
         headers = (self.config.headers or {}).copy()
 
@@ -89,9 +89,9 @@ class YouAPIHandler(BasePlatformHandler):
         new_api_user = getattr(self.config, 'new_api_user', None)
         if not new_api_user:
             raise ValueError(
-                "YouAPI requires new_api_user to be configured. Please set it using:\n"
-                "1. Environment variable: export YOUAPI_NEW_API_USER=YOUR_USER_ID\n"
-                "2. Separate config file: ~/.llm_balance/youapi_config.yaml\n"
+                "YourAPI requires new_api_user to be configured. Please set it using:\n"
+                "1. Environment variable: export YOURAPI_NEW_API_USER=YOUR_USER_ID\n"
+                "2. Separate config file: ~/.llm_balance/yourapi_config.yaml\n"
                 "   new_api_user: YOUR_USER_ID"
             )
 
@@ -112,7 +112,7 @@ class YouAPIHandler(BasePlatformHandler):
         )
 
         if not response:
-            raise ValueError("No response from YouAPI user API")
+            raise ValueError("No response from YourAPI user API")
 
         # Extract balance and spent from quota data
         balance = 0.0
@@ -151,7 +151,7 @@ class YouAPIHandler(BasePlatformHandler):
         )
 
     def get_model_tokens(self) -> PlatformTokenInfo:
-        """Query YouAPI user data and create usage package from quota info.
+        """Query YourAPI user data and create usage package from quota info.
 
         Authentication:
             - Use session cookie from browser
@@ -163,10 +163,10 @@ class YouAPIHandler(BasePlatformHandler):
 
         Models:
             - Generic model name: "gpt-4,gpt-3.5-turbo,claude"
-            - Package name: "YouAPI Quota Package"
+            - Package name: "YourAPI Quota Package"
         """
         if not getattr(self.config, 'api_url', None):
-            raise ValueError("No API URL configured for YouAPI")
+            raise ValueError("No API URL configured for YourAPI")
 
         headers = (self.config.headers or {}).copy()
 
@@ -174,9 +174,9 @@ class YouAPIHandler(BasePlatformHandler):
         new_api_user = getattr(self.config, 'new_api_user', None)
         if not new_api_user:
             raise ValueError(
-                "YouAPI requires new_api_user to be configured. Please set it using:\n"
-                "1. Environment variable: export YOUAPI_NEW_API_USER=YOUR_USER_ID\n"
-                "2. Separate config file: ~/.llm_balance/youapi_config.yaml\n"
+                "YourAPI requires new_api_user to be configured. Please set it using:\n"
+                "1. Environment variable: export YOURAPI_NEW_API_USER=YOUR_USER_ID\n"
+                "2. Separate config file: ~/.llm_balance/yourapi_config.yaml\n"
                 "   new_api_user: YOUR_USER_ID"
             )
 
@@ -197,7 +197,7 @@ class YouAPIHandler(BasePlatformHandler):
         )
 
         if not response:
-            raise ValueError("No response from YouAPI user API")
+            raise ValueError("No response from YourAPI user API")
 
         # Extract quota information
         models = self._extract_models_from_quota(response)
@@ -234,7 +234,7 @@ class YouAPIHandler(BasePlatformHandler):
         username = user_data.get('username', 'user')
         group = user_data.get('group', 'default')
 
-        package_name = f"YouAPI {group.title()} Package"
+        package_name = f"YourAPI {group.title()} Package"
 
         # Convert to numeric values
         def _num(v) -> float:

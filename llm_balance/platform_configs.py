@@ -146,7 +146,7 @@ class ConfigManager:
         from .platform_handlers import (
             DeepSeekHandler, MoonshotHandler, VolcengineHandler,
             AliyunHandler, TencentHandler, ZhipuHandler, SiliconFlowHandler,
-            OpenAIHandler, AnthropicHandler, GoogleHandler, FoxCodeHandler, DuckCodingHandler, Handler88Code, YouAPIHandler
+            OpenAIHandler, AnthropicHandler, GoogleHandler, FoxCodeHandler, DuckCodingHandler, Handler88Code, YourAPIHandler
         )
 
         handler_map = {
@@ -163,7 +163,7 @@ class ConfigManager:
             'foxcode': FoxCodeHandler,
             'duckcoding': DuckCodingHandler,
             '88code': Handler88Code,
-            'youapi': YouAPIHandler,
+            'yourapi': YourAPIHandler,
         }
         
         if platform_name not in handler_map:
@@ -194,7 +194,7 @@ class ConfigManager:
     
     def get_all_platforms(self) -> List[str]:
         """Get all available platform names"""
-        return ['deepseek', 'moonshot', 'volcengine', 'aliyun', 'tencent', 'zhipu', 'siliconflow', 'openai', 'anthropic', 'google', 'foxcode', 'duckcoding', '88code', 'youapi']
+        return ['deepseek', 'moonshot', 'volcengine', 'aliyun', 'tencent', 'zhipu', 'siliconflow', 'openai', 'anthropic', 'google', 'foxcode', 'duckcoding', '88code', 'yourapi']
     
     def get_enabled_platforms(self) -> List[PlatformConfig]:
         """Get enabled platform configurations"""
@@ -254,7 +254,7 @@ class ConfigManager:
         from .platform_handlers import (
             DeepSeekHandler, MoonshotHandler, VolcengineHandler,
             AliyunHandler, TencentHandler, ZhipuHandler, SiliconFlowHandler,
-            OpenAIHandler, AnthropicHandler, GoogleHandler, FoxCodeHandler, DuckCodingHandler, Handler88Code, YouAPIHandler
+            OpenAIHandler, AnthropicHandler, GoogleHandler, FoxCodeHandler, DuckCodingHandler, Handler88Code, YourAPIHandler
         )
 
         handler_map = {
@@ -271,7 +271,7 @@ class ConfigManager:
             'foxcode': FoxCodeHandler,
             'duckcoding': DuckCodingHandler,
             '88code': Handler88Code,
-            'youapi': YouAPIHandler,
+            'yourapi': YourAPIHandler,
         }
         
         for name, handler_class in handler_map.items():

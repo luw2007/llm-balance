@@ -5,7 +5,7 @@
 ## Key Features
 
 - **🔑 Multiple Authentication**: API Key, browser cookie, official SDK support
-- **🌐 14 Platforms Supported**: DeepSeek, Moonshot, Volcengine, Aliyun, Tencent, Zhipu, SiliconFlow, OpenAI, Anthropic, Google (+ third-party relays: FoxCode, DuckCoding, 88Code, YouAPI)
+- **🌐 14 Platforms Supported**: DeepSeek, Moonshot, Volcengine, Aliyun, Tencent, Zhipu, SiliconFlow, OpenAI, Anthropic, Google (+ third-party relays: FoxCode, DuckCoding, 88Code, YourAPI)
 - **💰 Real-time Balance & Spent**: Track both current balance and actual spending
 - **📊 Flexible Output**: Table, JSON, Markdown, and total-only formats
 - **💱 Multi-Currency**: Automatic conversion between CNY, USD, EUR, and more
@@ -397,13 +397,13 @@ platforms:
 | **FoxCode** | Cookie | ✅ | Relay service with dashboard access | ✅ Full Support | ✅ Full Support | ❌ No |
 | **DuckCoding** | Cookie | ✅ | Relay service with token packages | ✅ Full Support | ✅ Full Support | ✅ Yes |
 | **88Code** | Console Token | ✅ | Relay service with subscription packages | ✅ Full Support | ✅ Full Support | ✅ Yes |
-| **YouAPI** | Cookie | ✅ | Relay service with quota system | ✅ Full Support | ✅ Full Support | ✅ Yes |
+| **YourAPI** | Cookie | ✅ | Relay service with quota system | ✅ Full Support | ✅ Full Support | ✅ Yes |
 
 ### 📊 Platform Status Summary
 
 **Production-Ready (14 platforms)**: All platforms listed above are fully tested and ready for production use.
 
-**Independent Configuration**: DuckCoding, 88Code, and YouAPI use separate configuration files to avoid polluting global settings.
+**Independent Configuration**: DuckCoding, 88Code, and YourAPI use separate configuration files to avoid polluting global settings.
 
 **Development Status**: Additional platforms (Azure OpenAI, Lingyi, MiniMax) are available in the `dev` branch and under active development.
 
@@ -564,9 +564,9 @@ llm-balance cost --platform=88code
 llm-balance package --platform=88code
 ```
 
-### Third-Party Relay: YouAPI
+### Third-Party Relay: YourAPI
 
-YouAPI is a cookie-authenticated relay with simple quota-based balance and spent calculation.
+YourAPI is a cookie-authenticated relay with simple quota-based balance and spent calculation.
 
 - Auth: Browser cookie on `yourapi.cn` with `new-api-user` header.
 - Configuration: Requires `new_api_user` setting via environment variable or separate config file.
@@ -581,10 +581,10 @@ YouAPI is a cookie-authenticated relay with simple quota-based balance and spent
 Configuration Options:
 ```bash
 # Method 1: Environment variable
-export YOUAPI_NEW_API_USER="5942"
+export YOURAPI_NEW_API_USER="5942"
 
 # Method 2: Manual config file
-cat > ~/.llm_balance/youapi_config.yaml << EOF
+cat > ~/.llm_balance/yourapi_config.yaml << EOF
 new_api_user: "5942"
 EOF
 ```
@@ -592,11 +592,11 @@ EOF
 Examples:
 ```bash
 # Check balance and spent
-llm-balance cost --platform=youapi
+llm-balance cost --platform=yourapi
 # Check token usage
-llm-balance package --platform=youapi
+llm-balance package --platform=yourapi
 # View configuration
-llm-balance platform_config youapi
+llm-balance platform_config yourapi
 ```
 
 ## Browser Support
@@ -692,7 +692,7 @@ src/llm_balance/
     ├── foxcode.py         # FoxCode relay handler ✅
     ├── duckcoding.py      # DuckCoding relay handler ✅
     ├── _88code.py         # 88Code relay handler ✅
-    └── youapi.py          # YouAPI relay handler ✅
+    └── yourapi.py          # YourAPI relay handler ✅
 ```
 
 **Note**: Additional platform handlers (Azure OpenAI, Lingyi, MiniMax) are available in the `dev` branch.

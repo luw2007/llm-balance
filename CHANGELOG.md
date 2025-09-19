@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [0.2.4] - 2025-09-19
 
 ### Added
-- YouAPI third-party relay support (balance + package):
+- YourAPI third-party relay support (balance + package):
   - Cookie auth via `new-api-user` header against `https://yourapi.cn/api/user/self`.
   - package: parse `data.quota` and `data.used_quota`:
     - Total = `quota` (token count, converted to CNY by dividing by 500000)
@@ -30,7 +30,7 @@ All notable changes to this project will be documented in this file.
 - Status column feature for package display:
   - Added `status` field to `ModelTokenInfo` dataclass
   - Updated token formatter to display status columns in table and markdown formats
-  - Implemented status determination logic across all platforms (88code, zhipuai, duckcoding, foxcode, volcengine, aliyun, tencent, youapi)
+  - Implemented status determination logic across all platforms (88code, zhipuai, duckcoding, foxcode, volcengine, aliyun, tencent, yourapi)
   - Enhanced package display with activation status information
 
 ### Changed
@@ -40,7 +40,7 @@ All notable changes to this project will be documented in this file.
 - Improved spent calculation accuracy for subscription-based platforms
 
 ### Docs
-- Updated all documentation files to include 88Code and YouAPI support
+- Updated all documentation files to include 88Code and YourAPI support
 - Added comprehensive configuration examples for new platforms
 - Updated platform status summaries (now supports 14 platforms total)
 - Enhanced authentication and configuration documentation
