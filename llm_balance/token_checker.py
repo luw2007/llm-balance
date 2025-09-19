@@ -37,7 +37,8 @@ class TokenChecker:
                                 'package': model.package,
                                 'remaining_tokens': model.remaining_tokens,
                                 'used_tokens': model.used_tokens,
-                                'total_tokens': model.total_tokens
+                                'total_tokens': model.total_tokens,
+                                'status': model.status
                             }
                             for model in token_info.models
                         ],
@@ -78,7 +79,8 @@ class TokenChecker:
                             'package': model.package,
                             'remaining_tokens': model.remaining_tokens,
                             'used_tokens': model.used_tokens,
-                            'total_tokens': model.total_tokens
+                            'total_tokens': model.total_tokens,
+                            'status': model.status
                         }
                         for model in token_info.models
                     ],

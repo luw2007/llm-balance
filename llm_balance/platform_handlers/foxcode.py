@@ -430,7 +430,8 @@ class FoxCodeHandler(BasePlatformHandler):
                 package=package_name,
                 remaining_tokens=remaining,
                 used_tokens=used,
-                total_tokens=total
+                total_tokens=total,
+                status="active"  # FoxCode only processes active items from the subscription
             ))
 
         # Sort by remaining descending for readability

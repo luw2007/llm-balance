@@ -46,9 +46,9 @@ def format_model_tokens(platform_tokens: List[Dict[str, Any]], format_type: str 
 def _format_model_table(platform_tokens: List[Dict[str, Any]], target_currency: str = 'CNY') -> str:
     """Format model tokens as detailed table"""
     lines = []
-    lines.append("=" * 115)
-    lines.append(f"{'Platform':<15} {'Model':<30} {'Total':<12} {'Used':<12} {'Remaining':<12} {'Progress %':<11} {'Package':<20}")
-    lines.append("-" * 115)
+    lines.append("=" * 125)
+    lines.append(f"{'Platform':<15} {'Model':<30} {'Total':<12} {'Used':<12} {'Remaining':<12} {'Progress %':<11} {'Status':<8} {'Package':<15}")
+    lines.append("-" * 125)
     
     total_all_tokens = 0
     total_used_tokens = 0
@@ -59,7 +59,7 @@ def _format_model_table(platform_tokens: List[Dict[str, Any]], target_currency: 
         models = platform_data.get('models', [])
         
         if not models:
-            lines.append(f"{platform:<15} {'No data':<30} {'-':<12} {'-':<12} {'-':<12} {'-':<11} {'-':<20}")
+            lines.append(f"{platform:<15} {'No data':<30} {'-':<12} {'-':<12} {'-':<12} {'-':<11} {'-':<8} {'-':<15}")
             continue
         
         for model_info in models:
@@ -126,15 +126,18 @@ def _format_model_table(platform_tokens: List[Dict[str, Any]], target_currency: 
             else:
                 progress_display = " - "
 
-            lines.append(f"{platform:<15} {model:<30} {total:<12.0f} {used:<12.0f} {remaining:<12.0f} {progress_display:<11} {package:<20}")
+            # Get status with default fallback
+            status = str(model_info.get('status', 'active'))[:8]
+
+            lines.append(f"{platform:<15} {model:<30} {total:<12.0f} {used:<12.0f} {remaining:<12.0f} {progress_display:<11} {status:<8} {package:<15}")
 
             total_all_tokens += total
             total_used_tokens += used
             total_remaining_tokens += remaining
     
-    lines.append("-" * 115)
-    lines.append(f"{'Total Tokens':<45} {total_all_tokens:<12.0f} {total_used_tokens:<12.0f} {total_remaining_tokens:<12.0f} {'-':<11} {'-':<20}")
-    lines.append("=" * 115)
+    lines.append("-" * 125)
+    lines.append(f"{'Total Tokens':<53} {total_all_tokens:<12.0f} {total_used_tokens:<12.0f} {total_remaining_tokens:<12.0f} {'-':<11} {'-':<8} {'-':<15}")
+    lines.append("=" * 125)
     
     return '\n'.join(lines)
 
@@ -154,8 +157,8 @@ def _format_model_markdown(platform_tokens: List[Dict[str, Any]]) -> str:
         
         if models:
             lines.append(f"## {platform}\n")
-            lines.append("| Platform | Model | Total | Used | Remaining | Progress % | Package |")
-            lines.append("|----------|-------|-------|------|-----------|------------|---------|")
+            lines.append("| Platform | Model | Total | Used | Remaining | Progress % | Status | Package |")
+            lines.append("|----------|-------|-------|------|-----------|------------|--------|---------|")
             
             for model_info in models:
                 model = model_info['model']
@@ -180,7 +183,9 @@ def _format_model_markdown(platform_tokens: List[Dict[str, Any]]) -> str:
                 else:
                     progress_pct = "-"
 
-                lines.append(f"| {platform} | {model} | {total:.0f} | {used:.0f} | {remaining:.0f} | {progress_pct} | {package} |")
+                # Get status with default fallback
+                status = model_info.get('status', 'active')
+                lines.append(f"| {platform} | {model} | {total:.0f} | {used:.0f} | {remaining:.0f} | {progress_pct} | {status} | {package} |")
             
             lines.append("")
     

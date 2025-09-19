@@ -452,7 +452,8 @@ class VolcengineHandler(BasePlatformHandler):
                     package=package_name,
                     remaining_tokens=available_amount,
                     used_tokens=used_tokens,
-                    total_tokens=total_amount
+                    total_tokens=total_amount,
+                    status="active"  # Volcengine packages are active when returned by API
                 ))
         
         except Exception as e:

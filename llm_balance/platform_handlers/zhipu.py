@@ -201,7 +201,8 @@ class ZhipuHandler(BasePlatformHandler):
                 package=package_name,  # Always use resourcePackageName for display
                 remaining_tokens=available_balance,
                 used_tokens=used_tokens,
-                total_tokens=token_balance
+                total_tokens=token_balance,
+                status="active"  # Only effective packages are processed
             )
             models.append(model_info)
         

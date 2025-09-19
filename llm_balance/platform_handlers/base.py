@@ -22,6 +22,7 @@ class ModelTokenInfo:
     remaining_tokens: float
     used_tokens: float
     total_tokens: float
+    status: str = "active"
 
 @dataclass
 class PlatformTokenInfo:

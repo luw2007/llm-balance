@@ -158,7 +158,8 @@ class TencentHandler(BasePlatformHandler):
                 model=config["model"],
                 remaining_tokens=model_remaining,
                 used_tokens=model_used,
-                total_tokens=model_total
+                total_tokens=model_total,
+                status="active"  # Tencent packages are active when returned by API
             ))
         
         return models

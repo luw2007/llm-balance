@@ -239,7 +239,8 @@ class DuckCodingHandler(BasePlatformHandler):
             package="DuckCoding 按量计费",
             remaining_tokens=remaining_quota,
             used_tokens=used_quota,
-            total_tokens=total_quota
+            total_tokens=total_quota,
+            status="active"  # DuckCoding packages are always active when returned
         )
 
         return PlatformTokenInfo(
