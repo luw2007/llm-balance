@@ -66,8 +66,8 @@ class YourAPIHandler(BasePlatformHandler):
             try:
                 with open(config_path, 'r', encoding='utf-8') as f:
                     yourapi_config = yaml.safe_load(f) or {}
-                    if 'new_api_user' in youapi_config:
-                        self.config.new_api_user = youapi_config['new_api_user']
+                    if 'new_api_user' in yourapi_config:
+                        self.config.new_api_user = yourapi_config['new_api_user']
             except Exception:
                 pass
 
