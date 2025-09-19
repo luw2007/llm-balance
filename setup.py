@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="llm-balance",
-    version="0.2.3",
+    version="0.2.4",
     description="Check LLM platform balance and usage via API keys and browser cookies",
     author="Your Name",
     packages=find_packages(),

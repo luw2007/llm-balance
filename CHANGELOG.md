@@ -2,6 +2,49 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.4] - 2025-09-19
+
+### Added
+- YouAPI third-party relay support (balance + package):
+  - Cookie auth via `new-api-user` header against `https://yourapi.cn/api/user/self`.
+  - package: parse `data.quota` and `data.used_quota`:
+    - Total = `quota` (token count, converted to CNY by dividing by 500000)
+    - Used = `used_quota` (token count, converted to CNY by dividing by 500000)
+    - Remaining = Total - Used
+    - Package displays user group information with status display
+  - cost: Balance and spent calculated from quota data with currency conversion
+  - Requires independent configuration via environment variable or separate config file
+
+### Added
+- 88Code third-party relay support (balance + package):
+  - Console token auth via environment variable or separate config file
+  - package: Uses subscription data from `https://www.88code.org/admin-api/cc-admin/system/subscription/my`
+    - Total = sum of all subscription costs (active + inactive)
+    - Balance = calculated based on usage ratio of active subscriptions
+    - Spent = Total cost - Balance
+    - Package column shows subscription features with status display
+  - Status: Shows "active" or "inactive" based on subscription `isActive` flag
+  - Fixed spent calculation to include all subscriptions for accurate total cost
+
+### Added
+- Status column feature for package display:
+  - Added `status` field to `ModelTokenInfo` dataclass
+  - Updated token formatter to display status columns in table and markdown formats
+  - Implemented status determination logic across all platforms (88code, zhipuai, duckcoding, foxcode, volcengine, aliyun, tencent, youapi)
+  - Enhanced package display with activation status information
+
+### Changed
+- Renamed "code88" platform to "88code" throughout the codebase
+- Updated all platform handlers to support status field in token information
+- Enhanced independent configuration system for new relay platforms
+- Improved spent calculation accuracy for subscription-based platforms
+
+### Docs
+- Updated all documentation files to include 88Code and YouAPI support
+- Added comprehensive configuration examples for new platforms
+- Updated platform status summaries (now supports 14 platforms total)
+- Enhanced authentication and configuration documentation
+
 ## [0.2.3] - 2025-09-17
 
 ### Added

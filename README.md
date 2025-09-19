@@ -5,7 +5,7 @@
 ## Key Features
 
 - **🔑 Multiple Authentication**: API Key, browser cookie, official SDK support
-- **🌐 12 Platforms Supported**: DeepSeek, Moonshot, Volcengine, Aliyun, Tencent, Zhipu, SiliconFlow, OpenAI, Anthropic, Google (+ third-party relays: FoxCode, DuckCoding)
+- **🌐 14 Platforms Supported**: DeepSeek, Moonshot, Volcengine, Aliyun, Tencent, Zhipu, SiliconFlow, OpenAI, Anthropic, Google (+ third-party relays: FoxCode, DuckCoding, 88Code, YouAPI)
 - **💰 Real-time Balance & Spent**: Track both current balance and actual spending
 - **📊 Flexible Output**: Table, JSON, Markdown, and total-only formats
 - **💱 Multi-Currency**: Automatic conversion between CNY, USD, EUR, and more
@@ -390,18 +390,20 @@ platforms:
 | **Zhipu** | Cookie | ✅ | Requires login to https://open.bigmodel.cn | ✅ Full Support | ✅ Full Support |
 | **SiliconFlow** | API Key | ✅ | Requires SILICONFLOW_API_KEY | ❌ Not Available | ✅ Full Support |
 
-### 🔄 Third-Party Relay Platforms (2)
+### 🔄 Third-Party Relay Platforms (4)
 
 | Platform | Authentication | Status | Description | Token Usage | Spent Tracking | Independent Config |
 |----------|----------------|--------|-------------|-------------|---------------|-------------------|
 | **FoxCode** | Cookie | ✅ | Relay service with dashboard access | ✅ Full Support | ✅ Full Support | ❌ No |
 | **DuckCoding** | Cookie | ✅ | Relay service with token packages | ✅ Full Support | ✅ Full Support | ✅ Yes |
+| **88Code** | Console Token | ✅ | Relay service with subscription packages | ✅ Full Support | ✅ Full Support | ✅ Yes |
+| **YouAPI** | Cookie | ✅ | Relay service with quota system | ✅ Full Support | ✅ Full Support | ✅ Yes |
 
 ### 📊 Platform Status Summary
 
-**Production-Ready (12 platforms)**: All platforms listed above are fully tested and ready for production use.
+**Production-Ready (14 platforms)**: All platforms listed above are fully tested and ready for production use.
 
-**Independent Configuration**: DuckCoding uses separate configuration files to avoid polluting global settings.
+**Independent Configuration**: DuckCoding, 88Code, and YouAPI use separate configuration files to avoid polluting global settings.
 
 **Development Status**: Additional platforms (Azure OpenAI, Lingyi, MiniMax) are available in the `dev` branch and under active development.
 
@@ -530,6 +532,73 @@ llm-balance platform_config duckcoding
 llm-balance platform_config duckcoding api_user_id 10801
 ```
 
+### Third-Party Relay: 88Code
+
+88Code is a console token-authenticated relay with subscription-based packages and cost information.
+
+- Auth: Console token via environment variable or separate config file.
+- Configuration: Requires `console_token` setting.
+- package: Uses subscription data from `https://www.88code.org/admin-api/cc-admin/system/subscription/my`.
+  - Total = sum of all subscription costs (active + inactive)
+  - Balance = calculated based on usage ratio of active subscriptions
+  - Spent = Total cost - Balance
+  - Package column shows subscription features with status display
+- Status: Shows "active" or "inactive" based on subscription `isActive` flag
+
+Configuration Options:
+```bash
+# Method 1: Environment variable
+export CODE88_CONSOLE_TOKEN="your_console_token"
+
+# Method 2: Manual config file
+cat > ~/.llm_balance/88code_config.yaml << EOF
+console_token: your_console_token
+EOF
+```
+
+Examples:
+```bash
+# Check balance and spent
+llm-balance cost --platform=88code
+# Check token usage with status display
+llm-balance package --platform=88code
+```
+
+### Third-Party Relay: YouAPI
+
+YouAPI is a cookie-authenticated relay with simple quota-based balance and spent calculation.
+
+- Auth: Browser cookie on `yourapi.cn` with `new-api-user` header.
+- Configuration: Requires `new_api_user` setting via environment variable or separate config file.
+- package: Uses quota data from `https://yourapi.cn/api/user/self`.
+  - Total = `quota` (in tokens, converted to CNY by dividing by 500000)
+  - Used = `used_quota` (in tokens, converted to CNY by dividing by 500000)
+  - Remaining = Total - Used
+  - Package column shows user group information
+  - Status: Shows "active" or "inactive" based on user status
+- cost: Balance and spent calculated from quota data with currency conversion.
+
+Configuration Options:
+```bash
+# Method 1: Environment variable
+export YOUAPI_NEW_API_USER="5942"
+
+# Method 2: Manual config file
+cat > ~/.llm_balance/youapi_config.yaml << EOF
+new_api_user: "5942"
+EOF
+```
+
+Examples:
+```bash
+# Check balance and spent
+llm-balance cost --platform=youapi
+# Check token usage
+llm-balance package --platform=youapi
+# View configuration
+llm-balance platform_config youapi
+```
+
 ## Browser Support
 
 ### 🌍 Global Browser Configuration
@@ -621,7 +690,9 @@ src/llm_balance/
     ├── anthropic.py       # Anthropic handler ✅
     ├── google.py          # Google handler ✅
     ├── foxcode.py         # FoxCode relay handler ✅
-    └── duckcoding.py      # DuckCoding relay handler ✅
+    ├── duckcoding.py      # DuckCoding relay handler ✅
+    ├── _88code.py         # 88Code relay handler ✅
+    └── youapi.py          # YouAPI relay handler ✅
 ```
 
 **Note**: Additional platform handlers (Azure OpenAI, Lingyi, MiniMax) are available in the `dev` branch.

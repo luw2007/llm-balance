@@ -15,6 +15,7 @@ from .google import GoogleHandler
 from .foxcode import FoxCodeHandler
 from .duckcoding import DuckCodingHandler
 from ._88code import Handler88Code
+from .youapi import YouAPIHandler
 
 def create_handler(config, browser: str = 'chrome'):
     """Factory function to create platform handlers using Python-based configuration"""
@@ -33,6 +34,7 @@ def create_handler(config, browser: str = 'chrome'):
         'foxcode': FoxCodeHandler,
         'duckcoding': DuckCodingHandler,
         '88code': Handler88Code,
+        'youapi': YouAPIHandler,
     }
     
     # Get handler class from configuration
