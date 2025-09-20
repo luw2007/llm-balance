@@ -22,7 +22,7 @@ A Python CLI tool for checking costs and balances across multiple LLM platforms.
 1. **API Key**: Bearer token authentication (DeepSeek, Moonshot, SiliconFlow)
 2. **Browser Cookies**: Automatic cookie extraction via pycookiecheat (Zhipu)
 3. **Official SDK**: Enterprise SDK integration (Aliyun, Volcengine, Tencent)
-4. **Third-party Relays**: Cookie-based authentication for third-party services (FoxCode, DuckCoding)
+4. **Third-party Relays**: Cookie-based authentication for third-party services (FoxCode, DuckCoding, CSMindAI, YouAPI)
 
 ### Configuration System
 
@@ -34,7 +34,7 @@ A Python CLI tool for checking costs and balances across multiple LLM platforms.
 
 #### Independent Configuration Architecture
 
-Some platforms (like DuckCoding) require special configuration that should not pollute the global config:
+Some platforms (like DuckCoding, CSMindAI, YouAPI) require special configuration that should not pollute the global config:
 
 1. **Environment Variables**: `DUCKCODING_API_USER_ID` (highest priority)
 2. **Separate Config Files**: `~/.llm_balance/duckcoding_config.yaml` (medium priority)
@@ -134,6 +134,8 @@ export TENCENT_API_KEY="your_key"
 
 # Third-party relay specific
 export DUCKCODING_API_USER_ID="your_user_id"
+export CSMINDDAI_NEW_API_USER="your_user_id"
+export YOUAPI_NEW_API_USER="your_user_id"
 
 # Custom configuration
 export LLM_BALANCE_CONFIG_FILE="/path/to/config.yaml"
@@ -195,7 +197,7 @@ Each handler implements:
 
 #### Independent Configuration Pattern
 
-For platforms requiring special configuration (e.g., DuckCoding):
+For platforms requiring special configuration (e.g., DuckCoding, CSMindAI, YouAPI):
 
 ```python
 def _load_env_config(self):
@@ -304,7 +306,7 @@ python -c "from llm_balance.config import ConfigManager; cm = ConfigManager(); p
 1. **API Key Authentication**: Direct HTTP requests with Authorization headers
 2. **SDK Authentication**: Use platform-specific SDKs (Aliyun, Volcengine, Tencent)
 3. **Cookie Authentication**: Extract cookies from browser using pycookiecheat (Zhipu)
-4. **Third-party Authentication**: Custom cookie extraction for relay services (FoxCode, DuckCoding)
+4. **Third-party Authentication**: Custom cookie extraction for relay services (FoxCode, DuckCoding, CSMindAI, YouAPI)
 
 ### Error Handling
 
@@ -317,7 +319,7 @@ python -c "from llm_balance.config import ConfigManager; cm = ConfigManager(); p
 - **Platform Configs**: Defined in `platform_configs.py` with default settings
 - **User Configs**: Stored in `~/.llm_balance/config.yaml` for user overrides
 - **Runtime Configs**: Merged configuration with environment variable support
-- **Independent Configs**: Some platforms use separate config files (e.g., `~/.llm_balance/duckcoding_config.yaml`)
+- **Independent Configs**: Some platforms use separate config files (e.g., `~/.llm_balance/duckcoding_config.yaml`, `~/.llm_balance/csmindai_config.yaml`, `~/.llm_balance/youapi_config.yaml`)
 
 ### Output Formatting
 

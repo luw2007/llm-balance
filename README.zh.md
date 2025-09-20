@@ -5,7 +5,7 @@
 ## 功能特性
 
 - 🔑 **多重认证**: 支持API Key、浏览器Cookie和代理服务认证
-- 🌐 **多平台支持**: 集成12个主流LLM平台（生产就绪）+ 第三方中转（FoxCode、DuckCoding）
+- 🌐 **多平台支持**: 集成15个主流LLM平台（生产就绪）+ 第三方中转（FoxCode、DuckCoding、88Code、YourAPI、CSMindAI）
 - 📊 **多种输出格式**: JSON、Markdown、表格、仅总额
 - 💱 **多货币支持**: 支持CNY、USD、EUR等多种货币显示
 - ⚙️ **灵活配置**: YAML配置文件，支持动态启用/禁用平台
@@ -55,6 +55,12 @@ export TENCENT_API_KEY="your_tencent_api_key"
 # 特殊平台（独立配置）
 # DuckCoding 需要额外的用户ID配置
 export DUCKCODING_API_USER_ID="your_user_id"
+
+# CSMindAI 需要额外的用户ID配置
+export CSMINDDAI_NEW_API_USER="your_user_id"
+
+# YouAPI 需要额外的用户ID配置
+export YOUAPI_NEW_API_USER="your_user_id"
 ```
 
 ## 使用方法

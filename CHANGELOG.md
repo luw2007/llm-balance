@@ -2,7 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
-## [0.2.4] - 2025-09-19
+## [0.2.5] - 2025-09-20
+
+### Added
+- CSMindAI third-party relay support (balance + package):
+  - Cookie auth via `new-api-user` header against `https://api.csmindai.com/api/user/self`.
+  - package: parse `data.quota` and `data.used_quota`:
+    - Total = `quota` (token count, converted to CNY by dividing by 500000)
+    - Used = `used_quota` (token count, converted to CNY by dividing by 500000)
+    - Remaining = Total - Used
+    - Package displays user group information with status display
+  - cost: Balance and spent calculated from quota data with currency conversion
+  - Requires independent configuration via environment variable or separate config file
 
 ### Added
 - YourAPI third-party relay support (balance + package):
@@ -40,9 +51,9 @@ All notable changes to this project will be documented in this file.
 - Improved spent calculation accuracy for subscription-based platforms
 
 ### Docs
-- Updated all documentation files to include 88Code and YourAPI support
+- Updated all documentation files to include CSMindAI, 88Code and YourAPI support
 - Added comprehensive configuration examples for new platforms
-- Updated platform status summaries (now supports 14 platforms total)
+- Updated platform status summaries (now supports 15 platforms total)
 - Enhanced authentication and configuration documentation
 
 ## [0.2.3] - 2025-09-17

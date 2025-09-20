@@ -5,7 +5,7 @@
 ## Key Features
 
 - **🔑 Multiple Authentication**: API Key, browser cookie, official SDK support
-- **🌐 14 Platforms Supported**: DeepSeek, Moonshot, Volcengine, Aliyun, Tencent, Zhipu, SiliconFlow, OpenAI, Anthropic, Google (+ third-party relays: FoxCode, DuckCoding, 88Code, YourAPI)
+- **🌐 15 Platforms Supported**: DeepSeek, Moonshot, Volcengine, Aliyun, Tencent, Zhipu, SiliconFlow, OpenAI, Anthropic, Google (+ third-party relays: FoxCode, DuckCoding, 88Code, YourAPI, CSMindAI)
 - **💰 Real-time Balance & Spent**: Track both current balance and actual spending
 - **📊 Flexible Output**: Table, JSON, Markdown, and total-only formats
 - **💱 Multi-Currency**: Automatic conversion between CNY, USD, EUR, and more
@@ -89,6 +89,36 @@ EOF
 
 # Then login to https://duckcoding.com and run:
 llm-balance cost --platform=duckcoding
+
+# CSMindAI (Requires independent configuration)
+# Method 1: Environment variable
+export CSMINDDAI_NEW_API_USER="your_user_id"
+
+# Method 2: Separate config file
+llm-balance platform_config csmindai new_api_user your_user_id
+
+# Method 3: Manual config file creation
+cat > ~/.llm_balance/csmindai_config.yaml << EOF
+new_api_user: your_user_id
+EOF
+
+# Then login to https://api.csmindai.com and run:
+llm-balance cost --platform=csmindai
+
+# YouAPI (Requires independent configuration)
+# Method 1: Environment variable
+export YOUAPI_NEW_API_USER="your_user_id"
+
+# Method 2: Separate config file
+llm-balance platform_config yourapi new_api_user your_user_id
+
+# Method 3: Manual config file creation
+cat > ~/.llm_balance/youapi_config.yaml << EOF
+new_api_user: your_user_id
+EOF
+
+# Then login to https://yourapi.cn and run:
+llm-balance cost --platform=yourapi
 ```
 
 ### First Use
@@ -180,7 +210,7 @@ llm-balance package --format=table   # Console view
 llm-balance package --format=json    # Machine-readable
 ```
 
-> **Note**: Token monitoring is available for Volcengine and Zhipu platforms only
+> **Note**: Token monitoring is available for Volcengine, Zhipu, DuckCoding, CSMindAI, and YouAPI platforms
 > Plus, FoxCode relay exposes package/quotas via dashboard (see below).
 
 #### Quick Reference
