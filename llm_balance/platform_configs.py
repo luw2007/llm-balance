@@ -146,7 +146,7 @@ class ConfigManager:
         from .platform_handlers import (
             DeepSeekHandler, MoonshotHandler, VolcengineHandler,
             AliyunHandler, TencentHandler, ZhipuHandler, SiliconFlowHandler,
-            OpenAIHandler, AnthropicHandler, GoogleHandler, FoxCodeHandler, DuckCodingHandler, Handler88Code, YourAPIHandler
+            OpenAIHandler, AnthropicHandler, GoogleHandler, FoxCodeHandler, DuckCodingHandler, Handler88Code, YourAPIHandler, CSMindAIHandler
         )
 
         handler_map = {
@@ -164,19 +164,20 @@ class ConfigManager:
             'duckcoding': DuckCodingHandler,
             '88code': Handler88Code,
             'yourapi': YourAPIHandler,
+            'csmindai': CSMindAIHandler,
         }
         
         if platform_name not in handler_map:
             return None
-        
+
         try:
             handler_class = handler_map[platform_name]
             config = handler_class.get_default_config()
-            
+
             # Apply user overrides
             user_override = self.user_config.get(platform_name, {})
             config.update(user_override)
-            
+
             return config
         except Exception as e:
             print(f"Error getting config for {platform_name}: {e}")
@@ -194,7 +195,7 @@ class ConfigManager:
     
     def get_all_platforms(self) -> List[str]:
         """Get all available platform names"""
-        return ['deepseek', 'moonshot', 'volcengine', 'aliyun', 'tencent', 'zhipu', 'siliconflow', 'openai', 'anthropic', 'google', 'foxcode', 'duckcoding', '88code', 'yourapi']
+        return ['deepseek', 'moonshot', 'volcengine', 'aliyun', 'tencent', 'zhipu', 'siliconflow', 'openai', 'anthropic', 'google', 'foxcode', 'duckcoding', '88code', 'yourapi', 'csmindai']
     
     def get_enabled_platforms(self) -> List[PlatformConfig]:
         """Get enabled platform configurations"""
@@ -254,7 +255,7 @@ class ConfigManager:
         from .platform_handlers import (
             DeepSeekHandler, MoonshotHandler, VolcengineHandler,
             AliyunHandler, TencentHandler, ZhipuHandler, SiliconFlowHandler,
-            OpenAIHandler, AnthropicHandler, GoogleHandler, FoxCodeHandler, DuckCodingHandler, Handler88Code, YourAPIHandler
+            OpenAIHandler, AnthropicHandler, GoogleHandler, FoxCodeHandler, DuckCodingHandler, Handler88Code, YourAPIHandler, CSMindAIHandler
         )
 
         handler_map = {
@@ -272,6 +273,7 @@ class ConfigManager:
             'duckcoding': DuckCodingHandler,
             '88code': Handler88Code,
             'yourapi': YourAPIHandler,
+            'csmindai': CSMindAIHandler,
         }
         
         for name, handler_class in handler_map.items():

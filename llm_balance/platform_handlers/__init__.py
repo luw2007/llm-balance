@@ -16,6 +16,7 @@ from .foxcode import FoxCodeHandler
 from .duckcoding import DuckCodingHandler
 from ._88code import Handler88Code
 from .yourapi import YourAPIHandler
+from .csmindai import CSMindAIHandler
 
 def create_handler(config, browser: str = 'chrome'):
     """Factory function to create platform handlers using Python-based configuration"""
@@ -35,6 +36,7 @@ def create_handler(config, browser: str = 'chrome'):
         'duckcoding': DuckCodingHandler,
         '88code': Handler88Code,
         'yourapi': YourAPIHandler,
+        'csmindai': CSMindAIHandler,
     }
     
     # Get handler class from configuration
