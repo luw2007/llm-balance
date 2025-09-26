@@ -235,7 +235,7 @@ class DuckCodingHandler(BasePlatformHandler):
 
         # Create model info
         model_info = ModelTokenInfo(
-            model="claude,gpt-5,gpt-5-codex",
+            model="claude,codex",
             package="DuckCoding 按量计费",
             remaining_tokens=remaining_quota,
             used_tokens=used_quota,

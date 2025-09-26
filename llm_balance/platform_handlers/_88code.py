@@ -226,7 +226,7 @@ class Handler88Code(BasePlatformHandler):
             subscriptions = []
 
         results: List[ModelTokenInfo] = []
-        default_model_name = "claude,gpt-5,gpt-5-codex"
+        default_model_name = "claude,codex"
 
         for item in subscriptions:
             if not isinstance(item, dict):

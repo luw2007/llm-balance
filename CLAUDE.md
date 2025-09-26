@@ -6,6 +6,43 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 A Python CLI tool for checking costs and balances across multiple LLM platforms. The tool supports multiple authentication methods (API keys, browser cookies, official SDKs), multi-currency conversion, global browser configuration, and provides real-time cost monitoring with flexible output formats.
 
+## Development Commands
+
+### Setup & Installation
+```bash
+# Install in development mode
+pip install -e .
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Install optional platform-specific SDKs
+pip install aliyun-python-sdk-bssopenapi>=2.0.0  # Aliyun billing
+pip install volcengine-python-sdk==4.0.13        # Volcengine
+pip install tencentcloud-sdk-python>=3.0.0      # Tencent Cloud
+
+# Verify installation
+llm-balance --help
+```
+
+### Automated Testing
+```bash
+# Run comprehensive tests
+python test_llm_balance.py
+
+# Run with verbose output
+python test_llm_balance.py --verbose
+
+# Test specific platforms only
+python test_llm_balance.py --platforms deepseek volcengine
+
+# Generate JSON report for analysis
+python test_llm_balance.py --json-report
+
+# Fast fail on first error
+python test_llm_balance.py --fail-fast
+```
+
 ## Architecture
 
 ### Core Components
@@ -16,6 +53,22 @@ A Python CLI tool for checking costs and balances across multiple LLM platforms.
 - **ConfigManager** (`config.py`): YAML configuration management with global browser settings
 - **Platform Handlers** (`platform_handlers/`): Modular platform-specific implementations
 - **Utilities** (`utils.py`): Currency conversion, output formatting, and helper functions
+
+### Key Architecture Patterns
+
+1. **Factory Pattern**: `create_handler()` function in `platform_handlers/__init__.py` creates appropriate platform handlers
+2. **Template Method**: `BasePlatformHandler` defines common interface with abstract methods
+3. **Independent Configuration**: Special platforms (DuckCoding, CSMindAI, YouAPI) use separate config files
+4. **Error Resilience**: Platform failures don't stop other platforms from being checked
+
+### Platform Handler Lifecycle
+
+1. **Handler Creation**: Factory creates handler based on platform configuration
+2. **Authentication**: Each handler implements platform-specific auth (API key, SDK, cookie)
+3. **Data Fetching**: Handlers make requests to platform APIs
+4. **Data Processing**: Parse responses and extract balance/spent information
+5. **Error Handling**: Graceful degradation with meaningful error messages
+6. **Result Packaging**: Return standardized `CostInfo` or `PlatformTokenInfo` objects
 
 ### Authentication Methods
 
@@ -64,6 +117,11 @@ pip install -e .
 # Install dependencies
 pip install -r requirements.txt
 
+# Install optional platform-specific SDKs
+pip install aliyun-python-sdk-bssopenapi>=2.0.0  # Aliyun billing
+pip install volcengine-python-sdk==4.0.13        # Volcengine
+pip install tencentcloud-sdk-python>=3.0.0      # Tencent Cloud
+
 # Verify installation
 llm-balance --help
 ```
@@ -84,6 +142,61 @@ python test_llm_balance.py --json-report
 
 # Fast fail on first error
 python test_llm_balance.py --fail-fast
+```
+
+### Common Development Tasks
+
+#### Debug Platform Issues
+```bash
+# Test individual platform
+llm-balance cost --platform=deepseek --format=json
+
+# Check configuration
+llm-balance config deepseek
+
+# Diagnose system
+llm-balance diagnose
+
+# Test specific authentication method
+llm-balance config volcengine auth_type sdk
+llm-balance config volcengine auth_type cookie
+```
+
+#### Browser Configuration
+```bash
+# Set global browser
+llm-balance set-browser chrome
+
+# Override for single command
+llm-balance cost --browser=firefox
+
+# Test cookie-based platforms (Zhipu)
+llm-balance cost --platform=zhipu --browser=chrome
+```
+
+#### Configuration Management
+```bash
+# Generate fresh config
+llm-balance generate_config
+
+# View/edit platform config
+llm-balance config volcengine auth_type sdk
+
+# Enable/disable platforms
+llm-balance enable moonshot
+llm-balance disable tencent
+```
+
+#### Development Workflow
+```bash
+# Install in development mode
+pip install -e .
+
+# Run specific platform tests
+python -c "from llm_balance.platform_handlers.deepseek import DeepSeekHandler; print(DeepSeekHandler.get_default_config())"
+
+# Test configuration loading
+python -c "from llm_balance.config import ConfigManager; cm = ConfigManager(); print([p.name for p in cm.get_enabled_platforms()])"
 ```
 
 ### Testing Commands
@@ -157,6 +270,18 @@ pip install tencentcloud-sdk-python>=3.0.0      # Tencent Cloud
 
 Note: Some SDKs are included in requirements.txt, others may need manual installation based on platform requirements.
 
+### Build & Distribution
+```bash
+# Build distribution package
+python setup.py sdist bdist_wheel
+
+# Install built distribution
+pip install dist/llm_balance-0.2.5-py3-none-any.whl
+
+# Clean build artifacts
+rm -rf build/ dist/ llm_balance.egg-info/
+```
+
 ### Important Development Notes
 
 #### Recent Bug Fixes
@@ -176,6 +301,14 @@ The automated test script (`test_llm_balance.py`) provides comprehensive testing
 - Some platforms return `"-"` for spent values when tracking is not supported
 - Volcengine SDK requires specific parameter formatting (strings vs integers)
 - Configuration objects may need JSON serialization cleanup
+
+#### Key Implementation Details
+- **Fire CLI**: Uses Google Fire for CLI interface implementation
+- **Configuration Loading**: Supports YAML files with environment variable overrides
+- **Error Handling**: Each platform handler implements its own error recovery
+- **Output Formatting**: Multiple formats (table, JSON, markdown, total) with consistent data structures
+- **Currency Conversion**: CNY-based conversion with customizable exchange rates
+- **Version Management**: Version defined in `__init__.py` as `__version__ = "0.2.4"`
 
 ## Key Files & Patterns
 

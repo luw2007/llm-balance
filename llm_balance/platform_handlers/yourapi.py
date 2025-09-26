@@ -223,7 +223,7 @@ class YourAPIHandler(BasePlatformHandler):
             user_data = {}
 
         results: List[ModelTokenInfo] = []
-        default_model_name = "gpt-4,gpt-3.5-turbo,claude"
+        default_model_name = "claude,codex"
 
         # Extract quota information
         quota = user_data.get('quota', 0)

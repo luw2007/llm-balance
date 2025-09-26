@@ -333,7 +333,7 @@ class FoxCodeHandler(BasePlatformHandler):
             active = []
 
         results: List[ModelTokenInfo] = []
-        default_model_name = "claude,gpt-5"
+        default_model_name = "claude,codex"
 
         for item in active:
             if not isinstance(item, dict):

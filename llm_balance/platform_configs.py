@@ -146,7 +146,7 @@ class ConfigManager:
         from .platform_handlers import (
             DeepSeekHandler, MoonshotHandler, VolcengineHandler,
             AliyunHandler, TencentHandler, ZhipuHandler, SiliconFlowHandler,
-            OpenAIHandler, AnthropicHandler, GoogleHandler, FoxCodeHandler, DuckCodingHandler, Handler88Code, YourAPIHandler, CSMindAIHandler
+            OpenAIHandler, AnthropicHandler, GoogleHandler, FoxCodeHandler, DuckCodingHandler, Handler88Code, YourAPIHandler, CSMindAIHandler, YesCodeHandler
         )
 
         handler_map = {
@@ -165,6 +165,7 @@ class ConfigManager:
             '88code': Handler88Code,
             'yourapi': YourAPIHandler,
             'csmindai': CSMindAIHandler,
+            'yescode': YesCodeHandler,
         }
         
         if platform_name not in handler_map:
@@ -195,7 +196,7 @@ class ConfigManager:
     
     def get_all_platforms(self) -> List[str]:
         """Get all available platform names"""
-        return ['deepseek', 'moonshot', 'volcengine', 'aliyun', 'tencent', 'zhipu', 'siliconflow', 'openai', 'anthropic', 'google', 'foxcode', 'duckcoding', '88code', 'yourapi', 'csmindai']
+        return ['deepseek', 'moonshot', 'volcengine', 'aliyun', 'tencent', 'zhipu', 'siliconflow', 'openai', 'anthropic', 'google', 'foxcode', 'duckcoding', '88code', 'yourapi', 'csmindai', 'yescode']
     
     def get_enabled_platforms(self) -> List[PlatformConfig]:
         """Get enabled platform configurations"""
@@ -255,7 +256,7 @@ class ConfigManager:
         from .platform_handlers import (
             DeepSeekHandler, MoonshotHandler, VolcengineHandler,
             AliyunHandler, TencentHandler, ZhipuHandler, SiliconFlowHandler,
-            OpenAIHandler, AnthropicHandler, GoogleHandler, FoxCodeHandler, DuckCodingHandler, Handler88Code, YourAPIHandler, CSMindAIHandler
+            OpenAIHandler, AnthropicHandler, GoogleHandler, FoxCodeHandler, DuckCodingHandler, Handler88Code, YourAPIHandler, CSMindAIHandler, YesCodeHandler
         )
 
         handler_map = {
@@ -274,6 +275,7 @@ class ConfigManager:
             '88code': Handler88Code,
             'yourapi': YourAPIHandler,
             'csmindai': CSMindAIHandler,
+            'yescode': YesCodeHandler,
         }
         
         for name, handler_class in handler_map.items():
