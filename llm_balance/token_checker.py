@@ -22,9 +22,13 @@ class TokenChecker:
     def check_all_tokens(self) -> List[Dict[str, Any]]:
         """Check token balances for all enabled platforms"""
         tokens = []
-        
+
         for platform_config in self.config_manager.get_enabled_platforms():
             try:
+                # Skip platforms with show_package disabled
+                if not platform_config.show_package:
+                    continue
+
                 handler = self._get_handler(platform_config)
                 try:
                     token_info = handler.get_model_tokens()
@@ -51,7 +55,7 @@ class TokenChecker:
             except Exception as e:
                 # Skip platforms that don't support tokens or have errors
                 continue
-        
+
         return tokens
     
     def check_platform_tokens(self, platform_name: str) -> Optional[Dict[str, Any]]:
@@ -60,17 +64,22 @@ class TokenChecker:
         if not platform_config:
             print(f"Platform {platform_name} not found in configuration")
             return None
-        
+
+        # Check if package display is disabled
+        if hasattr(platform_config, 'show_package') and not platform_config.show_package:
+            print(f"Package display is disabled for platform {platform_name}")
+            return None
+
         try:
             # platform_config is already a PlatformConfig object
-            
+
             handler = self._get_handler(platform_config)
             try:
                 token_info = handler.get_model_tokens()
                 # Convert PlatformTokenInfo to dict format for backward compatibility
                 # Filter out non-serializable objects from raw_data
                 filtered_raw_data = self._clean_raw_data_for_json(token_info.raw_data)
-                
+
                 return {
                     'platform': token_info.platform,
                     'models': [

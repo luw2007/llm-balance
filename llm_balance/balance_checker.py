@@ -22,9 +22,13 @@ class BalanceChecker:
     def check_all_balances(self) -> List[Dict[str, Any]]:
         """Check balances for all enabled platforms"""
         balances = []
-        
+
         for platform_config in self.config_manager.get_enabled_platforms():
             try:
+                # Skip platforms with show_cost disabled
+                if not platform_config.show_cost:
+                    continue
+
                 handler = self._get_handler(platform_config)
                 balance_info = handler.get_balance()
                 balances.append({
@@ -38,7 +42,7 @@ class BalanceChecker:
             except Exception as e:
                 print(f"Error checking {platform_config.name}: {e}")
                 continue
-        
+
         return balances
     
     def check_platform_balance(self, platform_name: str) -> Optional[CostInfo]:
@@ -47,7 +51,12 @@ class BalanceChecker:
         if not platform_config:
             print(f"Platform {platform_name} not found in configuration")
             return None
-        
+
+        # Check if cost display is disabled
+        if hasattr(platform_config, 'show_cost') and not platform_config.show_cost:
+            print(f"Cost display is disabled for platform {platform_name}")
+            return None
+
         try:
             # Convert dict config to PlatformConfig if needed
             if isinstance(platform_config, dict):
@@ -58,9 +67,11 @@ class BalanceChecker:
                     description=platform_config.get('description', f'{platform_name.title()} platform'),
                     auth_type=platform_config.get('auth_type', 'api_key'),
                     enabled=platform_config.get('enabled', True),
-                    **{k: v for k, v in platform_config.items() if k not in ['name', 'display_name', 'handler_class', 'description', 'auth_type', 'enabled']}
+                    show_cost=platform_config.get('show_cost', True),
+                    show_package=platform_config.get('show_package', True),
+                    **{k: v for k, v in platform_config.items() if k not in ['name', 'display_name', 'handler_class', 'description', 'auth_type', 'enabled', 'show_cost', 'show_package']}
                 )
-            
+
             handler = self._get_handler(platform_config)
             return handler.get_balance()
         except Exception as e:

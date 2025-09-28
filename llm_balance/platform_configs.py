@@ -20,6 +20,10 @@ class PlatformConfig:
     auth_type: str
     default_enabled: bool = True
     env_var: Optional[str] = None
+
+    # Display control options
+    show_cost: bool = True
+    show_package: bool = True
     
     # API configuration
     api_url: str = ""
@@ -67,8 +71,10 @@ class PlatformConfig:
             'auth_type': self.auth_type,
             'default_enabled': self.default_enabled,
             'enabled': self.enabled,
+            'show_cost': self.show_cost,
+            'show_package': self.show_package,
         }
-        
+
         if self.env_var:
             result['env_var'] = self.env_var
             

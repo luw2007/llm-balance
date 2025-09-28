@@ -258,34 +258,35 @@ class LLMBalanceCLI:
     def config(self, platform: str, key: str = None, value: str = None) -> str:
         """
         Configure platform settings
-        
+
         Args:
             platform: Platform name
             key: Configuration key (optional)
             value: Configuration value (optional)
         """
         from .platform_configs import ConfigManager
-        
+
         config_manager = ConfigManager(self.config_file)
         config = config_manager.get_platform_config(platform)
-        
+
         if not config:
             return f"Platform {platform} not found"
-        
+
         if key is None:
             # Show all configuration
             import json
             return json.dumps(config, indent=2, ensure_ascii=False)
-        
+
         if value is None:
             # Show specific key
             if key in config:
                 return f"{platform}.{key} = {config[key]}"
             else:
                 return f"Key {key} not found in {platform} configuration"
-        
+
         # Set configuration value
-        if key in config:
+        # Allow setting show_cost and show_package even if they're not in the original config
+        if key in config or key in ['show_cost', 'show_package']:
             # Convert string values to appropriate types
             if isinstance(value, str):
                 if value.lower() in ['true', 'false']:
@@ -294,7 +295,7 @@ class LLMBalanceCLI:
                     value = int(value)
                 elif value.replace('.', '').isdigit():
                     value = float(value)
-            
+
             if platform not in config_manager.user_config:
                 config_manager.user_config[platform] = {}
             config_manager.user_config[platform][key] = value
