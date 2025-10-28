@@ -208,10 +208,13 @@ llm-balance package --platform=volcengine,zhipu
 # Different output formats
 llm-balance package --format=table   # Console view
 llm-balance package --format=json    # Machine-readable
+llm-balance package --show-all       # Include inactive entries
 ```
 
 > **Note**: Token monitoring is available for Volcengine, Zhipu, DuckCoding, CSMindAI, and YouAPI platforms
 > Plus, FoxCode relay exposes package/quotas via dashboard (see below).
+
+> By default the `package` command hides entries marked as inactive. Pass `--show-all` to include them across all output formats.
 
 #### Quick Reference
 | Command | Purpose | Example |

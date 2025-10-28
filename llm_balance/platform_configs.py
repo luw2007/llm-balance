@@ -31,7 +31,15 @@ class PlatformConfig:
     headers: Dict[str, Any] = field(default_factory=dict)
     params: Dict[str, Any] = field(default_factory=dict)
     data: Dict[str, Any] = field(default_factory=dict)
-    
+
+    # Extended API URLs for platforms with multiple endpoints
+    account_url: Optional[str] = None
+    balance_url: Optional[str] = None
+    statistics_url: Optional[str] = None
+    usage_url: Optional[str] = None
+    packages_url: Optional[str] = None
+    group_id: Optional[str] = None
+
     # Authentication configuration
     cookie_domain: Optional[str] = None
     cookie_api_url: Optional[str] = None
@@ -90,7 +98,22 @@ class PlatformConfig:
             
         if self.data:
             result['data'] = self.data
-            
+
+        if self.group_id:
+            result['group_id'] = self.group_id
+
+        # Extended API URLs for platforms with multiple endpoints
+        if self.account_url:
+            result['account_url'] = self.account_url
+        if self.balance_url:
+            result['balance_url'] = self.balance_url
+        if self.statistics_url:
+            result['statistics_url'] = self.statistics_url
+        if self.usage_url:
+            result['usage_url'] = self.usage_url
+        if self.packages_url:
+            result['packages_url'] = self.packages_url
+
         if self.cookie_domain:
             result['cookie_domain'] = self.cookie_domain
         if self.cookie_api_url:
@@ -152,7 +175,7 @@ class ConfigManager:
         from .platform_handlers import (
             DeepSeekHandler, MoonshotHandler, VolcengineHandler,
             AliyunHandler, TencentHandler, ZhipuHandler, SiliconFlowHandler,
-            OpenAIHandler, AnthropicHandler, GoogleHandler, FoxCodeHandler, DuckCodingHandler, Handler88Code, YourAPIHandler, CSMindAIHandler, YesCodeHandler
+            OpenAIHandler, AnthropicHandler, GoogleHandler, FoxCodeHandler, DuckCodingHandler, Handler88Code, YourAPIHandler, CSMindAIHandler, YesCodeHandler, OneAPIHandler, APIProxyHandler, FastGPTHandler, MiniMaxHandler
         )
 
         handler_map = {
@@ -172,6 +195,10 @@ class ConfigManager:
             'yourapi': YourAPIHandler,
             'csmindai': CSMindAIHandler,
             'yescode': YesCodeHandler,
+            'oneapi': OneAPIHandler,
+            'apiproxy': APIProxyHandler,
+            'fastgpt': FastGPTHandler,
+            'minimax': MiniMaxHandler,
         }
         
         if platform_name not in handler_map:
@@ -202,7 +229,7 @@ class ConfigManager:
     
     def get_all_platforms(self) -> List[str]:
         """Get all available platform names"""
-        return ['deepseek', 'moonshot', 'volcengine', 'aliyun', 'tencent', 'zhipu', 'siliconflow', 'openai', 'anthropic', 'google', 'foxcode', 'duckcoding', '88code', 'yourapi', 'csmindai', 'yescode']
+        return ['deepseek', 'moonshot', 'volcengine', 'aliyun', 'tencent', 'zhipu', 'siliconflow', 'openai', 'anthropic', 'google', 'foxcode', 'duckcoding', '88code', 'yourapi', 'csmindai', 'yescode', 'oneapi', 'apiproxy', 'fastgpt', 'minimax']
     
     def get_enabled_platforms(self) -> List[PlatformConfig]:
         """Get enabled platform configurations"""
@@ -282,6 +309,10 @@ class ConfigManager:
             'yourapi': YourAPIHandler,
             'csmindai': CSMindAIHandler,
             'yescode': YesCodeHandler,
+            'oneapi': OneAPIHandler,
+            'apiproxy': APIProxyHandler,
+            'fastgpt': FastGPTHandler,
+            'minimax': MiniMaxHandler,
         }
         
         for name, handler_class in handler_map.items():

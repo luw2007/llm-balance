@@ -83,7 +83,8 @@ class LLMBalanceCLI:
                format: str = 'table', 
                browser: Optional[str] = None,
                currency: str = 'CNY',
-               model: Optional[str] = None) -> str:
+               model: Optional[str] = None,
+               show_all: bool = False) -> str:
         """
         Check model-level package/tokens for LLM platforms
         
@@ -95,7 +96,8 @@ class LLMBalanceCLI:
             currency: Target currency for total (CNY, USD, EUR, etc.)
             model: Filter by model name (optional)
                    Examples: "gpt-4", "doubao", "glm-4.5"
-        
+            show_all: Include entries marked as inactive when True
+
         Returns:
             Formatted package information with model-level details
         """
@@ -126,7 +128,7 @@ class LLMBalanceCLI:
             # Check all platforms
             tokens = checker.check_all_tokens()
         
-        return checker.format_tokens(tokens, format, currency, model)
+        return checker.format_tokens(tokens, format, currency, model, show_all)
 
     def check(self, platform: Optional[str] = None, 
               format: str = 'table', 

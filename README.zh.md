@@ -111,7 +111,10 @@ llm-balance package --platform=volcengine,zhipu
 # Token使用量的不同输出格式
 llm-balance package --format=table   # 控制台表格格式
 llm-balance package --format=json    # 机器可读格式
+llm-balance package --show-all       # 包含已停用套餐
 ```
+
+> 默认情况下 `package` 命令不会展示 `inactive` 状态的套餐，可通过 `--show-all` 参数强制输出全部数据。
 
 > 💡 向后兼容：`llm-balance check` 命令仍然可用，作为 `llm-balance cost` 的别名
 

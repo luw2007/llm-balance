@@ -143,6 +143,13 @@ class TokenChecker:
         """List enabled platforms"""
         return [cfg.name for cfg in self.config_manager.get_enabled_platforms()]
     
-    def format_tokens(self, tokens: List[Dict[str, Any]], format_type: str = 'table', target_currency: str = 'CNY', model: Optional[str] = None) -> str:
+    def format_tokens(
+        self,
+        tokens: List[Dict[str, Any]],
+        format_type: str = 'table',
+        target_currency: str = 'CNY',
+        model: Optional[str] = None,
+        show_all: bool = False,
+    ) -> str:
         """Format token information in specified format"""
-        return format_model_tokens(tokens, format_type, target_currency, model)
+        return format_model_tokens(tokens, format_type, target_currency, model, show_all)

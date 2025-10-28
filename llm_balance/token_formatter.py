@@ -25,23 +25,37 @@ def _clean_for_json(data):
         except (TypeError, ValueError):
             return f"<{data.__class__.__name__} object>"
 
-def format_model_tokens(platform_tokens: List[Dict[str, Any]], format_type: str = 'table', target_currency: str = 'CNY', model: Optional[str] = None) -> str:
+def format_model_tokens(
+    platform_tokens: List[Dict[str, Any]],
+    format_type: str = 'table',
+    target_currency: str = 'CNY',
+    model: Optional[str] = None,
+    show_all: bool = False,
+) -> str:
     """Format model-level token information"""
     if not platform_tokens:
         return "No token data available"
-    
+
+    tokens_to_format = platform_tokens
+
     # Filter by model if provided
     if model:
-        platform_tokens = _filter_tokens_by_model(platform_tokens, model)
-    
+        tokens_to_format = _filter_tokens_by_model(tokens_to_format, model)
+
+    if not show_all:
+        tokens_to_format = _filter_out_inactive(tokens_to_format)
+
+    if not tokens_to_format:
+        return "No token data available"
+
     if format_type == 'json':
-        return _format_model_json(platform_tokens)
+        return _format_model_json(tokens_to_format)
     elif format_type == 'markdown':
-        return _format_model_markdown(platform_tokens)
+        return _format_model_markdown(tokens_to_format)
     elif format_type == 'total':
-        return _format_model_total(platform_tokens, target_currency)
+        return _format_model_total(tokens_to_format, target_currency)
     else:  # table format
-        return _format_model_table(platform_tokens, target_currency)
+        return _format_model_table(tokens_to_format, target_currency)
 
 def _format_model_table(platform_tokens: List[Dict[str, Any]], target_currency: str = 'CNY') -> str:
     """Format model tokens as detailed table"""
@@ -205,7 +219,7 @@ def _format_model_total(platform_tokens: List[Dict[str, Any]], target_currency: 
 def _filter_tokens_by_model(platform_tokens: List[Dict[str, Any]], model: str) -> List[Dict[str, Any]]:
     """Filter tokens by model name"""
     filtered_tokens = []
-    
+
     for platform_data in platform_tokens:
         platform = platform_data['platform']
         models = platform_data.get('models', [])
@@ -227,5 +241,28 @@ def _filter_tokens_by_model(platform_tokens: List[Dict[str, Any]], model: str) -
                 'models': filtered_models,
                 'raw_data': platform_data.get('raw_data', {})
             })
-    
+
+    return filtered_tokens
+
+
+def _filter_out_inactive(platform_tokens: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """Remove models marked as inactive from the token list"""
+    filtered_tokens: List[Dict[str, Any]] = []
+
+    for platform_data in platform_tokens:
+        models = platform_data.get('models', [])
+        active_models = []
+
+        for model_info in models:
+            status = str(model_info.get('status', 'active')).lower()
+            if status != 'inactive':
+                active_models.append(model_info)
+
+        if active_models:
+            filtered_tokens.append({
+                'platform': platform_data.get('platform'),
+                'models': active_models,
+                'raw_data': platform_data.get('raw_data', {})
+            })
+
     return filtered_tokens

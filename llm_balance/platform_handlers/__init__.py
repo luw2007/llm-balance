@@ -18,6 +18,10 @@ from ._88code import Handler88Code
 from .yourapi import YourAPIHandler
 from .csmindai import CSMindAIHandler
 from .yescode import YesCodeHandler
+from .oneapi import OneAPIHandler
+from .apiproxy import APIProxyHandler
+from .fastgpt import FastGPTHandler
+from .minimax import MiniMaxHandler
 
 def create_handler(config, browser: str = 'chrome'):
     """Factory function to create platform handlers using Python-based configuration"""
@@ -39,6 +43,10 @@ def create_handler(config, browser: str = 'chrome'):
         'yourapi': YourAPIHandler,
         'csmindai': CSMindAIHandler,
         'yescode': YesCodeHandler,
+        'oneapi': OneAPIHandler,
+        'apiproxy': APIProxyHandler,
+        'fastgpt': FastGPTHandler,
+        'minimax': MiniMaxHandler,
     }
     
     # Get handler class from configuration
