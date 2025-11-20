@@ -315,10 +315,22 @@ class FoxCodeHandler(BasePlatformHandler):
     def _extract_models_from_dashboard(self, response: Dict[str, Any]) -> List[ModelTokenInfo]:
         """Extract ModelTokenInfo list from dashboard response using data.subscription.active.
 
-        The schema is not strictly defined, so this uses a best-effort approach:
+        Reset type based calculation (similar to 88code planType):
+        - NEVER (按量付费):
+          * Uses actual usage: remaining = quotaRemaining, used = quotaUsed
+          * No reset_count or reset_time
+          * Typical for one-time purchase packages
+
+        - MONTHLY/WEEKLY/YEARLY/DAILY (订阅制):
+          * Uses time-based depreciation: remaining = total × (remainingDays / totalDays)
+          * Includes reset_time (lastResetAt) and expiry_date (endDate)
+          * Typical for subscription packages with periodic reset
+
+        The schema:
             - Look for list at data.subscription.active
-            - For each item, attempt to read package name and quotas
-            - Map totals/remaining/used from common keys
+            - For each item, extract plan.resetType to determine calculation method
+            - Extract startDate/endDate for time-based calculations
+            - Extract lastResetAt for reset time information
         """
         data = response if isinstance(response, dict) else {}
         subscription = data.get('data', {}).get('subscription', {}) if isinstance(data.get('data'), dict) else {}
@@ -425,13 +437,80 @@ class FoxCodeHandler(BasePlatformHandler):
             remaining = max(0.0, remaining)
             used = max(0.0, used)
 
+            # Extract resetType to determine calculation method
+            reset_type = (plan.get('resetType') if plan else None) or 'NEVER'
+            reset_type = str(reset_type).upper()
+
+            # Calculate remaining/used based on resetType
+            if reset_type != 'NEVER':
+                # For subscription-based plans (MONTHLY/WEEKLY/YEARLY/DAILY):
+                # Calculate based on time elapsed rather than actual usage
+                start_date_str = item.get('startDate')
+                end_date_str = item.get('endDate')
+
+                if start_date_str and end_date_str and total > 0:
+                    try:
+                        from datetime import datetime
+                        # Parse ISO 8601 dates
+                        start_date = datetime.fromisoformat(start_date_str.replace('Z', '+00:00'))
+                        end_date = datetime.fromisoformat(end_date_str.replace('Z', '+00:00'))
+                        now = datetime.now(start_date.tzinfo)
+
+                        # Calculate total days and remaining days
+                        total_days = (end_date - start_date).total_seconds() / 86400
+                        remaining_days = (end_date - now).total_seconds() / 86400
+
+                        if total_days > 0:
+                            # Calculate based on time ratio
+                            remaining_ratio = max(0.0, min(1.0, remaining_days / total_days))
+                            elapsed_ratio = 1.0 - remaining_ratio
+
+                            # Recalculate remaining and used based on time
+                            remaining = total * remaining_ratio
+                            used = total * elapsed_ratio
+                    except Exception:
+                        # If date parsing fails, keep the usage-based values
+                        pass
+
+            # Extract expiry date
+            expiry_date = None
+            end_date_str = item.get('endDate')
+            if end_date_str:
+                try:
+                    from datetime import datetime
+                    dt = datetime.fromisoformat(end_date_str.replace('Z', '+00:00'))
+                    expiry_date = dt.strftime('%Y-%m-%d')
+                except Exception:
+                    expiry_date = None
+
+            # Extract reset information (only for subscription-based plans)
+            reset_time = None
+            reset_count = None
+
+            if reset_type != 'NEVER':
+                # Extract last reset time
+                last_reset_str = item.get('lastResetAt')
+                if last_reset_str:
+                    try:
+                        from datetime import datetime
+                        dt = datetime.fromisoformat(last_reset_str.replace('Z', '+00:00'))
+                        reset_time = dt.strftime('%Y-%m-%d %H:%M')
+                    except Exception:
+                        reset_time = str(last_reset_str) if last_reset_str else None
+
+                # Note: reset_count may not be available in FoxCode API
+                # Could potentially calculate from startDate and current time based on resetType
+
             results.append(ModelTokenInfo(
                 model=default_model_name,
                 package=package_name,
                 remaining_tokens=remaining,
                 used_tokens=used,
                 total_tokens=total,
-                status="active"  # FoxCode only processes active items from the subscription
+                status="active",  # FoxCode only processes active items from the subscription
+                expiry_date=expiry_date,
+                reset_count=reset_count,
+                reset_time=reset_time
             ))
 
         # Sort by remaining descending for readability

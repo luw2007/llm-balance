@@ -42,7 +42,9 @@ class TokenChecker:
                                 'remaining_tokens': model.remaining_tokens,
                                 'used_tokens': model.used_tokens,
                                 'total_tokens': model.total_tokens,
-                                'status': model.status
+                                'status': model.status,
+                                'expiry_date': model.expiry_date,
+                                'reset_count': model.reset_count
                             }
                             for model in token_info.models
                         ],
@@ -89,14 +91,29 @@ class TokenChecker:
                             'remaining_tokens': model.remaining_tokens,
                             'used_tokens': model.used_tokens,
                             'total_tokens': model.total_tokens,
-                            'status': model.status
+                            'status': model.status,
+                            'expiry_date': model.expiry_date,
+                            'reset_count': model.reset_count,
+                            'reset_time': model.reset_time
                         }
                         for model in token_info.models
                     ],
                     'raw_data': filtered_raw_data
                 }
-            except NotImplementedError:
-                # Platform doesn't support token checking
+            except NotImplementedError as e:
+                # Platform doesn't support token checking or needs additional configuration
+                error_msg = str(e)
+                if error_msg:
+                    print(f"\n❌ {platform_name}: {error_msg}")
+                return None
+            except ValueError as e:
+                # API authentication or request errors
+                error_msg = str(e)
+                if "401" in error_msg or "Authentication" in error_msg:
+                    print(f"\n❌ {platform_name}: Authentication failed - your token may have expired or is invalid")
+                    print(f"   Details: {error_msg}")
+                else:
+                    print(f"\n❌ {platform_name}: {error_msg}")
                 return None
         except Exception as e:
             # Skip platforms that don't support tokens or have errors
@@ -150,6 +167,9 @@ class TokenChecker:
         target_currency: str = 'CNY',
         model: Optional[str] = None,
         show_all: bool = False,
+        show_expiry: bool = False,
+        show_reset: bool = False,
+        show_reset_time: bool = False,
     ) -> str:
         """Format token information in specified format"""
-        return format_model_tokens(tokens, format_type, target_currency, model, show_all)
+        return format_model_tokens(tokens, format_type, target_currency, model, show_all, show_expiry, show_reset, show_reset_time)

@@ -2,6 +2,46 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.6] - 2025-11-20
+
+### Added
+- **Billing mode differentiation for subscription-based platforms**:
+  - Added `expiry_date`, `reset_count`, and `reset_time` fields to `ModelTokenInfo` dataclass
+  - New CLI parameters for package command: `--show-expiry`, `--show-reset`, `--show-reset-time`
+  - Dynamic table formatting that adjusts column width based on enabled features
+
+- **88Code platform enhancements**:
+  - Implemented `planType`-based calculation logic:
+    - `PAY_PER_USE`: Uses actual credit usage (remaining = currentCredits)
+    - `MONTHLY/YEARLY`: Uses time-based depreciation (remaining = total × remainingDays/totalDays)
+  - Reset information (count/time) only displayed for subscription plans
+  - Enhanced spent calculation accuracy for mixed subscription types
+
+- **FoxCode platform enhancements**:
+  - Implemented `resetType`-based calculation logic:
+    - `NEVER`: Uses actual quota usage (pay-per-use model)
+    - `MONTHLY/WEEKLY/YEARLY/DAILY`: Uses time-based depreciation (subscription model)
+  - Extracts expiry date from `endDate` field
+  - Reset time extracted from `lastResetAt` for subscription plans
+
+- **Moonshot platform package support**:
+  - Implemented `get_model_tokens()` method for Moonshot Code Package
+  - Queries billing API endpoint with FEATURE_CODING scope
+  - Extracts limit, used, remaining, and resetTime information
+  - Requires `MOONSHOT_CONSOLE_TOKEN` and `MOONSHOT_ORG_ID` environment variables
+
+### Changed
+- **Token formatter improvements**:
+  - Table format now supports optional columns for expiry, reset count, and reset time
+  - Markdown format includes subscription lifecycle information
+  - Column widths dynamically adjust based on enabled features
+
+### Technical Details
+- Both 88Code and FoxCode now distinguish between:
+  - **Pay-per-use packages**: Calculated by actual usage, no reset information
+  - **Subscription packages**: Calculated by time depreciation, includes reset information
+- This ensures accurate balance and spent reporting for platforms with multiple billing models
+
 ## [0.2.5] - 2025-09-20
 
 ### Added

@@ -257,5 +257,127 @@ class MoonshotHandler(BasePlatformHandler):
             return 0.0
 
     def get_model_tokens(self) -> PlatformTokenInfo:
-        """Get model-level token information from Moonshot"""
-        raise NotImplementedError(f"Model token checking not implemented for {self.get_platform_name()}")
+        """Get model-level token information from Moonshot
+
+        Requires console_token and org_id to be configured via:
+        - Environment variables: MOONSHOT_CONSOLE_TOKEN, MOONSHOT_ORG_ID
+        - Config file: ~/.llm_balance/moonshot_config.yaml
+        """
+        # Get authentication info
+        console_token = getattr(self.config, 'console_token', None)
+        org_id = getattr(self.config, 'org_id', None)
+
+        try:
+            # Use the billing API to get code package usage
+            models = self._get_code_package_usage(console_token, org_id)
+
+            return PlatformTokenInfo(
+                platform=self.get_platform_name(),
+                models=models,
+                raw_data={}
+            )
+        except NotImplementedError:
+            # Re-raise NotImplementedError to indicate missing configuration
+            raise
+        except Exception as e:
+            raise ValueError(f"Failed to get model token info for {self.get_platform_name()}: {e}")
+
+    def _get_code_package_usage(self, console_token: str, org_id: str) -> List[ModelTokenInfo]:
+        """Get code package usage information from Moonshot billing API"""
+
+        # Validate that we have the required credentials
+        if not console_token or not org_id:
+            raise NotImplementedError(
+                "Moonshot Code Package requires MOONSHOT_CONSOLE_TOKEN and MOONSHOT_ORG_ID"
+            )
+
+        # Use the billing API endpoint for code usage
+        billing_url = "https://www.kimi.com/apiv2/kimi.gateway.billing.v1.BillingService/GetUsages"
+
+        headers = {
+            'Authorization': f'Bearer {console_token}',
+            'Content-Type': 'application/json',
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
+            'Accept': 'application/json',
+            'Referer': 'https://www.kimi.com/'
+        }
+
+        # Get cookies for additional authentication if needed
+        cookies = {}
+        try:
+            # Try multiple Moonshot/Kimi domains
+            for domain in ['.kimi.com', 'kimi.com', '.moonshot.cn', 'moonshot.cn']:
+                try:
+                    domain_cookies = self._get_cookies(domain)
+                    if domain_cookies:
+                        cookies.update(domain_cookies)
+                        break
+                except Exception:
+                    continue
+        except Exception:
+            pass  # Cookies are optional for this API
+
+        # Request data for FEATURE_CODING scope
+        data = {"scope": ["FEATURE_CODING"]}
+
+        response = self._make_request(
+            url=billing_url,
+            method='POST',
+            headers=headers,
+            cookies=cookies,
+            data=data
+        )
+
+        if not response:
+            raise ValueError("No response from Moonshot billing API")
+
+        # Extract usage information
+        usages = response.get('usages', [])
+        models = []
+
+        for usage in usages:
+            if usage.get('scope') == 'FEATURE_CODING':
+                detail = usage.get('detail', {})
+
+                # Extract package information
+                limit = self._num(detail.get('limit', 0))
+                used = self._num(detail.get('used', 0))
+                remaining = self._num(detail.get('remaining', 0))
+                reset_time = detail.get('resetTime')
+
+                # Format reset_time for display
+                reset_time_display = None
+                if reset_time:
+                    try:
+                        # Parse ISO 8601 format and format as readable date
+                        from datetime import datetime
+                        dt = datetime.fromisoformat(reset_time.replace('Z', '+00:00'))
+                        reset_time_display = dt.strftime('%Y-%m-%d %H:%M')
+                    except Exception:
+                        reset_time_display = str(reset_time)
+
+                models.append(ModelTokenInfo(
+                    model="code",
+                    package="Moonshot Code Package",
+                    total_tokens=limit,
+                    used_tokens=used,
+                    remaining_tokens=remaining,
+                    status="active",
+                    expiry_date=None,
+                    reset_count=None,
+                    reset_time=reset_time_display
+                ))
+
+        return models
+
+    def _num(self, value) -> float:
+        """Convert value to float safely"""
+        try:
+            if value is None:
+                return 0.0
+            if isinstance(value, (int, float)):
+                return float(value)
+            s = str(value).strip().replace(',', '')
+            return float(s)
+        except Exception:
+            return 0.0

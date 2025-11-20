@@ -79,15 +79,18 @@ class LLMBalanceCLI:
             balances = checker.check_all_balances()
             return checker.format_balances(balances, format, currency)
     
-    def package(self, platform: Optional[str] = None, 
-               format: str = 'table', 
+    def package(self, platform: Optional[str] = None,
+               format: str = 'table',
                browser: Optional[str] = None,
                currency: str = 'CNY',
                model: Optional[str] = None,
-               show_all: bool = False) -> str:
+               show_all: bool = False,
+               show_expiry: bool = True,
+               show_reset: bool = True,
+               show_reset_time: bool = True) -> str:
         """
         Check model-level package/tokens for LLM platforms
-        
+
         Args:
             platform: Specific platform(s) to check, comma-separated string or tuple (optional)
                      Examples: "volcengine", "volcengine,zhipu", or multiple --platform flags
@@ -97,13 +100,16 @@ class LLMBalanceCLI:
             model: Filter by model name (optional)
                    Examples: "gpt-4", "doubao", "glm-4.5"
             show_all: Include entries marked as inactive when True
+            show_expiry: Show expiry date for subscriptions (88code, etc.)
+            show_reset: Show reset count for subscriptions (88code, etc.)
+            show_reset_time: Show reset time for subscriptions (moonshot, 88code, etc.)
 
         Returns:
             Formatted package information with model-level details
         """
         browser = browser or self.browser
         checker = TokenChecker(self.config_file, browser)
-        
+
         if platform:
             # Handle comma-separated platform list or tuple from fire
             if isinstance(platform, tuple):
@@ -112,23 +118,24 @@ class LLMBalanceCLI:
                 platforms = [p.strip() for p in platform.split(',') if p.strip()]
             else:
                 platforms = [str(platform).strip()] if str(platform).strip() else []
-            
+
             if not platforms:
                 return "No valid platforms specified"
-                
+
             tokens = []
-            
+
             for p in platforms:
                 token_info = checker.check_platform_tokens(p)
                 if token_info:
                     tokens.append(token_info)
-                else:
-                    return f"Platform '{p}' not found or does not support token checking"
+
+            if not tokens:
+                return "No token data available"
         else:
             # Check all platforms
             tokens = checker.check_all_tokens()
-        
-        return checker.format_tokens(tokens, format, currency, model, show_all)
+
+        return checker.format_tokens(tokens, format, currency, model, show_all, show_expiry, show_reset, show_reset_time)
 
     def check(self, platform: Optional[str] = None, 
               format: str = 'table', 

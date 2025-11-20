@@ -31,6 +31,9 @@ def format_model_tokens(
     target_currency: str = 'CNY',
     model: Optional[str] = None,
     show_all: bool = False,
+    show_expiry: bool = False,
+    show_reset: bool = False,
+    show_reset_time: bool = False,
 ) -> str:
     """Format model-level token information"""
     if not platform_tokens:
@@ -51,18 +54,42 @@ def format_model_tokens(
     if format_type == 'json':
         return _format_model_json(tokens_to_format)
     elif format_type == 'markdown':
-        return _format_model_markdown(tokens_to_format)
+        return _format_model_markdown(tokens_to_format, show_expiry, show_reset, show_reset_time)
     elif format_type == 'total':
         return _format_model_total(tokens_to_format, target_currency)
     else:  # table format
-        return _format_model_table(tokens_to_format, target_currency)
+        return _format_model_table(tokens_to_format, target_currency, show_expiry, show_reset, show_reset_time)
 
-def _format_model_table(platform_tokens: List[Dict[str, Any]], target_currency: str = 'CNY') -> str:
+def _format_model_table(platform_tokens: List[Dict[str, Any]], target_currency: str = 'CNY', show_expiry: bool = False, show_reset: bool = False, show_reset_time: bool = False) -> str:
     """Format model tokens as detailed table"""
     lines = []
-    lines.append("=" * 125)
-    lines.append(f"{'Platform':<15} {'Model':<30} {'Total':<12} {'Used':<12} {'Remaining':<12} {'Progress %':<11} {'Status':<8} {'Package':<15}")
-    lines.append("-" * 125)
+
+    # Calculate column widths based on what we're showing
+    base_width = 125
+    extra_width = 0
+    if show_expiry:
+        extra_width += 12
+    if show_reset:
+        extra_width += 10
+    if show_reset_time:
+        extra_width += 16
+
+    total_width = base_width + extra_width
+
+    lines.append("=" * total_width)
+
+    # Build header dynamically - Expiry, Resets, ResetTime before Package
+    header = f"{'Platform':<15} {'Model':<30} {'Total':<12} {'Used':<12} {'Remaining':<12} {'Progress %':<11} {'Status':<8}"
+    if show_expiry:
+        header += f" {'Expiry':<11}"
+    if show_reset:
+        header += f" {'Resets':<9}"
+    if show_reset_time:
+        header += f" {'ResetTime':<15}"
+    header += f" {'Package':<15}"
+
+    lines.append(header)
+    lines.append("-" * total_width)
     
     total_all_tokens = 0
     total_used_tokens = 0
@@ -143,15 +170,40 @@ def _format_model_table(platform_tokens: List[Dict[str, Any]], target_currency: 
             # Get status with default fallback
             status = str(model_info.get('status', 'active'))[:8]
 
-            lines.append(f"{platform:<15} {model:<30} {total:<12.0f} {used:<12.0f} {remaining:<12.0f} {progress_display:<11} {status:<8} {package:<15}")
+            row = f"{platform:<15} {model:<30} {total:<12.0f} {used:<12.0f} {remaining:<12.0f} {progress_display:<11} {status:<8}"
+            if show_expiry:
+                expiry = model_info.get('expiry_date')
+                expiry_display = str(expiry) if expiry else '-'
+                row += f" {expiry_display:<11}"
+            if show_reset:
+                reset = model_info.get('reset_count')
+                reset_display = str(reset) if reset is not None else '-'
+                row += f" {reset_display:<9}"
+            if show_reset_time:
+                reset_time = model_info.get('reset_time')
+                reset_time_display = str(reset_time) if reset_time else '-'
+                # Truncate long reset_time values for display
+                if len(reset_time_display) > 15:
+                    reset_time_display = reset_time_display[:12] + '...'
+                row += f" {reset_time_display:<15}"
+            row += f" {package:<15}"
+            lines.append(row)
 
             total_all_tokens += total
             total_used_tokens += used
             total_remaining_tokens += remaining
-    
-    lines.append("-" * 125)
-    lines.append(f"{'Total Tokens':<53} {total_all_tokens:<12.0f} {total_used_tokens:<12.0f} {total_remaining_tokens:<12.0f} {'-':<11} {'-':<8} {'-':<15}")
-    lines.append("=" * 125)
+
+    lines.append("-" * total_width)
+    footer = f"{'Total Tokens':<53} {total_all_tokens:<12.0f} {total_used_tokens:<12.0f} {total_remaining_tokens:<12.0f} {'-':<11} {'-':<8}"
+    if show_expiry:
+        footer += f" {'-':<11}"
+    if show_reset:
+        footer += f" {'-':<9}"
+    if show_reset_time:
+        footer += f" {'-':<15}"
+    footer += f" {'-':<15}"
+    lines.append(footer)
+    lines.append("=" * total_width)
     
     return '\n'.join(lines)
 
@@ -161,19 +213,39 @@ def _format_model_json(platform_tokens: List[Dict[str, Any]]) -> str:
     cleaned_tokens = _clean_for_json(platform_tokens)
     return json.dumps(cleaned_tokens, indent=2, ensure_ascii=False)
 
-def _format_model_markdown(platform_tokens: List[Dict[str, Any]]) -> str:
+def _format_model_markdown(platform_tokens: List[Dict[str, Any]], show_expiry: bool = False, show_reset: bool = False, show_reset_time: bool = False) -> str:
     """Format model tokens as markdown table"""
     lines = ["# LLM Model Token Statistics\n"]
-    
+
     for platform_data in platform_tokens:
         platform = platform_data['platform']
         models = platform_data.get('models', [])
-        
+
         if models:
             lines.append(f"## {platform}\n")
-            lines.append("| Platform | Model | Total | Used | Remaining | Progress % | Status | Package |")
-            lines.append("|----------|-------|-------|------|-----------|------------|--------|---------|")
-            
+
+            # Build header dynamically - Expiry, Resets, ResetTime before Package
+            header = "| Platform | Model | Total | Used | Remaining | Progress % | Status |"
+            if show_expiry:
+                header += " Expiry |"
+            if show_reset:
+                header += " Resets |"
+            if show_reset_time:
+                header += " ResetTime |"
+            header += " Package |"
+            lines.append(header)
+
+            # Build separator dynamically
+            separator = "|----------|-------|-------|------|-----------|------------|--------|"
+            if show_expiry:
+                separator += "---------|"
+            if show_reset:
+                separator += "--------|"
+            if show_reset_time:
+                separator += "-------------|"
+            separator += "---------|"
+            lines.append(separator)
+
             for model_info in models:
                 model = model_info['model']
                 package = model_info.get('package', model)
@@ -199,10 +271,24 @@ def _format_model_markdown(platform_tokens: List[Dict[str, Any]]) -> str:
 
                 # Get status with default fallback
                 status = model_info.get('status', 'active')
-                lines.append(f"| {platform} | {model} | {total:.0f} | {used:.0f} | {remaining:.0f} | {progress_pct} | {status} | {package} |")
-            
+                row = f"| {platform} | {model} | {total:.0f} | {used:.0f} | {remaining:.0f} | {progress_pct} | {status} |"
+                if show_expiry:
+                    expiry = model_info.get('expiry_date')
+                    expiry_display = expiry if expiry else '-'
+                    row += f" {expiry_display} |"
+                if show_reset:
+                    reset = model_info.get('reset_count')
+                    reset_display = str(reset) if reset is not None else '-'
+                    row += f" {reset_display} |"
+                if show_reset_time:
+                    reset_time = model_info.get('reset_time')
+                    reset_time_display = str(reset_time) if reset_time else '-'
+                    row += f" {reset_time_display} |"
+                row += f" {package} |"
+                lines.append(row)
+
             lines.append("")
-    
+
     return '\n'.join(lines)
 
 def _format_model_total(platform_tokens: List[Dict[str, Any]], target_currency: str = 'CNY') -> str:

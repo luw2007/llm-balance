@@ -209,10 +209,19 @@ llm-balance package --platform=volcengine,zhipu
 llm-balance package --format=table   # Console view
 llm-balance package --format=json    # Machine-readable
 llm-balance package --show-all       # Include inactive entries
+
+# Show subscription lifecycle information (for 88code, FoxCode, Moonshot)
+llm-balance package --show-expiry      # Show expiry dates
+llm-balance package --show-reset       # Show reset counts
+llm-balance package --show-reset-time  # Show reset times
+llm-balance package --show-expiry --show-reset --show-reset-time  # Show all
 ```
 
-> **Note**: Token monitoring is available for Volcengine, Zhipu, DuckCoding, CSMindAI, and YouAPI platforms
-> Plus, FoxCode relay exposes package/quotas via dashboard (see below).
+> **Note**: Token monitoring is available for Volcengine, Zhipu, DuckCoding, CSMindAI, YouAPI, 88Code, FoxCode, and Moonshot platforms
+
+> **Subscription Features**: For platforms with subscription-based billing (88Code, FoxCode), the tool automatically distinguishes between:
+> - **Pay-per-use packages**: Calculated by actual usage
+> - **Subscription packages**: Calculated by time depreciation with reset information
 
 > By default the `package` command hides entries marked as inactive. Pass `--show-all` to include them across all output formats.
 

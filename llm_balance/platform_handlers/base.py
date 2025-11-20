@@ -4,7 +4,7 @@ Base handler for platform cost checking
 
 from abc import ABC, abstractmethod
 from typing import Dict, Any, Optional, List
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 @dataclass
 class CostInfo:
@@ -23,6 +23,9 @@ class ModelTokenInfo:
     used_tokens: float
     total_tokens: float
     status: str = "active"
+    expiry_date: Optional[str] = None
+    reset_count: Optional[int] = None
+    reset_time: Optional[str] = None
 
 @dataclass
 class PlatformTokenInfo:
