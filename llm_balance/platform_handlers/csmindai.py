@@ -55,9 +55,9 @@ class CSMindAIHandler(BasePlatformHandler):
     def _load_env_config(self):
         """Load configuration from environment variables or separate config file."""
         # Try environment variable first
-        env_new_api_user = os.getenv('CSMINDDAI_NEW_API_USER')
-        if env_new_api_user:
-            self.config.new_api_user = env_new_api_user
+        env_user_id = os.getenv('CSMINDAI_API_USER_ID')
+        if env_user_id:
+            self.config.api_user_id = env_user_id
             return
 
         # Try separate config file
@@ -66,8 +66,8 @@ class CSMindAIHandler(BasePlatformHandler):
             try:
                 with open(config_path, 'r', encoding='utf-8') as f:
                     csmindai_config = yaml.safe_load(f) or {}
-                    if 'new_api_user' in csmindai_config:
-                        self.config.new_api_user = csmindai_config['new_api_user']
+                    if 'api_user_id' in csmindai_config:
+                        self.config.api_user_id = csmindai_config['api_user_id']
             except Exception:
                 pass
 
@@ -85,18 +85,18 @@ class CSMindAIHandler(BasePlatformHandler):
 
         headers = (self.config.headers or {}).copy()
 
-        # Get new_api_user from config (loaded from env var or separate config file)
-        new_api_user = getattr(self.config, 'new_api_user', None)
-        if not new_api_user:
+        # Get api_user_id from config (loaded from env var or separate config file)
+        api_user_id = getattr(self.config, 'api_user_id', None)
+        if not api_user_id:
             raise ValueError(
-                "CSMindAI requires new_api_user to be configured. Please set it using:\n"
-                "1. Environment variable: export CSMINDDAI_NEW_API_USER=YOUR_USER_ID\n"
+                "CSMindAI requires api_user_id to be configured. Please set it using:\n"
+                "1. Environment variable: export CSMINDAI_API_USER_ID=YOUR_USER_ID\n"
                 "2. Separate config file: ~/.llm_balance/csmindai_config.yaml\n"
-                "   new_api_user: YOUR_USER_ID"
+                "   api_user_id: YOUR_USER_ID"
             )
 
         # Set required headers
-        headers['new-api-user'] = str(new_api_user)
+        headers['new-api-user'] = str(api_user_id)
 
         # Get cookies from browser
         cookies = self._get_cookies(self.config.cookie_domain)
@@ -170,18 +170,18 @@ class CSMindAIHandler(BasePlatformHandler):
 
         headers = (self.config.headers or {}).copy()
 
-        # Get new_api_user from config (loaded from env var or separate config file)
-        new_api_user = getattr(self.config, 'new_api_user', None)
-        if not new_api_user:
+        # Get api_user_id from config (loaded from env var or separate config file)
+        api_user_id = getattr(self.config, 'api_user_id', None)
+        if not api_user_id:
             raise ValueError(
-                "CSMindAI requires new_api_user to be configured. Please set it using:\n"
-                "1. Environment variable: export CSMINDDAI_NEW_API_USER=YOUR_USER_ID\n"
+                "CSMindAI requires api_user_id to be configured. Please set it using:\n"
+                "1. Environment variable: export CSMINDAI_API_USER_ID=YOUR_USER_ID\n"
                 "2. Separate config file: ~/.llm_balance/csmindai_config.yaml\n"
-                "   new_api_user: YOUR_USER_ID"
+                "   api_user_id: YOUR_USER_ID"
             )
 
         # Set required headers
-        headers['new-api-user'] = str(new_api_user)
+        headers['new-api-user'] = str(api_user_id)
 
         # Get cookies from browser
         cookies = self._get_cookies(self.config.cookie_domain)

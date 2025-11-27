@@ -175,7 +175,7 @@ class ConfigManager:
         from .platform_handlers import (
             DeepSeekHandler, MoonshotHandler, VolcengineHandler,
             AliyunHandler, TencentHandler, ZhipuHandler, SiliconFlowHandler,
-            OpenAIHandler, AnthropicHandler, GoogleHandler, FoxCodeHandler, DuckCodingHandler, Handler88Code, YourAPIHandler, CSMindAIHandler, YesCodeHandler, OneAPIHandler, APIProxyHandler, FastGPTHandler, MiniMaxHandler
+            OpenAIHandler, AnthropicHandler, GoogleHandler, FoxCodeHandler, DuckCodingHandler, PackyCodeHandler, Handler88Code, YourAPIHandler, CSMindAIHandler, YesCodeHandler, OneAPIHandler, APIProxyHandler, FastGPTHandler, MiniMaxHandler
         )
 
         handler_map = {
@@ -191,6 +191,7 @@ class ConfigManager:
             'google': GoogleHandler,
             'foxcode': FoxCodeHandler,
             'duckcoding': DuckCodingHandler,
+            'packycode': PackyCodeHandler,
             '88code': Handler88Code,
             'yourapi': YourAPIHandler,
             'csmindai': CSMindAIHandler,
@@ -229,7 +230,7 @@ class ConfigManager:
     
     def get_all_platforms(self) -> List[str]:
         """Get all available platform names"""
-        return ['deepseek', 'moonshot', 'volcengine', 'aliyun', 'tencent', 'zhipu', 'siliconflow', 'openai', 'anthropic', 'google', 'foxcode', 'duckcoding', '88code', 'yourapi', 'csmindai', 'yescode', 'oneapi', 'apiproxy', 'fastgpt', 'minimax']
+        return ['deepseek', 'moonshot', 'volcengine', 'aliyun', 'tencent', 'zhipu', 'siliconflow', 'openai', 'anthropic', 'google', 'foxcode', 'duckcoding', 'packycode', '88code', 'yourapi', 'csmindai', 'yescode', 'oneapi', 'apiproxy', 'fastgpt', 'minimax']
     
     def get_enabled_platforms(self) -> List[PlatformConfig]:
         """Get enabled platform configurations"""
@@ -289,7 +290,7 @@ class ConfigManager:
         from .platform_handlers import (
             DeepSeekHandler, MoonshotHandler, VolcengineHandler,
             AliyunHandler, TencentHandler, ZhipuHandler, SiliconFlowHandler,
-            OpenAIHandler, AnthropicHandler, GoogleHandler, FoxCodeHandler, DuckCodingHandler, Handler88Code, YourAPIHandler, CSMindAIHandler, YesCodeHandler
+            OpenAIHandler, AnthropicHandler, GoogleHandler, FoxCodeHandler, DuckCodingHandler, PackyCodeHandler, Handler88Code, YourAPIHandler, CSMindAIHandler, YesCodeHandler
         )
 
         handler_map = {
@@ -305,6 +306,7 @@ class ConfigManager:
             'google': GoogleHandler,
             'foxcode': FoxCodeHandler,
             'duckcoding': DuckCodingHandler,
+            'packycode': PackyCodeHandler,
             '88code': Handler88Code,
             'yourapi': YourAPIHandler,
             'csmindai': CSMindAIHandler,

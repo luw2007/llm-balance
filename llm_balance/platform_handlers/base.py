@@ -76,8 +76,13 @@ class BasePlatformHandler(ABC):
         """Get model-level token information for the platform (optional)"""
         raise NotImplementedError(f"Model token checking not implemented for {self.get_platform_name()}")
     
-    def _get_cookies(self, domain: str) -> Dict[str, str]:
-        """Get cookies for domain using pycookiecheat"""
+    def _get_cookies(self, domain: str, silent: bool = True) -> Dict[str, str]:
+        """Get cookies for domain using pycookiecheat
+
+        Args:
+            domain: The domain to get cookies for
+            silent: If True, suppress warning messages when cookies are not found (default: True)
+        """
         # Check if browser is None (non-cookie authentication)
         if self.browser is None:
             raise ValueError(f"This platform doesn't use cookie-based authentication. Please check your API key configuration.")
@@ -104,17 +109,17 @@ class BasePlatformHandler(ABC):
             # Special handling for Arc browser
             if browser_lower == 'arc':
                 # Arc has a different cookie path structure, use custom implementation
-                return self._get_arc_cookies(domain)
+                return self._get_arc_cookies(domain, silent=silent)
             
             browser_type = browser_mapping[browser_lower]
-            
+
             # Use appropriate function based on browser family
             if browser_type in [BrowserType.FIREFOX]:
                 cookies = pycookiecheat.firefox_cookies(domain, browser=browser_type)
             else:
                 cookies = pycookiecheat.chrome_cookies(domain, browser=browser_type)
-            
-            if not cookies:
+
+            if not cookies and not silent:
                 print(f"Warning: No cookies found for {domain}. Please ensure you are logged in to {domain} in {self.browser} browser.")
             return cookies
             
@@ -129,8 +134,13 @@ class BasePlatformHandler(ABC):
             else:
                 raise ValueError(f"Failed to get cookies for {domain}: {e}. Please ensure you are logged in to {domain} in {self.browser} browser.")
     
-    def _get_arc_cookies(self, domain: str) -> Dict[str, str]:
-        """Get cookies for Arc browser using custom implementation"""
+    def _get_arc_cookies(self, domain: str, silent: bool = True) -> Dict[str, str]:
+        """Get cookies for Arc browser using custom implementation
+
+        Args:
+            domain: The domain to get cookies for
+            silent: If True, suppress warning messages when cookies are not found (default: True)
+        """
         try:
             import keyring
             import sqlite3
@@ -228,10 +238,10 @@ class BasePlatformHandler(ABC):
                         cookies[cookie_name] = cookie_value
             
             conn.close()
-            
-            if not cookies:
+
+            if not cookies and not silent:
                 print(f"Warning: No cookies found for {domain}. Please ensure you are logged in to {domain} in Arc browser.")
-            
+
             return cookies
             
         except Exception as e:

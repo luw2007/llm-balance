@@ -3,7 +3,9 @@ Main balance checker functionality
 """
 
 import json
+import threading
 from typing import List, Dict, Any, Optional
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from .config import ConfigManager
 from .platform_configs import PlatformConfig
 from .platform_handlers.base import BasePlatformHandler, CostInfo
@@ -18,30 +20,53 @@ class BalanceChecker:
         # Use provided browser or fall back to global configuration
         self.browser = browser or self.config_manager.get_global_browser()
         self.handlers = {}
-    
+        # Thread pool size for concurrent platform checking
+        self.max_workers = 5
+        # Thread lock for handler cache
+        self._handler_lock = threading.Lock()
+
+    def _check_single_balance(self, platform_config: PlatformConfig) -> Optional[Dict[str, Any]]:
+        """Check balance for a single platform (thread-safe helper method)"""
+        try:
+            # Skip platforms with show_cost disabled
+            if not platform_config.show_cost:
+                return None
+
+            handler = self._get_handler(platform_config)
+            balance_info = handler.get_balance()
+            return {
+                'platform': balance_info.platform,
+                'balance': balance_info.balance,
+                'currency': balance_info.currency,
+                'spent': balance_info.spent,
+                'spent_currency': balance_info.spent_currency,
+                'raw_data': balance_info.raw_data
+            }
+        except Exception as e:
+            print(f"Error checking {platform_config.name}: {e}")
+            return None
+
     def check_all_balances(self) -> List[Dict[str, Any]]:
-        """Check balances for all enabled platforms"""
+        """Check balances for all enabled platforms using thread pool"""
         balances = []
+        platforms = [p for p in self.config_manager.get_enabled_platforms() if p.show_cost]
 
-        for platform_config in self.config_manager.get_enabled_platforms():
-            try:
-                # Skip platforms with show_cost disabled
-                if not platform_config.show_cost:
-                    continue
+        with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
+            # Submit all platform checks to thread pool
+            future_to_platform = {
+                executor.submit(self._check_single_balance, config): config
+                for config in platforms
+            }
 
-                handler = self._get_handler(platform_config)
-                balance_info = handler.get_balance()
-                balances.append({
-                    'platform': balance_info.platform,
-                    'balance': balance_info.balance,
-                    'currency': balance_info.currency,
-                    'spent': balance_info.spent,
-                    'spent_currency': balance_info.spent_currency,
-                    'raw_data': balance_info.raw_data
-                })
-            except Exception as e:
-                print(f"Error checking {platform_config.name}: {e}")
-                continue
+            # Collect results as they complete
+            for future in as_completed(future_to_platform):
+                try:
+                    result = future.result()
+                    if result:
+                        balances.append(result)
+                except Exception as e:
+                    platform = future_to_platform[future]
+                    print(f"Error checking {platform.name}: {e}")
 
         return balances
     
@@ -79,9 +104,13 @@ class BalanceChecker:
             return None
     
     def _get_handler(self, config: PlatformConfig) -> BasePlatformHandler:
-        """Get handler instance for platform configuration"""
+        """Get handler instance for platform configuration (thread-safe)"""
+        # Use double-checked locking pattern for efficiency
         if config.name not in self.handlers:
-            self.handlers[config.name] = create_handler(config, self.browser)
+            with self._handler_lock:
+                # Check again after acquiring lock
+                if config.name not in self.handlers:
+                    self.handlers[config.name] = create_handler(config, self.browser)
         return self.handlers[config.name]
     
     def list_platforms(self) -> List[str]:

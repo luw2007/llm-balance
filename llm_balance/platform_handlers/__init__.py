@@ -14,6 +14,7 @@ from .anthropic import AnthropicHandler
 from .google import GoogleHandler
 from .foxcode import FoxCodeHandler
 from .duckcoding import DuckCodingHandler
+from .packycode import PackyCodeHandler
 from ._88code import Handler88Code
 from .yourapi import YourAPIHandler
 from .csmindai import CSMindAIHandler
@@ -39,6 +40,7 @@ def create_handler(config, browser: str = 'chrome'):
         'google': GoogleHandler,
         'foxcode': FoxCodeHandler,
         'duckcoding': DuckCodingHandler,
+        'packycode': PackyCodeHandler,
         '88code': Handler88Code,
         'yourapi': YourAPIHandler,
         'csmindai': CSMindAIHandler,

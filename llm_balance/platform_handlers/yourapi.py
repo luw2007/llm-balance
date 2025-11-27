@@ -55,9 +55,9 @@ class YourAPIHandler(BasePlatformHandler):
     def _load_env_config(self):
         """Load configuration from environment variables or separate config file."""
         # Try environment variable first
-        env_new_api_user = os.getenv('YOURAPI_NEW_API_USER')
-        if env_new_api_user:
-            self.config.new_api_user = env_new_api_user
+        env_user_id = os.getenv('YOURAPI_API_USER_ID')
+        if env_user_id:
+            self.config.api_user_id = env_user_id
             return
 
         # Try separate config file
@@ -66,8 +66,8 @@ class YourAPIHandler(BasePlatformHandler):
             try:
                 with open(config_path, 'r', encoding='utf-8') as f:
                     yourapi_config = yaml.safe_load(f) or {}
-                    if 'new_api_user' in yourapi_config:
-                        self.config.new_api_user = yourapi_config['new_api_user']
+                    if 'api_user_id' in yourapi_config:
+                        self.config.api_user_id = yourapi_config['api_user_id']
             except Exception:
                 pass
 
@@ -85,18 +85,18 @@ class YourAPIHandler(BasePlatformHandler):
 
         headers = (self.config.headers or {}).copy()
 
-        # Get new_api_user from config (loaded from env var or separate config file)
-        new_api_user = getattr(self.config, 'new_api_user', None)
-        if not new_api_user:
+        # Get api_user_id from config (loaded from env var or separate config file)
+        api_user_id = getattr(self.config, 'api_user_id', None)
+        if not api_user_id:
             raise ValueError(
-                "YourAPI requires new_api_user to be configured. Please set it using:\n"
-                "1. Environment variable: export YOURAPI_NEW_API_USER=YOUR_USER_ID\n"
+                "YourAPI requires api_user_id to be configured. Please set it using:\n"
+                "1. Environment variable: export YOURAPI_API_USER_ID=YOUR_USER_ID\n"
                 "2. Separate config file: ~/.llm_balance/yourapi_config.yaml\n"
-                "   new_api_user: YOUR_USER_ID"
+                "   api_user_id: YOUR_USER_ID"
             )
 
         # Set required headers
-        headers['new-api-user'] = str(new_api_user)
+        headers['new-api-user'] = str(api_user_id)
 
         # Get cookies from browser
         cookies = self._get_cookies(self.config.cookie_domain)
@@ -170,18 +170,18 @@ class YourAPIHandler(BasePlatformHandler):
 
         headers = (self.config.headers or {}).copy()
 
-        # Get new_api_user from config (loaded from env var or separate config file)
-        new_api_user = getattr(self.config, 'new_api_user', None)
-        if not new_api_user:
+        # Get api_user_id from config (loaded from env var or separate config file)
+        api_user_id = getattr(self.config, 'api_user_id', None)
+        if not api_user_id:
             raise ValueError(
-                "YourAPI requires new_api_user to be configured. Please set it using:\n"
-                "1. Environment variable: export YOURAPI_NEW_API_USER=YOUR_USER_ID\n"
+                "YourAPI requires api_user_id to be configured. Please set it using:\n"
+                "1. Environment variable: export YOURAPI_API_USER_ID=YOUR_USER_ID\n"
                 "2. Separate config file: ~/.llm_balance/yourapi_config.yaml\n"
-                "   new_api_user: YOUR_USER_ID"
+                "   api_user_id: YOUR_USER_ID"
             )
 
         # Set required headers
-        headers['new-api-user'] = str(new_api_user)
+        headers['new-api-user'] = str(api_user_id)
 
         # Get cookies from browser
         cookies = self._get_cookies(self.config.cookie_domain)

@@ -2,6 +2,46 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.7] - 2025-11-27
+
+### Added
+- **PackyCode platform support**:
+  - Added PackyCode third-party relay platform (balance + package)
+  - Cookie authentication via `new-api-user` header
+  - API endpoint: `https://packyapi.com/api/user/self`
+  - Configuration via `PACKYCODE_API_USER_ID` environment variable or `~/.llm_balance/packycode_config.yaml`
+  - Pure pay-per-use model with quota-based billing
+
+### Changed
+- **Performance optimization with multi-threading**:
+  - Implemented concurrent platform checking using ThreadPoolExecutor
+  - Thread pool size: 5 workers (optimal balance between performance and resource usage)
+  - Both `cost` and `package` commands now check platforms in parallel
+  - Thread-safe handler caching with double-checked locking pattern
+  - Significantly reduced total execution time for multi-platform queries
+
+- **Unified API user ID naming across all platforms**:
+  - YourAPI: Changed from `new_api_user` to `api_user_id`
+    - Environment variable: `YOURAPI_NEW_API_USER` → `YOURAPI_API_USER_ID`
+    - Config file field: `new_api_user` → `api_user_id`
+  - CSMindAI: Changed from `new_api_user` to `api_user_id`
+    - Environment variable: `CSMINDDAI_NEW_API_USER` → `CSMINDAI_API_USER_ID` (also fixed typo: removed extra 'D')
+    - Config file field: `new_api_user` → `api_user_id`
+  - HTTP header `new-api-user` remains unchanged (required by API)
+  - Provides consistent naming with DuckCoding and PackyCode platforms
+
+### Fixed
+- **Cookie domain search warning suppression**:
+  - Added `silent` parameter to `_get_cookies()` and `_get_arc_cookies()` methods
+  - Default behavior now suppresses warnings when trying multiple cookie domains (silent=True)
+  - Eliminates false-positive warnings when platforms correctly try fallback domains
+  - Improves user experience by only showing meaningful error messages
+
+- **PackyCode platform cookie domain fix**:
+  - Added `www.packyapi.com` to cookie domain search list
+  - Fixed authentication failure when logged in via `www.packyapi.com` console
+  - Cookie domain search now tries: configured domain, `www.packyapi.com`, `.packyapi.com`, `packyapi.com`
+
 ## [0.2.6] - 2025-11-20
 
 ### Added
@@ -30,11 +70,25 @@ All notable changes to this project will be documented in this file.
   - Extracts limit, used, remaining, and resetTime information
   - Requires `MOONSHOT_CONSOLE_TOKEN` and `MOONSHOT_ORG_ID` environment variables
 
+- **PackyCode platform support**:
+  - Added PackyCode third-party relay platform (balance + package)
+  - Cookie authentication via `new-api-user` header
+  - API endpoint: `https://packyapi.com/api/user/self`
+  - Configuration via `PACKYCODE_API_USER_ID` environment variable or `~/.llm_balance/packycode_config.yaml`
+  - Pure pay-per-use model with quota-based billing
+
 ### Changed
 - **Token formatter improvements**:
   - Table format now supports optional columns for expiry, reset count, and reset time
   - Markdown format includes subscription lifecycle information
   - Column widths dynamically adjust based on enabled features
+
+- **Performance optimization with multi-threading**:
+  - Implemented concurrent platform checking using ThreadPoolExecutor
+  - Thread pool size: 5 workers (optimal balance between performance and resource usage)
+  - Both `cost` and `package` commands now check platforms in parallel
+  - Thread-safe handler caching with double-checked locking pattern
+  - Significantly reduced total execution time for multi-platform queries
 
 ### Technical Details
 - Both 88Code and FoxCode now distinguish between:

@@ -3,7 +3,9 @@ Main token checker functionality
 """
 
 import json
+import threading
 from typing import List, Dict, Any, Optional
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from .config import ConfigManager
 from .platform_configs import PlatformConfig
 from .platform_handlers.base import BasePlatformHandler, PlatformTokenInfo
@@ -18,45 +20,68 @@ class TokenChecker:
         # Use provided browser or fall back to global configuration
         self.browser = browser or self.config_manager.get_global_browser()
         self.handlers = {}
-    
-    def check_all_tokens(self) -> List[Dict[str, Any]]:
-        """Check token balances for all enabled platforms"""
-        tokens = []
+        # Thread pool size for concurrent platform checking
+        self.max_workers = 5
+        # Thread lock for handler cache
+        self._handler_lock = threading.Lock()
 
-        for platform_config in self.config_manager.get_enabled_platforms():
+    def _check_single_token(self, platform_config: PlatformConfig) -> Optional[Dict[str, Any]]:
+        """Check token balance for a single platform (thread-safe helper method)"""
+        try:
+            # Skip platforms with show_package disabled
+            if not platform_config.show_package:
+                return None
+
+            handler = self._get_handler(platform_config)
             try:
-                # Skip platforms with show_package disabled
-                if not platform_config.show_package:
-                    continue
+                token_info = handler.get_model_tokens()
+                # Convert PlatformTokenInfo to dict format for backward compatibility
+                platform_data = {
+                    'platform': token_info.platform,
+                    'models': [
+                        {
+                            'model': model.model,
+                            'package': model.package,
+                            'remaining_tokens': model.remaining_tokens,
+                            'used_tokens': model.used_tokens,
+                            'total_tokens': model.total_tokens,
+                            'status': model.status,
+                            'expiry_date': model.expiry_date,
+                            'reset_count': model.reset_count
+                        }
+                        for model in token_info.models
+                    ],
+                    'raw_data': token_info.raw_data
+                }
+                return platform_data
+            except NotImplementedError:
+                # Platform doesn't support token checking - skip it
+                return None
+        except Exception as e:
+            # Skip platforms that don't support tokens or have errors
+            return None
 
-                handler = self._get_handler(platform_config)
+    def check_all_tokens(self) -> List[Dict[str, Any]]:
+        """Check token balances for all enabled platforms using thread pool"""
+        tokens = []
+        platforms = [p for p in self.config_manager.get_enabled_platforms() if p.show_package]
+
+        with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
+            # Submit all platform checks to thread pool
+            future_to_platform = {
+                executor.submit(self._check_single_token, config): config
+                for config in platforms
+            }
+
+            # Collect results as they complete
+            for future in as_completed(future_to_platform):
                 try:
-                    token_info = handler.get_model_tokens()
-                    # Convert PlatformTokenInfo to dict format for backward compatibility
-                    platform_data = {
-                        'platform': token_info.platform,
-                        'models': [
-                            {
-                                'model': model.model,
-                                'package': model.package,
-                                'remaining_tokens': model.remaining_tokens,
-                                'used_tokens': model.used_tokens,
-                                'total_tokens': model.total_tokens,
-                                'status': model.status,
-                                'expiry_date': model.expiry_date,
-                                'reset_count': model.reset_count
-                            }
-                            for model in token_info.models
-                        ],
-                        'raw_data': token_info.raw_data
-                    }
-                    tokens.append(platform_data)
-                except NotImplementedError:
-                    # Platform doesn't support token checking - skip it
-                    continue
-            except Exception as e:
-                # Skip platforms that don't support tokens or have errors
-                continue
+                    result = future.result()
+                    if result:
+                        tokens.append(result)
+                except Exception as e:
+                    # Silently skip platforms with errors
+                    pass
 
         return tokens
     
@@ -147,9 +172,13 @@ class TokenChecker:
         return clean_value(raw_data)
     
     def _get_handler(self, config: PlatformConfig) -> BasePlatformHandler:
-        """Get handler instance for platform configuration"""
+        """Get handler instance for platform configuration (thread-safe)"""
+        # Use double-checked locking pattern for efficiency
         if config.name not in self.handlers:
-            self.handlers[config.name] = create_handler(config, self.browser)
+            with self._handler_lock:
+                # Check again after acquiring lock
+                if config.name not in self.handlers:
+                    self.handlers[config.name] = create_handler(config, self.browser)
         return self.handlers[config.name]
     
     def list_platforms(self) -> List[str]:
