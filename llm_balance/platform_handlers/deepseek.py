@@ -225,9 +225,8 @@ class DeepSeekHandler(BasePlatformHandler):
 
             # Extract payment orders from response
             data = response.get('data', {})
-
-            invoices = data.get('invoices', {})
-
+            biz_data = data.get('biz_data', {})
+            invoices = biz_data.get('invoices', {})
             payment_orders = invoices.get('payment_orders', [])
 
             # Sum successful payment amounts to get total recharge

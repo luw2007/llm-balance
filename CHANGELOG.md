@@ -42,6 +42,19 @@ All notable changes to this project will be documented in this file.
   - Fixed authentication failure when logged in via `www.packyapi.com` console
   - Cookie domain search now tries: configured domain, `www.packyapi.com`, `.packyapi.com`, `packyapi.com`
 
+- **DeepSeek spent calculation fix**:
+  - Fixed invoice API response parsing by adding missing `biz_data` layer
+  - Previous path: `data.invoices.payment_orders` (incorrect, returned empty list)
+  - Correct path: `data.biz_data.invoices.payment_orders`
+  - Spent now correctly calculated as: total_recharge - current_balance
+  - Ensures accurate spending tracking for DeepSeek platform
+
+- **88Code package calculation and status fix**:
+  - Fixed remaining tokens calculation for MONTHLY/YEARLY packages (was incorrectly using actual currentCredits instead of time-based remainingCredits)
+  - Status now correctly shows "inactive" when remainingDays <= 0 (previously showed "active" when isActive=true even if expired)
+  - Ensures accurate balance tracking for subscription plans
+
+
 ## [0.2.6] - 2025-11-20
 
 ### Added

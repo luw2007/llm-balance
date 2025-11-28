@@ -447,7 +447,7 @@ class Handler88Code(BasePlatformHandler):
 
             # Convert to numeric values
             total_tokens = _num(credit_limit)
-            remaining_tokens = _num(current_credits)
+            remaining_tokens = _num(remaining_credits)  # Use calculated remaining (time-based for subscriptions)
             used_tokens = _num(used_credits)
 
             # Ensure non-negative values
@@ -455,15 +455,25 @@ class Handler88Code(BasePlatformHandler):
             remaining_tokens = max(0.0, remaining_tokens)
             used_tokens = max(0.0, used_tokens)
 
-            # Determine status based on isActive flag
+            # Extract remaining days first (needed for status determination)
+            remaining_days = item.get('remainingDays') or subscription_plan.get('remainingDays')
+            try:
+                remaining_days_int = int(remaining_days) if remaining_days is not None else 0
+            except (ValueError, TypeError):
+                remaining_days_int = 0
+
+            # Determine status based on isActive flag and remainingDays
             is_active = item.get('isActive', True)
-            status = "active" if is_active else "inactive"
+            if not is_active or remaining_days_int <= 0:
+                # Package inactive (either explicitly inactive or expired)
+                status = "inactive"
+            else:
+                status = "active"
 
             # Extract expiry date (从 remainingDays 计算或直接使用 expireTime)
             expiry_date = None
 
             # 先尝试从 remainingDays 计算
-            remaining_days = item.get('remainingDays') or subscription_plan.get('remainingDays')
             if remaining_days is not None:
                 try:
                     from datetime import datetime, timedelta
