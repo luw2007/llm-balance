@@ -23,6 +23,7 @@ from .oneapi import OneAPIHandler
 from .apiproxy import APIProxyHandler
 from .fastgpt import FastGPTHandler
 from .minimax import MiniMaxHandler
+from .cubence import CubenceHandler
 
 def create_handler(config, browser: str = 'chrome'):
     """Factory function to create platform handlers using Python-based configuration"""
@@ -49,6 +50,7 @@ def create_handler(config, browser: str = 'chrome'):
         'apiproxy': APIProxyHandler,
         'fastgpt': FastGPTHandler,
         'minimax': MiniMaxHandler,
+        'cubence': CubenceHandler,
     }
     
     # Get handler class from configuration

@@ -48,6 +48,7 @@ class PlatformConfig:
     region: Optional[str] = None
     api_user_id: Optional[str] = None
     console_token: Optional[str] = None
+    token: Optional[str] = None
     org_id: Optional[str] = None
     ingress_cookie: Optional[str] = None
     
@@ -175,7 +176,7 @@ class ConfigManager:
         from .platform_handlers import (
             DeepSeekHandler, MoonshotHandler, VolcengineHandler,
             AliyunHandler, TencentHandler, ZhipuHandler, SiliconFlowHandler,
-            OpenAIHandler, AnthropicHandler, GoogleHandler, FoxCodeHandler, DuckCodingHandler, PackyCodeHandler, Handler88Code, YourAPIHandler, CSMindAIHandler, YesCodeHandler, OneAPIHandler, APIProxyHandler, FastGPTHandler, MiniMaxHandler
+            OpenAIHandler, AnthropicHandler, GoogleHandler, FoxCodeHandler, DuckCodingHandler, PackyCodeHandler, Handler88Code, YourAPIHandler, CSMindAIHandler, YesCodeHandler, OneAPIHandler, APIProxyHandler, FastGPTHandler, MiniMaxHandler, CubenceHandler
         )
 
         handler_map = {
@@ -200,8 +201,9 @@ class ConfigManager:
             'apiproxy': APIProxyHandler,
             'fastgpt': FastGPTHandler,
             'minimax': MiniMaxHandler,
+            'cubence': CubenceHandler,
         }
-        
+
         if platform_name not in handler_map:
             return None
 
@@ -230,7 +232,7 @@ class ConfigManager:
     
     def get_all_platforms(self) -> List[str]:
         """Get all available platform names"""
-        return ['deepseek', 'moonshot', 'volcengine', 'aliyun', 'tencent', 'zhipu', 'siliconflow', 'openai', 'anthropic', 'google', 'foxcode', 'duckcoding', 'packycode', '88code', 'yourapi', 'csmindai', 'yescode', 'oneapi', 'apiproxy', 'fastgpt', 'minimax']
+        return ['deepseek', 'moonshot', 'volcengine', 'aliyun', 'tencent', 'zhipu', 'siliconflow', 'openai', 'anthropic', 'google', 'foxcode', 'duckcoding', 'packycode', '88code', 'yourapi', 'csmindai', 'yescode', 'oneapi', 'apiproxy', 'fastgpt', 'minimax', 'cubence']
     
     def get_enabled_platforms(self) -> List[PlatformConfig]:
         """Get enabled platform configurations"""
@@ -290,7 +292,7 @@ class ConfigManager:
         from .platform_handlers import (
             DeepSeekHandler, MoonshotHandler, VolcengineHandler,
             AliyunHandler, TencentHandler, ZhipuHandler, SiliconFlowHandler,
-            OpenAIHandler, AnthropicHandler, GoogleHandler, FoxCodeHandler, DuckCodingHandler, PackyCodeHandler, Handler88Code, YourAPIHandler, CSMindAIHandler, YesCodeHandler
+            OpenAIHandler, AnthropicHandler, GoogleHandler, FoxCodeHandler, DuckCodingHandler, PackyCodeHandler, Handler88Code, YourAPIHandler, CSMindAIHandler, YesCodeHandler, CubenceHandler
         )
 
         handler_map = {
@@ -315,8 +317,9 @@ class ConfigManager:
             'apiproxy': APIProxyHandler,
             'fastgpt': FastGPTHandler,
             'minimax': MiniMaxHandler,
+            'cubence': CubenceHandler,
         }
-        
+
         for name, handler_class in handler_map.items():
             try:
                 default_config = handler_class.get_default_config()

@@ -439,7 +439,7 @@ class LLMBalanceCLI:
         Manage platform-specific configuration (separate from global config)
 
         Args:
-            platform: Platform name (currently only supports 'duckcoding')
+            platform: Platform name (supports 'duckcoding', 'cubence', 'csmindai', 'yourapi', 'deepseek')
             key: Configuration key (optional)
             value: Configuration value (optional)
 
@@ -449,10 +449,42 @@ class LLMBalanceCLI:
         import yaml
         from pathlib import Path
 
-        if platform.lower() != 'duckcoding':
-            return f"Platform '{platform}' does not support separate configuration. Use 'llm-balance config {platform}' instead."
+        # Map platform names to their config file names and supported keys
+        platform_configs = {
+            'duckcoding': {
+                'file': 'duckcoding_config.yaml',
+                'keys': ['api_user_id'],
+                'display_name': 'DuckCoding'
+            },
+            'cubence': {
+                'file': 'cubence_config.yaml',
+                'keys': ['token'],
+                'display_name': 'Cubence'
+            },
+            'csmindai': {
+                'file': 'csmindai_config.yaml',
+                'keys': ['new_api_user'],
+                'display_name': 'CSMindAI'
+            },
+            'yourapi': {
+                'file': 'yourapi_config.yaml',
+                'keys': ['new_api_user'],
+                'display_name': 'YourAPI'
+            },
+            'deepseek': {
+                'file': 'deepseek_config.yaml',
+                'keys': ['console_token'],
+                'display_name': 'DeepSeek'
+            }
+        }
 
-        config_path = Path.home() / '.llm_balance' / 'duckcoding_config.yaml'
+        platform_lower = platform.lower()
+        if platform_lower not in platform_configs:
+            supported = ', '.join(platform_configs.keys())
+            return f"Platform '{platform}' does not support separate configuration. Supported platforms: {supported}\nUse 'llm-balance config {platform}' for other platforms."
+
+        platform_info = platform_configs[platform_lower]
+        config_path = Path.home() / '.llm_balance' / platform_info['file']
 
         # Load existing config
         config = {}
@@ -466,7 +498,9 @@ class LLMBalanceCLI:
         if key is None:
             # Show all configuration
             if not config:
-                return "No DuckCoding configuration found. Set DUCKCODING_API_USER_ID environment variable or create ~/.llm_balance/duckcoding_config.yaml"
+                display_name = platform_info['display_name']
+                example_keys = ', '.join(platform_info['keys'])
+                return f"No {display_name} configuration found. Set {platform.upper()}_* environment variable or create {config_path}\nSupported keys: {example_keys}"
 
             import json
             return json.dumps(config, indent=2, ensure_ascii=False)
@@ -474,9 +508,9 @@ class LLMBalanceCLI:
         if value is None:
             # Show specific key
             if key in config:
-                return f"duckcoding.{key} = {config[key]}"
+                return f"{platform_lower}.{key} = {config[key]}"
             else:
-                return f"Key '{key}' not found in DuckCoding configuration"
+                return f"Key '{key}' not found in {platform_info['display_name']} configuration"
 
         # Set configuration value
         # Convert string values to appropriate types
@@ -495,7 +529,7 @@ class LLMBalanceCLI:
             config_path.parent.mkdir(exist_ok=True)
             with open(config_path, 'w', encoding='utf-8') as f:
                 yaml.dump(config, f, default_flow_style=False, allow_unicode=True)
-            return f"Set duckcoding.{key} = {value} (stored in separate config file)"
+            return f"Set {platform_lower}.{key} = {value} (stored in {config_path})"
         except Exception as e:
             return f"Error saving config: {e}"
 
