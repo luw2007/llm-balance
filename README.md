@@ -5,7 +5,7 @@
 ## Key Features
 
 - **🔑 Multiple Authentication**: API Key, browser cookie, official SDK support
-- **🌐 21 Platforms Supported**: Official platforms (DeepSeek, Moonshot, Volcengine, Aliyun, Tencent, Zhipu, SiliconFlow, OpenAI, Anthropic, Google) + third-party relays (FoxCode, DuckCoding, PackyCode, 88Code, YourAPI, CSMindAI, YesCode) + relay platforms (OneAPI, APIProxy, FastGPT, MiniMax)
+- **🌐 22 Platforms Supported**: Official platforms (DeepSeek, Moonshot, Volcengine, Aliyun, Tencent, Zhipu, SiliconFlow, OpenAI, Anthropic, Google) + third-party relays (FoxCode, DuckCoding, PackyCode, 88Code, YouAPI, CSMindAI, YesCode, Cubence) + relay platforms (OneAPI, APIProxy, FastGPT, MiniMax)
 - **💰 Real-time Balance & Spent**: Track both current balance and actual spending
 - **📊 Flexible Output**: Table, JSON, Markdown, and total-only formats
 - **💱 Multi-Currency**: Automatic conversion between CNY, USD, EUR, and more
@@ -135,6 +135,21 @@ EOF
 
 # Then login to https://yourapi.cn and run:
 llm-balance cost --platform=yourapi
+
+# Cubence (Requires independent configuration)
+# Method 1: Environment variable
+export CUBENCE_TOKEN="your_token"
+
+# Method 2: Separate config file
+llm-balance platform_config cubence token "your_token"
+
+# Method 3: Manual config file creation
+cat > ~/.llm_balance/cubence_config.yaml << EOF
+token: your_token
+EOF
+
+# Then run:
+llm-balance cost --platform=cubence
 ```
 
 ### First Use

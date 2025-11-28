@@ -61,6 +61,9 @@ export CSMINDDAI_NEW_API_USER="your_user_id"
 
 # YouAPI 需要额外的用户ID配置
 export YOUAPI_NEW_API_USER="your_user_id"
+
+# Cubence 需要 Token 配置
+export CUBENCE_TOKEN="your_token"
 ```
 
 ## 使用方法

@@ -2,6 +2,34 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.8] - 2025-11-28
+
+### Added
+- **Cubence platform support**:
+  - Added Cubence AI platform with token-based authentication
+  - API endpoint: `https://cubence.com/api/v1/dashboard/overview`
+  - Configuration via `CUBENCE_TOKEN` environment variable or `~/.llm_balance/cubence_config.yaml`
+  - Supports balance query with CNY currency
+  - Note: Despite field name 'balance_dollar', actual currency is CNY (人民币)
+  - Cookie-based token authentication using `token` cookie
+
+- **Enhanced platform_config CLI command**:
+  - Extended to support 5 platforms: `duckcoding`, `cubence`, `csmindai`, `yourapi`, `deepseek`
+  - Each platform gets dedicated config file mapping and display names
+  - Improved error messages with platform-specific guidance
+  - Dynamic platform validation with supported platform list
+
+### Changed
+- **PlatformConfig dataclass extended**:
+  - Added `token` field to support token-based authentication platforms
+  - Enables consistent token configuration across multiple platforms
+
+### Documentation
+- **Updated README files**:
+  - Added Cubence to supported platforms list (22 platforms total)
+  - Added Cubence configuration examples in Special Platforms section
+  - Updated platform count from 21 to 22 in feature highlights
+
 ## [0.2.7] - 2025-11-27
 
 ### Added
