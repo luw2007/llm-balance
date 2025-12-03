@@ -115,12 +115,15 @@ class CubenceHandler(BasePlatformHandler):
         # Calculate spent amount (if available)
         spent = self._calculate_spent_amount(response)
 
+        # Set spent_currency based on whether spent is available
+        spent_currency = currency or 'CNY' if spent != "-" else "-"
+
         return CostInfo(
             platform=self.get_platform_name(),
             balance=balance or 0.0,
             currency=currency or 'CNY',
             spent=spent,
-            spent_currency=currency or 'CNY',
+            spent_currency=spent_currency,
             raw_data=response
         )
 
@@ -188,15 +191,41 @@ class CubenceHandler(BasePlatformHandler):
     def _calculate_spent_amount(self, response: Dict[str, Any]) -> float:
         """Calculate spent amount from Cubence API response
 
-        Note: This may not be available in the overview endpoint.
-        Return "-" string to indicate not supported, or 0.0 if truly no spending.
+        Expected response format from /api/v1/dashboard/overview:
+        {
+            "data": {
+                "apikey_stats": {
+                    "active": 1,
+                    "quota_limit": -1,
+                    "quota_used": 3182440,  # Total quota used across all API keys
+                    "total": 1
+                },
+                ...
+            },
+            "success": true
+        }
+
+        Spent calculation: quota_used / 1000000 = CNY
+        (Same scaling as balance: 1M tokens = 1 CNY)
         """
         try:
-            # Try common spent/used field locations
+            # Extract spent from apikey_stats
             if 'data' in response:
                 data = response['data']
 
-                # Try direct spent field
+                # Try apikey_stats.quota_used (from dashboard/overview endpoint)
+                if 'apikey_stats' in data and isinstance(data['apikey_stats'], dict):
+                    apikey_stats = data['apikey_stats']
+                    if 'quota_used' in apikey_stats:
+                        quota_used = apikey_stats['quota_used']
+                        try:
+                            # Convert using same scaling as balance (1M tokens = 1 CNY)
+                            spent = float(quota_used) / 1000000.0
+                            return spent
+                        except (ValueError, TypeError):
+                            pass
+
+                # Fallback: Try direct spent field (for potential future API changes)
                 if 'spent' in data:
                     return float(data['spent'])
 
