@@ -1,5 +1,5 @@
 """
-88996.cloud platform handler
+88996 platform handler
 """
 
 import os
@@ -9,11 +9,11 @@ from ..config import PlatformConfig
 
 
 class Handler88996(BasePlatformHandler):
-    """88996.cloud platform cost handler"""
+    """88996 platform cost handler"""
 
     @classmethod
     def get_default_config(cls) -> dict:
-        """Get default configuration for 88996.cloud platform"""
+        """Get default configuration for 88996 platform"""
         return {
             "api_url": "https://88996.cloud/api/user/self",
             "method": "GET",
@@ -35,8 +35,8 @@ class Handler88996(BasePlatformHandler):
             "enabled": False,
             "show_cost": True,
             "show_package": True,
-            "display_name": "88996.cloud",
-            "description": "88996.cloud AI platform"
+            "display_name": "88996",
+            "description": "88996 AI platform"
         }
 
     def __init__(self, config, browser: str = 'chrome'):
@@ -66,16 +66,16 @@ class Handler88996(BasePlatformHandler):
                 pass
 
     def get_balance(self) -> CostInfo:
-        """Get cost information from 88996.cloud"""
+        """Get cost information from 88996"""
         api_url = self.config.get('api_url') if isinstance(self.config, dict) else self.config.api_url
         if not api_url:
-            raise ValueError("No API URL configured for 88996.cloud")
+            raise ValueError("No API URL configured for 88996")
 
         # Get api_user_id from configuration
         api_user_id = getattr(self.config, 'api_user_id', None)
         if not api_user_id:
             raise ValueError(
-                "88996.cloud api_user_id required. Please set it using one of the following methods:\n"
+                "88996 api_user_id required. Please set it using one of the following methods:\n"
                 "1. Environment variable: export CLOUD88996_API_USER_ID='your_user_id'\n"
                 "2. Config file: llm-balance platform_config 88996 api_user_id 'your_user_id'\n"
                 "3. Or create ~/.llm_balance/88996_config.yaml with:\n"
@@ -105,7 +105,7 @@ class Handler88996(BasePlatformHandler):
         )
 
         if not response:
-            raise ValueError("No response from 88996.cloud API")
+            raise ValueError("No response from 88996 API")
 
         # Extract balance and currency from response
         balance = self._extract_balance(response)
@@ -125,10 +125,10 @@ class Handler88996(BasePlatformHandler):
 
     def get_platform_name(self) -> str:
         """Get platform display name"""
-        return "88996.cloud"
+        return "88996"
 
     def _extract_balance(self, response: Dict[str, Any]) -> Optional[float]:
-        """Extract balance from 88996.cloud API response
+        """Extract balance from 88996 API response
 
         Expected response format:
         {
@@ -154,11 +154,11 @@ class Handler88996(BasePlatformHandler):
             return None
 
         except (ValueError, TypeError, KeyError) as e:
-            print(f"Warning: Failed to extract balance from 88996.cloud response: {e}")
+            print(f"Warning: Failed to extract balance from 88996 response: {e}")
             return None
 
     def _calculate_spent_amount(self, response: Dict[str, Any]) -> float:
-        """Calculate spent amount from 88996.cloud API response
+        """Calculate spent amount from 88996 API response
 
         Spent calculation: used_quota / 500000 = CNY
         """
@@ -174,17 +174,17 @@ class Handler88996(BasePlatformHandler):
             return "-"
 
     def get_model_tokens(self) -> PlatformTokenInfo:
-        """Get quota-based token information from 88996.cloud
+        """Get quota-based token information from 88996
 
         Returns quota info as a single model entry showing total/used/remaining.
         """
         api_url = self.config.get('api_url') if isinstance(self.config, dict) else self.config.api_url
         if not api_url:
-            raise ValueError("No API URL configured for 88996.cloud")
+            raise ValueError("No API URL configured for 88996")
 
         api_user_id = getattr(self.config, 'api_user_id', None)
         if not api_user_id:
-            raise ValueError("88996.cloud api_user_id required")
+            raise ValueError("88996 api_user_id required")
 
         headers = self.config.headers.copy() if hasattr(self.config, 'headers') else self.config.get('headers', {}).copy()
         headers['rix-api-user'] = str(api_user_id)
@@ -200,7 +200,7 @@ class Handler88996(BasePlatformHandler):
         )
 
         if not response or 'data' not in response:
-            raise ValueError("No response from 88996.cloud API")
+            raise ValueError("No response from 88996 API")
 
         data = response['data']
         quota = float(data.get('quota', 0))
@@ -213,7 +213,7 @@ class Handler88996(BasePlatformHandler):
         models = [
             ModelTokenInfo(
                 model="Quota",
-                package="88996.cloud",
+                package="88996",
                 total_tokens=total_tokens,
                 used_tokens=used_quota,
                 remaining_tokens=remaining_tokens,
