@@ -4,7 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-A Python CLI tool for checking costs and balances across multiple LLM platforms. The tool supports multiple authentication methods (API keys, browser cookies, official SDKs), multi-currency conversion, global browser configuration, and provides real-time cost monitoring with flexible output formats.
+A Python CLI tool for checking costs and balances across 24 LLM platforms with support for multiple authentication methods (API keys, browser cookies, official SDKs), multi-currency conversion, and real-time cost monitoring.
+
+**Current Version**: 0.2.7
 
 ## Development Commands
 
@@ -13,558 +15,411 @@ A Python CLI tool for checking costs and balances across multiple LLM platforms.
 # Install in development mode
 pip install -e .
 
-# Install dependencies
-pip install -r requirements.txt
-
-# Install optional platform-specific SDKs
-pip install aliyun-python-sdk-bssopenapi>=2.0.0  # Aliyun billing
-pip install volcengine-python-sdk==4.0.13        # Volcengine
-pip install tencentcloud-sdk-python>=3.0.0      # Tencent Cloud
-
-# Verify installation
-llm-balance --help
-```
-
-### Automated Testing
-```bash
-# Run comprehensive tests
-python test_llm_balance.py
-
-# Run with verbose output
-python test_llm_balance.py --verbose
-
-# Test specific platforms only
-python test_llm_balance.py --platforms deepseek volcengine
-
-# Generate JSON report for analysis
-python test_llm_balance.py --json-report
-
-# Fast fail on first error
-python test_llm_balance.py --fail-fast
-```
-
-## Architecture
-
-### Core Components
-
-- **CLI Layer** (`cli.py`): Fire-based CLI interface with commands like `cost`, `package`, `list`, `enable`, `disable`
-- **BalanceChecker** (`balance_checker.py`): Main orchestrator that manages platform checking and formatting
-- **TokenChecker** (`token_checker.py`): Token usage monitoring for supported platforms
-- **ConfigManager** (`config.py`): YAML configuration management with global browser settings
-- **Platform Handlers** (`platform_handlers/`): Modular platform-specific implementations
-- **Utilities** (`utils.py`): Currency conversion, output formatting, and helper functions
-
-### Key Architecture Patterns
-
-1. **Factory Pattern**: `create_handler()` function in `platform_handlers/__init__.py` creates appropriate platform handlers
-2. **Template Method**: `BasePlatformHandler` defines common interface with abstract methods
-3. **Independent Configuration**: Special platforms (DuckCoding, CSMindAI, YouAPI) use separate config files
-4. **Error Resilience**: Platform failures don't stop other platforms from being checked
-
-### Platform Handler Lifecycle
-
-1. **Handler Creation**: Factory creates handler based on platform configuration
-2. **Authentication**: Each handler implements platform-specific auth (API key, SDK, cookie)
-3. **Data Fetching**: Handlers make requests to platform APIs
-4. **Data Processing**: Parse responses and extract balance/spent information
-5. **Error Handling**: Graceful degradation with meaningful error messages
-6. **Result Packaging**: Return standardized `CostInfo` or `PlatformTokenInfo` objects
-
-### Authentication Methods
-
-1. **API Key**: Bearer token authentication (DeepSeek, Moonshot, SiliconFlow)
-2. **Browser Cookies**: Automatic cookie extraction via pycookiecheat (Zhipu)
-3. **Official SDK**: Enterprise SDK integration (Aliyun, Volcengine, Tencent)
-4. **Third-party Relays**: Cookie-based authentication for third-party services (FoxCode, DuckCoding, CSMindAI, YouAPI)
-
-### Configuration System
-
-- **Location**: `~/.llm_balance/config.yaml`
-- **Global Settings**: Single browser configuration for all cookie-based platforms
-- **Per-Platform**: Enable/disable, authentication type, API endpoints
-- **Dynamic Updates**: Runtime configuration changes via CLI commands
-- **Independent Configs**: Special platforms use separate config files to avoid global pollution
-
-#### Independent Configuration Architecture
-
-Some platforms (like DuckCoding, CSMindAI, YouAPI) require special configuration that should not pollute the global config:
-
-1. **Environment Variables**: `DUCKCODING_API_USER_ID` (highest priority)
-2. **Separate Config Files**: `~/.llm_balance/duckcoding_config.yaml` (medium priority)
-3. **Global Config**: `~/.llm_balance/config.yaml` (lowest priority, only for `enabled` flag)
-
-#### Platform Configuration Commands
-
-```bash
-# View DuckCoding configuration
-llm-balance platform_config duckcoding
-
-# Set DuckCoding configuration
-llm-balance platform_config duckcoding api_user_id 10801
-
-# Environment variable override
-export DUCKCODING_API_USER_ID=10801
-llm-balance cost --platform=duckcoding
-```
-
-## Development Commands
-
-### Setup & Installation
-```bash
-# Install in development mode
-pip install -e .
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Install optional platform-specific SDKs
-pip install aliyun-python-sdk-bssopenapi>=2.0.0  # Aliyun billing
-pip install volcengine-python-sdk==4.0.13        # Volcengine
-pip install tencentcloud-sdk-python>=3.0.0      # Tencent Cloud
-
-# Verify installation
-llm-balance --help
-```
-
-### Automated Testing
-```bash
-# Run comprehensive tests
-python test_llm_balance.py
-
-# Run with verbose output
-python test_llm_balance.py --verbose
-
-# Test specific platforms only
-python test_llm_balance.py --platforms deepseek volcengine
-
-# Generate JSON report for analysis
-python test_llm_balance.py --json-report
-
-# Fast fail on first error
-python test_llm_balance.py --fail-fast
-```
-
-### Common Development Tasks
-
-#### Debug Platform Issues
-```bash
-# Test individual platform
-llm-balance cost --platform=deepseek --format=json
-
-# Check configuration
-llm-balance config deepseek
-
-# Diagnose system
-llm-balance diagnose
-
-# Test specific authentication method
-llm-balance config volcengine auth_type sdk
-llm-balance config volcengine auth_type cookie
-```
-
-#### Browser Configuration
-```bash
-# Set global browser
-llm-balance set-browser chrome
-
-# Override for single command
-llm-balance cost --browser=firefox
-
-# Test cookie-based platforms (Zhipu)
-llm-balance cost --platform=zhipu --browser=chrome
-```
-
-#### Configuration Management
-```bash
-# Generate fresh config
-llm-balance generate_config
-
-# View/edit platform config
-llm-balance config volcengine auth_type sdk
-
-# Enable/disable platforms
-llm-balance enable moonshot
-llm-balance disable tencent
-```
-
-#### Development Workflow
-```bash
-# Install in development mode
-pip install -e .
-
-# Run specific platform tests
-python -c "from llm_balance.platform_handlers.deepseek import DeepSeekHandler; print(DeepSeekHandler.get_default_config())"
-
-# Test configuration loading
-python -c "from llm_balance.config import ConfigManager; cm = ConfigManager(); print([p.name for p in cm.get_enabled_platforms()])"
-```
-
-### Testing Commands
-```bash
-# Check all platforms
-llm-balance cost
-
-# Check specific platform
-llm-balance cost --platform=deepseek
-
-# Different output formats
-llm-balance cost --format=json
-llm-balance cost --format=table
-llm-balance cost --format=total
-
-# Token usage monitoring
-llm-balance package
-llm-balance package --platform=volcengine
-llm-balance package --platform=zhipu --model=glm-4
-
-# Package table output shows Total/Used/Remaining summary
-# The table format includes detailed model information with totals at the bottom
-llm-balance package --format=table
-
-# Multi-currency testing
-llm-balance cost --currency=USD
-llm-balance rates
-
-# Platform management
-llm-balance list
-llm-balance enable moonshot
-llm-balance disable tencent
-```
-
-### Environment Variables
-```bash
-# API Key platforms
-export DEEPSEEK_API_KEY="your_key"
-export MOONSHOT_API_KEY="your_key"
-export SILICONFLOW_API_KEY="your_key"
-
-# SDK platforms
-export VOLCENGINE_ACCESS_KEY="your_key"
-export VOLCENGINE_SECRET_KEY="your_key"
-export ALIYUN_ACCESS_KEY_ID="your_key"
-export ALIYUN_ACCESS_KEY_SECRET="your_key"
-export TENCENT_API_KEY="your_key"
-
-# Third-party relay specific
-export DUCKCODING_API_USER_ID="your_user_id"
-export CSMINDDAI_NEW_API_USER="your_user_id"
-export YOUAPI_NEW_API_USER="your_user_id"
-
-# Custom configuration
-export LLM_BALANCE_CONFIG_FILE="/path/to/config.yaml"
-export LLM_BALANCE_RATES='{"USD": 7.5}'
-```
-
-### Dependencies & SDK Installation
-
-The project requires specific SDK installations for certain platforms:
-```bash
-# Base dependencies (always required)
+# Install dependencies (includes Volcengine SDK)
 pip install -r requirements.txt
 
 # Optional platform-specific SDKs
 pip install aliyun-python-sdk-bssopenapi>=2.0.0  # Aliyun billing
-pip install volcengine-python-sdk==4.0.13        # Volcengine
 pip install tencentcloud-sdk-python>=3.0.0      # Tencent Cloud
+
+# Verify installation
+llm-balance --help
 ```
 
-Note: Some SDKs are included in requirements.txt, others may need manual installation based on platform requirements.
-
-### Build & Distribution
+### Testing
 ```bash
-# Build distribution package
-python setup.py sdist bdist_wheel
+# Run comprehensive automated tests
+python test_llm_balance.py
 
-# Install built distribution
-pip install dist/llm_balance-0.2.5-py3-none-any.whl
+# Run with verbose output
+python test_llm_balance.py --verbose
 
-# Clean build artifacts
-rm -rf build/ dist/ llm_balance.egg-info/
+# Test specific platforms only
+python test_llm_balance.py --platforms deepseek volcengine
+
+# Generate JSON report for analysis
+python test_llm_balance.py --json-report
+
+# Fast fail on first error
+python test_llm_balance.py --fail-fast
 ```
 
-### Important Development Notes
+### Common Commands
+```bash
+# Check balance and spent across platforms
+llm-balance cost
+llm-balance cost --platform=deepseek --format=json
 
-#### Recent Bug Fixes
-- **Volcengine Package API**: Fixed `ListResourcePackages` parameter format (requires string `"20"` not integer `100`)
-- **ModelTokenInfo Constructor**: Updated parameter names to match current data structure
-- **Cost Total Type Error**: Fixed int/str type mismatch in spent calculation
-- **JSON Serialization**: Added cleanup for non-serializable Configuration objects
+# Check token usage for supported platforms
+llm-balance package
+llm-balance package --platform=volcengine --model=deepseek-r1
 
-#### Testing Framework
-The automated test script (`test_llm_balance.py`) provides comprehensive testing:
-- **16 test cases** covering all platforms and output formats
-- **Environment validation** and dependency checking
-- **Detailed reporting** with JSON export capability
-- **Platform-specific testing** for isolated debugging
+# Platform management
+llm-balance list                    # List all platforms
+llm-balance enable moonshot         # Enable platform
+llm-balance disable tencent         # Disable platform
 
-#### Known Issues
-- Some platforms return `"-"` for spent values when tracking is not supported
-- Volcengine SDK requires specific parameter formatting (strings vs integers)
-- Configuration objects may need JSON serialization cleanup
+# Configuration
+llm-balance config deepseek         # View platform config
+llm-balance set-browser chrome      # Set global browser for cookie auth
+llm-balance platform_config duckcoding api_user_id 10801  # Independent config
 
-#### Key Implementation Details
-- **Fire CLI**: Uses Google Fire for CLI interface implementation
-- **Configuration Loading**: Supports YAML files with environment variable overrides
-- **Error Handling**: Each platform handler implements its own error recovery
-- **Output Formatting**: Multiple formats (table, JSON, markdown, total) with consistent data structures
-- **Currency Conversion**: CNY-based conversion with customizable exchange rates
-- **Version Management**: Version defined in `__init__.py` as `__version__ = "0.2.4"`
+# Build & distribution
+python setup.py sdist bdist_wheel
+pip install dist/llm_balance-0.2.7-py3-none-any.whl
+```
 
-## Key Files & Patterns
+## Architecture
+
+### Core Components & Flow
+
+```
+CLI (cli.py - Fire-based)
+    ↓
+BalanceChecker (balance_checker.py)
+    ↓
+ConfigManager (config.py) → YAML config at ~/.llm_balance/config.yaml
+    ↓
+Factory (platform_handlers/__init__.py) → create_handler()
+    ↓
+Platform Handlers (platform_handlers/*.py)
+    ↓
+BasePlatformHandler (base.py) → CostInfo / PlatformTokenInfo
+```
+
+### Key Architectural Patterns
+
+#### 1. **Factory Pattern with Handler Registry**
+- `create_handler()` in `platform_handlers/__init__.py` maps platform names to handler classes
+- All 24 platforms registered in a dictionary
+- No fallback - platforms must be explicitly supported
+
+#### 2. **Multi-threaded Concurrent Checking**
+- ThreadPoolExecutor with **5 workers** (see `balance_checker.py:24`)
+- Thread-safe handler caching with locks
+- Platforms checked in parallel for performance
+- Individual platform failures don't block others
+
+#### 3. **Independent Configuration Architecture**
+Some platforms (DuckCoding, CSMindAI, YouAPI, 88Code, 88996, Cubence) use separate config files:
+- Priority: Environment variables > Separate config files > Global config
+- Separate configs at `~/.llm_balance/{platform}_config.yaml`
+- Prevents pollution of global `config.yaml`
+- Example: `DUCKCODING_API_USER_ID` or `~/.llm_balance/duckcoding_config.yaml`
+
+#### 4. **Template Method Pattern**
+All handlers inherit from `BasePlatformHandler` and implement:
+- `get_balance()` → Returns `CostInfo` with balance, spent, currency, raw_data
+- `get_platform_name()` → Returns display name
+- `get_model_tokens()` → Optional, returns `PlatformTokenInfo` for token monitoring
+
+#### 5. **Error Resilience**
+- Each platform wrapped in try-catch
+- Single platform failure doesn't stop other checks
+- Returns `None` for failed platforms, continues execution
+- Meaningful error messages without stack traces
+
+### Authentication Methods
+
+1. **API Key** (DeepSeek, Moonshot, SiliconFlow, MiniMax)
+   - Bearer token in Authorization header
+   - Environment variable: `{PLATFORM}_API_KEY`
+
+2. **Official SDK** (Volcengine, Aliyun, Tencent)
+   - Platform-specific SDKs with access key + secret key
+   - Volcengine SDK included in requirements.txt
+   - Others require manual installation
+
+3. **Browser Cookies** (Zhipu, FoxCode, AICoding)
+   - Uses pycookiecheat to extract cookies from browser
+   - Global browser setting via `llm-balance set-browser chrome`
+   - Per-command override: `--browser=chrome`
+
+4. **Third-party Relay** (DuckCoding, PackyCode, CSMindAI, YouAPI, 88Code, 88996)
+   - Cookie-based with custom headers (`new-api-user`, `rix-api-user`, etc.)
+   - Requires independent configuration (see pattern #3)
+
+### Platform Categories & Default Status
+
+#### Default Enabled (4 platforms - Core Chinese AI Models)
+1. **DeepSeek** - Independent AI company, GPT-4 level performance
+2. **Moonshot** (Kimi) - Long context specialist
+3. **Zhipu** (GLM) - Tsinghua-backed AI company
+4. **MiniMax** - Multimodal AI company
+
+#### Default Disabled (20 platforms)
+
+**International Platforms (3)**
+- OpenAI, Anthropic, Google
+
+**Cloud Service Providers (4)**
+- **Volcengine** = ByteDance's cloud platform (hosts Doubao/豆包 - #1 Chinese LLM)
+- **Aliyun** = Alibaba Cloud (hosts Tongyi Qianwen/通义千问 - #3 Chinese LLM)
+- Tencent Cloud (hosts Hunyuan/混元)
+- SiliconFlow (硅基流动)
+
+**Third-party Relay Platforms (10)**
+- FoxCode, DuckCoding, PackyCode, 88Code, 88996, AICoding, YouAPI, CSMindAI, YesCode, Cubence
+
+**Relay Management Platforms (3)**
+- OneAPI (self-hosted), API-Proxy (public relay), FastGPT (open-source app platform)
+
+> **Important**: Volcengine and Aliyun query **total cloud account billing**, not just AI model costs. They represent ByteDance's Doubao and Alibaba's Qianwen respectively.
+
+### Configuration System
+
+#### Configuration Hierarchy
+1. **Environment Variables** (highest priority)
+2. **Separate Config Files** (`~/.llm_balance/{platform}_config.yaml`)
+3. **Global Config** (`~/.llm_balance/config.yaml`)
+4. **Default Configs** (from handler's `get_default_config()`)
+
+#### Configuration Loading Flow
+```python
+# In ConfigManager
+def get_platform_config(platform_name):
+    # Get default from handler
+    config = handler_class.get_default_config()
+    # Apply user overrides from global config
+    config.update(user_config.get(platform_name, {}))
+    return config
+
+# In special platform handlers (e.g., DuckCoding)
+def _load_env_config():
+    # Try environment variable first
+    if env_var := os.getenv('DUCKCODING_API_USER_ID'):
+        self.config.api_user_id = env_var
+        return
+    # Try separate config file
+    config_path = Path.home() / '.llm_balance' / 'duckcoding_config.yaml'
+    if config_path.exists():
+        # Load from file
+```
+
+#### Per-Platform Configuration
+Each platform handler defines default config via `get_default_config()` classmethod:
+- `api_url`, `method`, `auth_type`, `env_var`
+- `headers`, `params`, `data`
+- `enabled`, `show_cost`, `show_package`
+- Authentication-specific fields (cookie_domain, region, etc.)
+
+### Currency Conversion System
+
+**Design**: All currencies convert through CNY as intermediate currency.
+
+```python
+# Default rates (relative to CNY)
+DEFAULT_RATES = {
+    'CNY': 1.0,
+    'USD': 7.2,
+    'EUR': 7.8,
+    'GBP': 9.1,
+    'JPY': 0.048,
+    'KRW': 0.0054,
+    'Points': 0.01
+}
+
+# Conversion formula
+def convert(amount, from_currency, to_currency):
+    cny_amount = amount / RATES[from_currency]  # Convert to CNY
+    return cny_amount * RATES[to_currency]      # Convert to target
+```
+
+**Custom Rates**: Set via `LLM_BALANCE_RATES='{"USD": 7.5}'` environment variable.
+
+### Data Models
+
+Located in `platform_handlers/base.py`:
+
+```python
+@dataclass
+class CostInfo:
+    platform: str           # Display name
+    balance: float          # Current balance
+    currency: str           # Currency code (CNY, USD, etc.)
+    spent: Union[float, str]  # Spent amount or "-" if unsupported
+    spent_currency: str     # Spent currency or "-"
+    raw_data: Dict          # Original API response
+
+@dataclass
+class ModelTokenInfo:
+    model: str              # Model name
+    package: str            # Package/subscription name
+    remaining_tokens: float # Tokens remaining
+    used_tokens: float      # Tokens used
+    total_tokens: float     # Total tokens
+    status: str             # "active" or "inactive"
+
+@dataclass
+class PlatformTokenInfo:
+    platform: str           # Platform name
+    models: List[ModelTokenInfo]
+    raw_data: Dict          # Original API response
+```
+
+### Output Formats
+
+Implemented in `utils.py`:
+
+- **table**: Console-friendly with rich formatting and totals (default)
+- **json**: Machine-readable with full raw API responses
+- **markdown**: Documentation-friendly tables
+- **total**: Single line with total in target currency
+
+## Platform Handler Implementation Patterns
 
 ### Adding New Platforms
 
 1. **Create Handler**: Inherit from `BasePlatformHandler` in `platform_handlers/`
-2. **Register**: Add to `create_handler()` function in `platform_handlers/__init__.py`
-3. **Configure**: Add platform configuration to `platform_configs.py`
-4. **Test**: Use `llm-balance cost --platform=new_platform`
+2. **Implement Methods**:
+   ```python
+   @classmethod
+   def get_default_config(cls) -> dict:
+       return {
+           "api_url": "...",
+           "method": "GET",
+           "auth_type": "api_key",
+           "env_var": "PLATFORM_API_KEY",
+           "enabled": False,  # Default disabled for new platforms
+           # ...
+       }
 
-### Platform Handler Structure
+   def get_balance(self) -> CostInfo:
+       # Authentication logic
+       # API request
+       # Parse response
+       return CostInfo(...)
 
-Each handler implements:
-- `get_balance()`: Returns `CostInfo` with balance, currency, raw data
-- `get_platform_name()`: Returns display name
-- `get_model_tokens()`: Optional method for token usage monitoring
-- Authentication logic specific to platform type
-- Independent configuration loading (for special platforms like DuckCoding)
+   def get_platform_name(self) -> str:
+       return "Platform Name"
 
-#### Independent Configuration Pattern
+   def get_model_tokens(self) -> PlatformTokenInfo:  # Optional
+       # Return token usage data
+   ```
 
-For platforms requiring special configuration (e.g., DuckCoding, CSMindAI, YouAPI):
+3. **Register**: Add to `handler_classes` dict in `platform_handlers/__init__.py`
+4. **Test**: `llm-balance cost --platform=new_platform`
 
-```python
-def _load_env_config(self):
-    """Load configuration from environment variables or separate config file."""
-    # Try environment variable first
-    env_user_id = os.getenv('DUCKCODING_API_USER_ID')
-    if env_user_id:
-        self.config.api_user_id = env_user_id
-        return
+### Spent Tracking Implementation Strategies
 
-    # Try separate config file
-    config_path = Path.home() / '.llm_balance' / 'duckcoding_config.yaml'
-    if config_path.exists():
-        # Load configuration from file
-        pass
-```
-
-### Spent Tracking Implementation
-
-Platforms that support spent tracking should implement one of these approaches:
+Platforms that support spent tracking should use one of:
 - **Direct API**: Use platform's billing/spent API (preferred)
 - **Transaction History**: Query transaction records and sum expenses (Aliyun approach)
-- **Invoice/Recharge**: Calculate as "total_recharge - current_balance" (if recharge API available)
+- **Recharge Calculation**: `total_recharge - current_balance` (if recharge API available)
 
 For unsupported platforms, return `"-"` as spent value to distinguish from zero spending.
 
-### Data Class Structures
+### Independent Configuration Pattern
 
-Key data classes in `base.py`:
-- `CostInfo`: Contains balance, spent, currency, and raw API response data
-- `ModelTokenInfo`: Contains token usage data for specific models
-- `PlatformTokenInfo`: Contains model token info for entire platform
+For platforms requiring special configuration:
 
-### Output Formats
-
-- **JSON**: Machine-readable with raw data
-- **Table**: Console-friendly with totals
-- **Markdown**: Document-friendly
-- **Total**: Single currency total only
-
-### Currency System
-
-- **Default Rates**: CNY-based with USD=7.2, EUR=7.8, etc.
-- **Custom Rates**: Via `LLM_BALANCE_RATES` environment variable
-- **Conversion**: All currencies convert through CNY as intermediate
-
-## Common Development Tasks
-
-### Debug Platform Issues
-```bash
-# Test individual platform
-llm-balance cost --platform=deepseek --format=json
-
-# Check configuration
-llm-balance config deepseek
-
-# Diagnose system
-llm-balance diagnose
-
-# Test specific authentication method
-llm-balance config volcengine auth_type sdk
-llm-balance config volcengine auth_type cookie
-```
-
-### Browser Configuration
-```bash
-# Set global browser
-llm-balance set-browser chrome
-
-# Override for single command
-llm-balance cost --browser=firefox
-
-# Test cookie-based platforms (Zhipu)
-llm-balance cost --platform=zhipu --browser=chrome
-```
-
-### Configuration Management
-```bash
-# Generate fresh config
-llm-balance generate_config
-
-# View/edit platform config
-llm-balance config volcengine auth_type sdk
-
-# Enable/disable platforms
-llm-balance enable moonshot
-llm-balance disable tencent
-```
-
-### Development Workflow
-```bash
-# Install in development mode
-pip install -e .
-
-# Run specific platform tests
-python -c "from llm_balance.platform_handlers.deepseek import DeepSeekHandler; print(DeepSeekHandler.get_default_config())"
-
-# Test configuration loading
-python -c "from llm_balance.config import ConfigManager; cm = ConfigManager(); print([p.name for p in cm.get_enabled_platforms()])"
-```
-
-## Technical Implementation Details
-
-### Authentication Flow
-
-1. **API Key Authentication**: Direct HTTP requests with Authorization headers
-2. **SDK Authentication**: Use platform-specific SDKs (Aliyun, Volcengine, Tencent)
-3. **Cookie Authentication**: Extract cookies from browser using pycookiecheat (Zhipu)
-4. **Third-party Authentication**: Custom cookie extraction for relay services (FoxCode, DuckCoding, CSMindAI, YouAPI)
-
-### Error Handling
-
-- Platform failures don't stop other platforms from being checked
-- Each handler implements its own error handling and returns appropriate error messages
-- Configuration errors are caught and displayed with helpful guidance
-
-### Configuration Architecture
-
-- **Platform Configs**: Defined in `platform_configs.py` with default settings
-- **User Configs**: Stored in `~/.llm_balance/config.yaml` for user overrides
-- **Runtime Configs**: Merged configuration with environment variable support
-- **Independent Configs**: Some platforms use separate config files (e.g., `~/.llm_balance/duckcoding_config.yaml`, `~/.llm_balance/csmindai_config.yaml`, `~/.llm_balance/youapi_config.yaml`)
-
-### Output Formatting
-
-- **Table Format**: Clean console output with proper alignment and totals
-- **JSON Format**: Machine-readable with full raw API responses
-- **Markdown Format**: Documentation-friendly with proper formatting
-- **Total Format**: Single-line summary for scripting
-
-### Special Considerations
-
-- **Spent Tracking**: Some platforms don't support spent queries - return "-" instead of 0
-- **Currency Conversion**: All amounts converted through CNY as intermediate currency
-- **Time Zones**: Transaction queries use proper date alignment to avoid duplicates
-- **Browser Dependencies**: Cookie authentication requires browser login and proper cookie extraction
-
-### Testing Architecture
-
-The test suite (`test_llm_balance.py`) follows a comprehensive approach:
-- **Environment Validation**: Checks CLI availability and required environment variables
-- **Multi-Format Testing**: Validates table, JSON, total, and markdown output formats
-- **Platform Coverage**: Tests all 12 platforms individually and collectively
-- **Error Handling**: Gracefully handles platform failures and provides detailed error reporting
-- **Performance Tracking**: Measures execution time for each test case
-- **Report Generation**: Creates detailed JSON reports for analysis and debugging
-
-#### Test Structure
-- **Cost Command Tests**: Validate balance checking across all formats
-- **Package Command Tests**: Verify token usage monitoring functionality
-- **Platform-Specific Tests**: Isolate individual platform issues
-- **Integration Tests**: Ensure overall system reliability
-
-## Platform Handler Patterns
-
-### API Key Authentication (DeepSeek)
 ```python
-class DeepSeekHandler(BasePlatformHandler):
-    def get_balance(self) -> CostInfo:
-        # Get API key from environment
-        api_key = os.getenv(self.config.env_var)
-        headers['Authorization'] = f'Bearer {api_key}'
-        # Make request and parse response
-        response = self._make_request(url=self.config.api_url, headers=headers)
-        balance = self._extract_balance(response)
-        return CostInfo(platform=self.get_platform_name(), balance=balance, ...)
-```
-
-### SDK Authentication (Volcengine)
-```python
-class VolcengineHandler(BasePlatformHandler):
-    def _get_balance_with_sdk(self) -> CostInfo:
-        # Initialize SDK with credentials
-        configuration = volcenginesdkcore.Configuration()
-        configuration.ak = os.getenv('VOLCENGINE_ACCESS_KEY')
-        configuration.sk = os.getenv('VOLCENGINE_SECRET_KEY')
-        # Use SDK methods
-        api_instance = volcenginesdkbilling.BILLINGApi()
-        resp = api_instance.query_balance_acct(query_balance_request)
-        return CostInfo(platform=self.get_platform_name(), balance=balance, ...)
-```
-
-### Cookie Authentication (Zhipu)
-```python
-class ZhipuHandler(BasePlatformHandler):
-    def get_balance(self) -> CostInfo:
-        # Extract cookies from browser
-        cookies = self._get_cookies(self.config.cookie_domain)
-        auth_cookie = cookies.get('bigmodel_token_production')
-        headers['authorization'] = auth_cookie
-        # Make request with cookies
-        response = self._make_request(url=self.config.api_url, headers=headers, cookies=cookies)
-        return CostInfo(platform=self.get_platform_name(), balance=balance, ...)
-```
-
-### Third-party Relay (DuckCoding)
-```python
-class DuckCodingHandler(BasePlatformHandler):
-    def __init__(self, config: PlatformConfig, browser: str = 'chrome'):
+class SpecialPlatformHandler(BasePlatformHandler):
+    def __init__(self, config, browser='chrome'):
         super().__init__(browser)
         self.config = config
-        self._load_env_config()  # Load from separate config file
+        self._load_env_config()  # Load independent config
 
     def _load_env_config(self):
-        # Try environment variable first, then separate config file
-        env_user_id = os.getenv('DUCKCODING_API_USER_ID')
-        if not env_user_id:
-            # Load from ~/.llm_balance/duckcoding_config.yaml
+        # Priority 1: Environment variable
+        if env_value := os.getenv('PLATFORM_SPECIAL_KEY'):
+            self.config.special_key = env_value
+            return
+
+        # Priority 2: Separate config file
+        config_path = Path.home() / '.llm_balance' / 'platform_config.yaml'
+        if config_path.exists():
+            with open(config_path, 'r') as f:
+                platform_config = yaml.safe_load(f) or {}
+                if 'special_key' in platform_config:
+                    self.config.special_key = platform_config['special_key']
 ```
 
-## CLI Command Structure
+## Important Implementation Notes
+
+### Version Management
+- Version defined in `__init__.py` and `setup.py`
+- Currently at **0.2.7**
+- Update both files when bumping version
+
+### Thread Safety
+- Handler caching uses `threading.Lock()` (see `balance_checker.py:26`)
+- Each platform check runs in separate thread
+- Thread pool size: 5 workers (configurable via `self.max_workers`)
+
+### Recent Architecture Changes
+- **Volcengine Package API**: Parameter format requires string `"20"` not integer `100`
+- **Platform Enable/Disable Strategy**: Only 4 core Chinese platforms enabled by default
+- **Cloud Platform Clarification**: Volcengine = ByteDance Doubao, Aliyun = Alibaba Qianwen
+- **Independent Configuration**: Expanded to 6 platforms to avoid global config pollution
+
+### Testing Framework
+Automated test script (`test_llm_balance.py`):
+- 16 test cases covering all platforms and output formats
+- Environment validation and dependency checking
+- JSON export capability for detailed analysis
+- Platform-specific testing for isolated debugging
+- Measures execution time for performance tracking
+
+### Known Issues & Workarounds
+- Some platforms return `"-"` for spent when tracking unsupported
+- Volcengine SDK requires specific parameter types (strings vs integers)
+- Configuration objects need JSON serialization cleanup for JSON output
+- Cookie authentication requires active browser login session
+
+## Environment Variables Reference
+
+```bash
+# API Key Platforms
+DEEPSEEK_API_KEY="sk-..."
+MOONSHOT_API_KEY="sk-..."
+SILICONFLOW_API_KEY="..."
+
+# SDK Platforms
+VOLCENGINE_ACCESS_KEY="..."
+VOLCENGINE_SECRET_KEY="..."
+ALIYUN_ACCESS_KEY_ID="..."
+ALIYUN_ACCESS_KEY_SECRET="..."
+TENCENT_API_KEY="SecretId:SecretKey"
+
+# Third-party Relay (Independent Config)
+DUCKCODING_API_USER_ID="10801"
+CLOUD88996_API_USER_ID="2992"
+CODE88_CONSOLE_TOKEN="..."
+YOURAPI_NEW_API_USER="5942"
+CUBENCE_TOKEN="..."
+CSMINDAI_API_USER_ID="..."
+PACKYCODE_API_USER_ID="..."
+
+# Global Settings
+LLM_BALANCE_CONFIG_FILE="/path/to/config.yaml"
+LLM_BALANCE_RATES='{"USD": 7.5}'
+```
+
+## CLI Command Reference
 
 ### Main Commands
-- `llm-balance cost`: Check balance and spent across platforms
-- `llm-balance package`: Check token usage for supported platforms
-- `llm-balance list`: List available platforms
-- `llm-balance enable/disable`: Enable or disable platforms
-- `llm-balance config`: View/edit platform configuration
-- `llm-balance set-browser`: Set global browser for cookie-based platforms
-- `llm-balance rates`: Show current exchange rates
-- `llm-balance diagnose`: Run system diagnostics
-- `llm-balance generate_config`: Generate configuration file from handlers
+- `cost`: Check balance and spent across platforms
+- `package`: Check token usage for supported platforms
+- `list`: List all platforms and their status
+- `enable/disable`: Enable or disable platforms
+- `config`: View/edit platform configuration
+- `platform_config`: Manage independent platform configs
+- `set-browser`: Set global browser for cookie-based platforms
+- `rates`: Show current exchange rates
+- `diagnose`: Run system diagnostics
+- `generate_config`: Generate fresh config from handlers
 
 ### Platform Selection
-- Single platform: `--platform=deepseek`
-- Multiple platforms: `--platform=deepseek,volcengine`
-- Multiple arguments: `--platform=deepseek --platform=volcengine`
-- All platforms: (no --platform flag)
+- Single: `--platform=deepseek`
+- Multiple: `--platform=deepseek,volcengine` or `--platform=deepseek --platform=volcengine`
+- All enabled: (no --platform flag)
 
 ### Output Formats
-- `--format=table`: Clean console output (default)
-- `--format=json`: Machine-readable with raw data
-- `--format=total`: Single currency total
-- `--format=markdown`: Documentation-friendly
+- `--format=table` (default): Clean console output
+- `--format=json`: Machine-readable with raw API responses
+- `--format=total`: Single currency total only
+- `--format=markdown`: Documentation-friendly tables
 
 ### Currency Support
 - `--currency=USD`: Convert totals to USD
