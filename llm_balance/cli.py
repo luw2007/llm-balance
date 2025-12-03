@@ -439,7 +439,7 @@ class LLMBalanceCLI:
         Manage platform-specific configuration (separate from global config)
 
         Args:
-            platform: Platform name (supports 'duckcoding', 'cubence', 'csmindai', 'yourapi', 'deepseek')
+            platform: Platform name (supports 'duckcoding', 'cubence', 'csmindai', 'yourapi', 'deepseek', 'dawclaudecode', 'magic666')
             key: Configuration key (optional)
             value: Configuration value (optional)
 
@@ -475,6 +475,16 @@ class LLMBalanceCLI:
                 'file': 'deepseek_config.yaml',
                 'keys': ['console_token'],
                 'display_name': 'DeepSeek'
+            },
+            'dawclaudecode': {
+                'file': 'dawclaudecode_config.yaml',
+                'keys': ['api_user_id'],
+                'display_name': 'DawClaudeCode'
+            },
+            'magic666': {
+                'file': 'magic666_config.yaml',
+                'keys': ['api_user_id'],
+                'display_name': 'Magic666'
             }
         }
 

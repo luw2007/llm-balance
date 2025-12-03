@@ -26,6 +26,8 @@ from .fastgpt import FastGPTHandler
 from .minimax import MiniMaxHandler
 from .cubence import CubenceHandler
 from .aicoding import AICodingHandler
+from .dawclaudecode import DawClaudeCodeHandler
+from .magic666 import Magic666Handler
 
 def create_handler(config, browser: str = 'chrome'):
     """Factory function to create platform handlers using Python-based configuration"""
@@ -55,6 +57,8 @@ def create_handler(config, browser: str = 'chrome'):
         'minimax': MiniMaxHandler,
         'cubence': CubenceHandler,
         'aicoding': AICodingHandler,
+        'dawclaudecode': DawClaudeCodeHandler,
+        'magic666': Magic666Handler,
     }
     
     # Get handler class from configuration
