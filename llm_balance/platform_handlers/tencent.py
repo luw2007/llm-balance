@@ -24,7 +24,7 @@ class TencentHandler(BasePlatformHandler):
             },
             "params": {},
             "data": {},
-            "enabled": True,
+            "enabled": False,
             "cookie_domain": None,
             "region": "ap-beijing"
         }

@@ -36,7 +36,7 @@ class AliyunHandler(BasePlatformHandler):
             },
             "params": {},
             "data": {},
-            "enabled": True,
+            "enabled": False,
             "cookie_domain": None,
             "region": "cn-hangzhou"
         }

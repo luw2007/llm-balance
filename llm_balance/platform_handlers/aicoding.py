@@ -31,7 +31,7 @@ class AICodingHandler(BasePlatformHandler):
             "cookie_domain": "aicoding.sh",
             "params": {},
             "data": {},
-            "enabled": True,
+            "enabled": False,
             "show_cost": True,
             "show_package": True,
             "display_name": "AICoding",

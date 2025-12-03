@@ -24,7 +24,7 @@ class SiliconFlowHandler(BasePlatformHandler):
             },
             "params": {},
             "data": {},
-            "enabled": True,
+            "enabled": False,
             "cookie_domain": "cloud.siliconflow.cn"
         }
     

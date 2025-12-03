@@ -25,7 +25,7 @@ class VolcengineHandler(BasePlatformHandler):
             },
             "params": {},
             "data": {},
-            "enabled": True,
+            "enabled": False,
             "cookie_domain": "console.volcengine.com"
         }
     

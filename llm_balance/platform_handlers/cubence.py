@@ -32,7 +32,7 @@ class CubenceHandler(BasePlatformHandler):
             },
             "params": {},
             "data": {},
-            "enabled": True,
+            "enabled": False,
             "show_cost": True,
             "show_package": False,  # 暂时不支持订阅模型
             "display_name": "Cubence",

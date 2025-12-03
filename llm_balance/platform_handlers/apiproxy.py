@@ -27,7 +27,7 @@ class APIProxyHandler(BasePlatformHandler):
             },
             "params": {},
             "data": {},
-            "enabled": True
+            "enabled": False
         }
 
     def __init__(self, config: PlatformConfig, browser: str = 'chrome'):

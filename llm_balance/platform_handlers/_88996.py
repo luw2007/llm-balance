@@ -32,7 +32,7 @@ class Handler88996(BasePlatformHandler):
             "cookie_domain": "88996.cloud",
             "params": {},
             "data": {},
-            "enabled": True,
+            "enabled": False,
             "show_cost": True,
             "show_package": True,
             "display_name": "88996.cloud",
