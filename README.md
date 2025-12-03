@@ -5,7 +5,7 @@
 ## Key Features
 
 - **🔑 Multiple Authentication**: API Key, browser cookie, official SDK support
-- **🌐 22 Platforms Supported**: Official platforms (DeepSeek, Moonshot, Volcengine, Aliyun, Tencent, Zhipu, SiliconFlow, OpenAI, Anthropic, Google) + third-party relays (FoxCode, DuckCoding, PackyCode, 88Code, YouAPI, CSMindAI, YesCode, Cubence) + relay platforms (OneAPI, APIProxy, FastGPT, MiniMax)
+- **🌐 23 Platforms Supported**: Official platforms (DeepSeek, Moonshot, Volcengine, Aliyun, Tencent, Zhipu, SiliconFlow, OpenAI, Anthropic, Google) + third-party relays (FoxCode, DuckCoding, PackyCode, 88Code, 88996, YouAPI, CSMindAI, YesCode, Cubence) + relay platforms (OneAPI, APIProxy, FastGPT, MiniMax)
 - **💰 Real-time Balance & Spent**: Track both current balance and actual spending
 - **📊 Flexible Output**: Table, JSON, Markdown, and total-only formats
 - **💱 Multi-Currency**: Automatic conversion between CNY, USD, EUR, and more
@@ -150,6 +150,18 @@ EOF
 
 # Then run:
 llm-balance cost --platform=cubence
+
+# 88996.cloud (Requires independent configuration)
+# Method 1: Environment variable
+export CLOUD88996_API_USER_ID="your_user_id"
+
+# Method 2: Manual config file creation
+cat > ~/.llm_balance/88996_config.yaml << EOF
+api_user_id: your_user_id
+EOF
+
+# Then login to https://88996.cloud and run:
+llm-balance cost --platform=88996
 ```
 
 ### First Use
@@ -463,13 +475,14 @@ platforms:
 | **Zhipu** | Cookie | ✅ | Requires login to https://open.bigmodel.cn | ✅ Full Support | ✅ Full Support |
 | **SiliconFlow** | API Key | ✅ | Requires SILICONFLOW_API_KEY | ❌ Not Available | ✅ Full Support |
 
-### 🔄 Third-Party Relay Platforms (4)
+### 🔄 Third-Party Relay Platforms (5)
 
 | Platform | Authentication | Status | Description | Token Usage | Spent Tracking | Independent Config |
 |----------|----------------|--------|-------------|-------------|---------------|-------------------|
 | **FoxCode** | Cookie | ✅ | Relay service with dashboard access | ✅ Full Support | ✅ Full Support | ❌ No |
 | **DuckCoding** | Cookie | ✅ | Relay service with token packages | ✅ Full Support | ✅ Full Support | ✅ Yes |
 | **88Code** | Console Token | ✅ | Relay service with subscription packages | ✅ Full Support | ✅ Full Support | ✅ Yes |
+| **88996.cloud** | Cookie | ✅ | Relay service with quota system | ✅ Full Support | ✅ Full Support | ✅ Yes |
 | **YourAPI** | Cookie | ✅ | Relay service with quota system | ✅ Full Support | ✅ Full Support | ✅ Yes |
 
 ### 📊 Platform Status Summary
@@ -672,6 +685,39 @@ llm-balance package --platform=yourapi
 llm-balance platform_config yourapi
 ```
 
+### Third-Party Relay: 88996.cloud
+
+88996.cloud is a cookie-authenticated relay with quota-based balance and package information.
+
+- Auth: Browser cookie on `88996.cloud` with `rix-api-user` header.
+- Configuration: Requires `api_user_id` setting via environment variable or separate config file.
+- package: Uses quota data from `https://88996.cloud/api/user/self`.
+  - Total = `quota + bonus_quota` (in tokens)
+  - Used = `used_quota` (in tokens)
+  - Remaining = Total - Used
+- cost: Balance and spent calculated from quota data.
+  - Balance = `(quota + bonus_quota) / 500000` (in CNY)
+  - Spent = `used_quota / 500000` (in CNY)
+
+Configuration Options:
+```bash
+# Method 1: Environment variable
+export CLOUD88996_API_USER_ID="2992"
+
+# Method 2: Manual config file
+cat > ~/.llm_balance/88996_config.yaml << EOF
+api_user_id: "2992"
+EOF
+```
+
+Examples:
+```bash
+# Check balance and spent
+llm-balance cost --platform=88996
+# Check token usage
+llm-balance package --platform=88996
+```
+
 ## Browser Support
 
 ### 🌍 Global Browser Configuration
@@ -765,6 +811,7 @@ src/llm_balance/
     ├── foxcode.py         # FoxCode relay handler ✅
     ├── duckcoding.py      # DuckCoding relay handler ✅
     ├── _88code.py         # 88Code relay handler ✅
+    ├── _88996.py          # 88996.cloud relay handler ✅
     └── yourapi.py          # YourAPI relay handler ✅
 ```
 
