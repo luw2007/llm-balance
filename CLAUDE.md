@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 A Python CLI tool for checking costs and balances across 24 LLM platforms with support for multiple authentication methods (API keys, browser cookies, official SDKs), multi-currency conversion, and real-time cost monitoring.
 
-**Current Version**: 0.2.7
+**Current Version**: 0.3.0
 
 ## Development Commands
 
@@ -66,7 +66,7 @@ llm-balance platform_config duckcoding api_user_id 10801  # Independent config
 
 # Build & distribution
 python setup.py sdist bdist_wheel
-pip install dist/llm_balance-0.2.7-py3-none-any.whl
+pip install dist/llm_balance-0.3.0-py3-none-any.whl
 ```
 
 ## Architecture
@@ -339,7 +339,7 @@ class SpecialPlatformHandler(BasePlatformHandler):
 
 ### Version Management
 - Version defined in `__init__.py` and `setup.py`
-- Currently at **0.2.7**
+- Currently at **0.3.0**
 - Update both files when bumping version
 
 ### Thread Safety
