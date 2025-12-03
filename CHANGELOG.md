@@ -2,6 +2,48 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+### Added
+- **DawClaudeCode platform support**:
+  - Added DawClaudeCode third-party relay platform with quota-based balance and package information
+  - API endpoint: `https://dawclaudecode.com/api/user/self`
+  - Cookie authentication via `new-api-user` header
+  - Configuration via `DAWCLAUDECODE_API_USER_ID` environment variable or `~/.llm_balance/dawclaudecode_config.yaml`
+  - Supports both balance/spent tracking and token usage monitoring
+  - Balance calculation: `(quota + bonus_quota) / 500000` CNY
+  - Spent calculation: `used_quota / 500000` CNY
+  - Default status: Disabled
+
+- **Magic666 platform support**:
+  - Added Magic666 third-party relay platform with quota-based balance and package information
+  - API endpoint: `https://magic666.top/api/user/self`
+  - Cookie authentication via `new-api-user` header
+  - Configuration via `MAGIC666_API_USER_ID` environment variable or `~/.llm_balance/magic666_config.yaml`
+  - Supports both balance/spent tracking and token usage monitoring
+  - Balance calculation: `(quota + bonus_quota) / 500000` CNY
+  - Spent calculation: `used_quota / 500000` CNY
+  - Default status: Disabled
+
+### Changed
+- **Platform count increased from 24 to 26**:
+  - Updated all documentation to reflect new platform count
+  - Third-party relay platforms now total 12 (was 10)
+  - Independent configuration platforms expanded to 8 (was 6)
+
+### Documentation
+- **Updated CLAUDE.md**:
+  - Added DawClaudeCode and Magic666 to third-party relay platforms list
+  - Updated independent configuration architecture section
+  - Added DAWCLAUDECODE_API_USER_ID and MAGIC666_API_USER_ID to environment variables reference
+  - Updated platform count from 24 to 26
+- **Updated README.md**:
+  - Added DawClaudeCode and Magic666 to platform features list (26 platforms)
+  - Added detailed configuration sections for both platforms
+  - Updated third-party relay platforms table (8 platforms)
+  - Updated token monitoring availability list
+  - Updated production-ready platform count to 16
+
 ## [0.2.8] - 2025-11-28
 
 ### Added

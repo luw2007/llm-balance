@@ -91,7 +91,7 @@ BasePlatformHandler (base.py) → CostInfo / PlatformTokenInfo
 
 #### 1. **Factory Pattern with Handler Registry**
 - `create_handler()` in `platform_handlers/__init__.py` maps platform names to handler classes
-- All 24 platforms registered in a dictionary
+- All 26 platforms registered in a dictionary
 - No fallback - platforms must be explicitly supported
 
 #### 2. **Multi-threaded Concurrent Checking**
@@ -101,7 +101,7 @@ BasePlatformHandler (base.py) → CostInfo / PlatformTokenInfo
 - Individual platform failures don't block others
 
 #### 3. **Independent Configuration Architecture**
-Some platforms (DuckCoding, CSMindAI, YouAPI, 88Code, 88996, Cubence) use separate config files:
+Some platforms (DuckCoding, CSMindAI, YouAPI, 88Code, 88996, Cubence, DawClaudeCode, Magic666) use separate config files:
 - Priority: Environment variables > Separate config files > Global config
 - Separate configs at `~/.llm_balance/{platform}_config.yaml`
 - Prevents pollution of global `config.yaml`
@@ -135,7 +135,7 @@ All handlers inherit from `BasePlatformHandler` and implement:
    - Global browser setting via `llm-balance set-browser chrome`
    - Per-command override: `--browser=chrome`
 
-4. **Third-party Relay** (DuckCoding, PackyCode, CSMindAI, YouAPI, 88Code, 88996)
+4. **Third-party Relay** (DuckCoding, PackyCode, CSMindAI, YouAPI, 88Code, 88996, DawClaudeCode, Magic666)
    - Cookie-based with custom headers (`new-api-user`, `rix-api-user`, etc.)
    - Requires independent configuration (see pattern #3)
 
@@ -147,7 +147,7 @@ All handlers inherit from `BasePlatformHandler` and implement:
 3. **Zhipu** (GLM) - Tsinghua-backed AI company
 4. **MiniMax** - Multimodal AI company
 
-#### Default Disabled (20 platforms)
+#### Default Disabled (22 platforms)
 
 **International Platforms (3)**
 - OpenAI, Anthropic, Google
@@ -158,8 +158,8 @@ All handlers inherit from `BasePlatformHandler` and implement:
 - Tencent Cloud (hosts Hunyuan/混元)
 - SiliconFlow (硅基流动)
 
-**Third-party Relay Platforms (10)**
-- FoxCode, DuckCoding, PackyCode, 88Code, 88996, AICoding, YouAPI, CSMindAI, YesCode, Cubence
+**Third-party Relay Platforms (12)**
+- FoxCode, DuckCoding, PackyCode, 88Code, 88996, AICoding, YouAPI, CSMindAI, YesCode, Cubence, DawClaudeCode, Magic666
 
 **Relay Management Platforms (3)**
 - OneAPI (self-hosted), API-Proxy (public relay), FastGPT (open-source app platform)
@@ -351,7 +351,7 @@ class SpecialPlatformHandler(BasePlatformHandler):
 - **Volcengine Package API**: Parameter format requires string `"20"` not integer `100`
 - **Platform Enable/Disable Strategy**: Only 4 core Chinese platforms enabled by default
 - **Cloud Platform Clarification**: Volcengine = ByteDance Doubao, Aliyun = Alibaba Qianwen
-- **Independent Configuration**: Expanded to 6 platforms to avoid global config pollution
+- **Independent Configuration**: Expanded to 8 platforms to avoid global config pollution
 
 ### Testing Framework
 Automated test script (`test_llm_balance.py`):
@@ -390,6 +390,8 @@ YOURAPI_NEW_API_USER="5942"
 CUBENCE_TOKEN="..."
 CSMINDAI_API_USER_ID="..."
 PACKYCODE_API_USER_ID="..."
+DAWCLAUDECODE_API_USER_ID="58"
+MAGIC666_API_USER_ID="..."
 
 # Global Settings
 LLM_BALANCE_CONFIG_FILE="/path/to/config.yaml"

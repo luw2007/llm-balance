@@ -5,7 +5,7 @@
 ## Key Features
 
 - **🔑 Multiple Authentication**: API Key, browser cookie, official SDK support
-- **🌐 24 Platforms Supported**: Official platforms (DeepSeek, Moonshot, Volcengine, Aliyun, Tencent, Zhipu, SiliconFlow, OpenAI, Anthropic, Google) + third-party relays (FoxCode, DuckCoding, PackyCode, 88Code, 88996, AICoding, YouAPI, CSMindAI, YesCode, Cubence) + relay platforms (OneAPI, APIProxy, FastGPT, MiniMax)
+- **🌐 26 Platforms Supported**: Official platforms (DeepSeek, Moonshot, Volcengine, Aliyun, Tencent, Zhipu, SiliconFlow, OpenAI, Anthropic, Google) + third-party relays (FoxCode, DuckCoding, PackyCode, 88Code, 88996, AICoding, YouAPI, CSMindAI, YesCode, Cubence, DawClaudeCode, Magic666) + relay platforms (OneAPI, APIProxy, FastGPT, MiniMax)
 - **💰 Real-time Balance & Spent**: Track both current balance and actual spending
 - **📊 Flexible Output**: Table, JSON, Markdown, and total-only formats
 - **💱 Multi-Currency**: Automatic conversion between CNY, USD, EUR, and more
@@ -260,7 +260,7 @@ llm-balance package --show-reset-time  # Show reset times
 llm-balance package --show-expiry --show-reset --show-reset-time  # Show all
 ```
 
-> **Note**: Token monitoring is available for Volcengine, Zhipu, DuckCoding, CSMindAI, YouAPI, 88Code, FoxCode, and Moonshot platforms
+> **Note**: Token monitoring is available for Volcengine, Zhipu, DuckCoding, CSMindAI, YouAPI, 88Code, 88996, DawClaudeCode, Magic666, FoxCode, and Moonshot platforms
 
 > **Subscription Features**: For platforms with subscription-based billing (88Code, FoxCode), the tool automatically distinguishes between:
 > - **Pay-per-use packages**: Calculated by actual usage
@@ -475,7 +475,7 @@ platforms:
 | **Zhipu** | Cookie | ✅ | Requires login to https://open.bigmodel.cn | ✅ Full Support | ✅ Full Support |
 | **SiliconFlow** | API Key | ✅ | Requires SILICONFLOW_API_KEY | ❌ Not Available | ✅ Full Support |
 
-### 🔄 Third-Party Relay Platforms (6)
+### 🔄 Third-Party Relay Platforms (8)
 
 | Platform | Authentication | Status | Description | Token Usage | Spent Tracking | Independent Config |
 |----------|----------------|--------|-------------|-------------|---------------|-------------------|
@@ -483,14 +483,16 @@ platforms:
 | **DuckCoding** | Cookie | ✅ | Relay service with token packages | ✅ Full Support | ✅ Full Support | ✅ Yes |
 | **88Code** | Console Token | ✅ | Relay service with subscription packages | ✅ Full Support | ✅ Full Support | ✅ Yes |
 | **88996.cloud** | Cookie | ✅ | Relay service with quota system | ✅ Full Support | ✅ Full Support | ✅ Yes |
+| **DawClaudeCode** | Cookie | ✅ | Relay service with quota system | ✅ Full Support | ✅ Full Support | ✅ Yes |
+| **Magic666** | Cookie | ✅ | Relay service with quota system | ✅ Full Support | ✅ Full Support | ✅ Yes |
 | **AICoding** | Cookie | ✅ | Relay service with credits system | ✅ Full Support | ❌ Not Available | ❌ No |
 | **YourAPI** | Cookie | ✅ | Relay service with quota system | ✅ Full Support | ✅ Full Support | ✅ Yes |
 
 ### 📊 Platform Status Summary
 
-**Production-Ready (14 platforms)**: All platforms listed above are fully tested and ready for production use.
+**Production-Ready (16 platforms)**: All platforms listed above are fully tested and ready for production use.
 
-**Independent Configuration**: DuckCoding, 88Code, and YourAPI use separate configuration files to avoid polluting global settings.
+**Independent Configuration**: DuckCoding, 88Code, 88996, DawClaudeCode, Magic666, and YourAPI use separate configuration files to avoid polluting global settings.
 
 **Development Status**: Additional platforms (Azure OpenAI, Lingyi, MiniMax) are available in the `dev` branch and under active development.
 
@@ -717,6 +719,72 @@ Examples:
 llm-balance cost --platform=88996
 # Check token usage
 llm-balance package --platform=88996
+```
+
+### Third-Party Relay: DawClaudeCode
+
+DawClaudeCode is a cookie-authenticated relay with quota-based balance and package information.
+
+- Auth: Browser cookie on `dawclaudecode.com` with `new-api-user` header.
+- Configuration: Requires `api_user_id` setting via environment variable or separate config file.
+- package: Uses quota data from `https://dawclaudecode.com/api/user/self`.
+  - Total = `quota + bonus_quota` (in tokens)
+  - Used = `used_quota` (in tokens)
+  - Remaining = Total - Used
+- cost: Balance and spent calculated from quota data.
+  - Balance = `(quota + bonus_quota) / 500000` (in CNY)
+  - Spent = `used_quota / 500000` (in CNY)
+
+Configuration Options:
+```bash
+# Method 1: Environment variable
+export DAWCLAUDECODE_API_USER_ID="58"
+
+# Method 2: Manual config file
+cat > ~/.llm_balance/dawclaudecode_config.yaml << EOF
+api_user_id: "58"
+EOF
+```
+
+Examples:
+```bash
+# Check balance and spent
+llm-balance cost --platform=dawclaudecode
+# Check token usage
+llm-balance package --platform=dawclaudecode
+```
+
+### Third-Party Relay: Magic666
+
+Magic666 is a cookie-authenticated relay with quota-based balance and package information.
+
+- Auth: Browser cookie on `magic666.top` with `new-api-user` header.
+- Configuration: Requires `api_user_id` setting via environment variable or separate config file.
+- package: Uses quota data from `https://magic666.top/api/user/self`.
+  - Total = `quota + bonus_quota` (in tokens)
+  - Used = `used_quota` (in tokens)
+  - Remaining = Total - Used
+- cost: Balance and spent calculated from quota data.
+  - Balance = `(quota + bonus_quota) / 500000` (in CNY)
+  - Spent = `used_quota / 500000` (in CNY)
+
+Configuration Options:
+```bash
+# Method 1: Environment variable
+export MAGIC666_API_USER_ID="your_user_id"
+
+# Method 2: Manual config file
+cat > ~/.llm_balance/magic666_config.yaml << EOF
+api_user_id: "your_user_id"
+EOF
+```
+
+Examples:
+```bash
+# Check balance and spent
+llm-balance cost --platform=magic666
+# Check token usage
+llm-balance package --platform=magic666
 ```
 
 ### Third-Party Relay: AICoding
