@@ -5,7 +5,7 @@
 ## Key Features
 
 - **🔑 Multiple Authentication**: API Key, browser cookie, official SDK support
-- **🌐 23 Platforms Supported**: Official platforms (DeepSeek, Moonshot, Volcengine, Aliyun, Tencent, Zhipu, SiliconFlow, OpenAI, Anthropic, Google) + third-party relays (FoxCode, DuckCoding, PackyCode, 88Code, 88996, YouAPI, CSMindAI, YesCode, Cubence) + relay platforms (OneAPI, APIProxy, FastGPT, MiniMax)
+- **🌐 24 Platforms Supported**: Official platforms (DeepSeek, Moonshot, Volcengine, Aliyun, Tencent, Zhipu, SiliconFlow, OpenAI, Anthropic, Google) + third-party relays (FoxCode, DuckCoding, PackyCode, 88Code, 88996, AICoding, YouAPI, CSMindAI, YesCode, Cubence) + relay platforms (OneAPI, APIProxy, FastGPT, MiniMax)
 - **💰 Real-time Balance & Spent**: Track both current balance and actual spending
 - **📊 Flexible Output**: Table, JSON, Markdown, and total-only formats
 - **💱 Multi-Currency**: Automatic conversion between CNY, USD, EUR, and more
@@ -475,7 +475,7 @@ platforms:
 | **Zhipu** | Cookie | ✅ | Requires login to https://open.bigmodel.cn | ✅ Full Support | ✅ Full Support |
 | **SiliconFlow** | API Key | ✅ | Requires SILICONFLOW_API_KEY | ❌ Not Available | ✅ Full Support |
 
-### 🔄 Third-Party Relay Platforms (5)
+### 🔄 Third-Party Relay Platforms (6)
 
 | Platform | Authentication | Status | Description | Token Usage | Spent Tracking | Independent Config |
 |----------|----------------|--------|-------------|-------------|---------------|-------------------|
@@ -483,6 +483,7 @@ platforms:
 | **DuckCoding** | Cookie | ✅ | Relay service with token packages | ✅ Full Support | ✅ Full Support | ✅ Yes |
 | **88Code** | Console Token | ✅ | Relay service with subscription packages | ✅ Full Support | ✅ Full Support | ✅ Yes |
 | **88996.cloud** | Cookie | ✅ | Relay service with quota system | ✅ Full Support | ✅ Full Support | ✅ Yes |
+| **AICoding** | Cookie | ✅ | Relay service with credits system | ✅ Full Support | ❌ Not Available | ❌ No |
 | **YourAPI** | Cookie | ✅ | Relay service with quota system | ✅ Full Support | ✅ Full Support | ✅ Yes |
 
 ### 📊 Platform Status Summary
@@ -718,6 +719,27 @@ llm-balance cost --platform=88996
 llm-balance package --platform=88996
 ```
 
+### Third-Party Relay: AICoding
+
+AICoding is a cookie-authenticated relay with credits-based balance information.
+
+- Auth: Browser cookie on `aicoding.sh`.
+- package: Uses credits data from `https://aicoding.sh/api/user-credits/permanent`.
+  - Total = `personal_credits` (in credits)
+  - Remaining = `personal_credits` (in credits)
+- cost: Balance calculated from credits data.
+  - Balance = `personal_credits / 100` (in CNY)
+  - Spent = Not available (returns "-")
+
+Examples:
+```bash
+# Login to https://aicoding.sh first, then:
+# Check balance
+llm-balance cost --platform=aicoding
+# Check credits usage
+llm-balance package --platform=aicoding
+```
+
 ## Browser Support
 
 ### 🌍 Global Browser Configuration
@@ -812,6 +834,7 @@ src/llm_balance/
     ├── duckcoding.py      # DuckCoding relay handler ✅
     ├── _88code.py         # 88Code relay handler ✅
     ├── _88996.py          # 88996.cloud relay handler ✅
+    ├── aicoding.py        # AICoding relay handler ✅
     └── yourapi.py          # YourAPI relay handler ✅
 ```
 
