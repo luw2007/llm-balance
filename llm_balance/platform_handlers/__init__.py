@@ -16,6 +16,7 @@ from .foxcode import FoxCodeHandler
 from .duckcoding import DuckCodingHandler
 from .packycode import PackyCodeHandler
 from ._88code import Handler88Code
+from ._88996 import Handler88996
 from .yourapi import YourAPIHandler
 from .csmindai import CSMindAIHandler
 from .yescode import YesCodeHandler
@@ -43,6 +44,7 @@ def create_handler(config, browser: str = 'chrome'):
         'duckcoding': DuckCodingHandler,
         'packycode': PackyCodeHandler,
         '88code': Handler88Code,
+        '88996': Handler88996,
         'yourapi': YourAPIHandler,
         'csmindai': CSMindAIHandler,
         'yescode': YesCodeHandler,

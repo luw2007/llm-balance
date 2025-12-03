@@ -43,6 +43,8 @@ class CSMindAIHandler(BasePlatformHandler):
             "params": {},
             "data": {},
             "enabled": False,
+            "show_cost": True,
+            "show_package": True,
             "cookie_domain": "api.csmindai.com"
         }
 
