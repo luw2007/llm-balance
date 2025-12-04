@@ -363,14 +363,14 @@ DuckCoding 为基于浏览器 Cookie 的中转服务，支持Token套餐和费�
 配置选项：
 ```bash
 # 方法1：环境变量
-export DUCKCODING_API_USER_ID="10801"
+export DUCKCODING_API_USER_ID="your_user_id"
 
 # 方法2：CLI命令
-llm-balance platform_config duckcoding api_user_id 10801
+llm-balance platform_config duckcoding api_user_id your_user_id
 
 # 方法3：手动配置文件
 cat > ~/.llm_balance/duckcoding_config.yaml << EOF
-api_user_id: 10801
+api_user_id: your_user_id
 EOF
 ```
 
@@ -383,7 +383,7 @@ llm-balance package --platform=duckcoding
 # 查看配置
 llm-balance platform_config duckcoding
 # 配置用户ID
-llm-balance platform_config duckcoding api_user_id 10801
+llm-balance platform_config duckcoding api_user_id your_user_id
 ```
 
 ## 浏览器支持

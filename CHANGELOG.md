@@ -25,24 +25,34 @@ All notable changes to this project will be documented in this file.
   - Spent calculation: `used_quota / 500000` CNY
   - Default status: Disabled
 
+- **Jimiai platform support**:
+  - Added Jimiai third-party relay platform with quota-based balance and package information
+  - API endpoint: `https://jimiai.ai/api/user/self`
+  - Cookie authentication via `new-api-user` header
+  - Configuration via `JIIMIAI_API_USER_ID` environment variable or `~/.llm_balance/jimiai_config.yaml`
+  - Supports both balance/spent tracking and token usage monitoring
+  - Balance calculation: `quota / 500000` CNY (5,000,000 tokens = 10 CNY)
+  - Spent calculation: `used_quota / 500000` CNY
+  - Default status: Disabled
+
 ### Changed
-- **Platform count increased from 24 to 26**:
+- **Platform count increased from 24 to 27**:
   - Updated all documentation to reflect new platform count
-  - Third-party relay platforms now total 12 (was 10)
-  - Independent configuration platforms expanded to 8 (was 6)
+  - Third-party relay platforms now total 13 (was 10)
+  - Independent configuration platforms expanded to 9 (was 6)
 
 ### Documentation
 - **Updated CLAUDE.md**:
-  - Added DawClaudeCode and Magic666 to third-party relay platforms list
+  - Added DawClaudeCode, Magic666, and Jimiai to third-party relay platforms list
   - Updated independent configuration architecture section
-  - Added DAWCLAUDECODE_API_USER_ID and MAGIC666_API_USER_ID to environment variables reference
-  - Updated platform count from 24 to 26
+  - Added DAWCLAUDECODE_API_USER_ID, MAGIC666_API_USER_ID, and JIIMIAI_API_USER_ID to environment variables reference
+  - Updated platform count from 24 to 27
 - **Updated README.md**:
-  - Added DawClaudeCode and Magic666 to platform features list (26 platforms)
-  - Added detailed configuration sections for both platforms
-  - Updated third-party relay platforms table (8 platforms)
+  - Added DawClaudeCode, Magic666, and Jimiai to platform features list (27 platforms)
+  - Added detailed configuration sections for all three platforms
+  - Updated third-party relay platforms table (9 platforms)
   - Updated token monitoring availability list
-  - Updated production-ready platform count to 16
+  - Updated production-ready platform count to 17
 
 ## [0.2.8] - 2025-11-28
 
@@ -253,7 +263,7 @@ All notable changes to this project will be documented in this file.
   - Supports environment variables (highest priority)
   - Separate configuration files (medium priority)
   - CLI commands for platform-specific configuration:
-    - `llm-balance platform_config duckcoding api_user_id 10801`
+    - `llm-balance platform_config duckcoding api_user_id your_user_id`
     - `llm-balance platform_config duckcoding` (view config)
   - Configuration priority: Environment variables → separate config files → global config
 
