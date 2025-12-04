@@ -3,7 +3,7 @@ Moonshot platform handler
 """
 
 import os
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, Optional, List, Union
 from .base import BasePlatformHandler, CostInfo, PlatformTokenInfo, ModelTokenInfo
 from ..config import PlatformConfig
 
@@ -138,13 +138,14 @@ class MoonshotHandler(BasePlatformHandler):
         # Note: For traditional API key method, spent info is not available
         # Spent info is only available through organization account API
         spent = self._get_spent_with_console_token()
+        spent_currency = 'CNY' if isinstance(spent, (int, float)) else '-'
 
         return CostInfo(
             platform=self.get_platform_name(),
             balance=balance,
             currency='CNY',  # Moonshot uses CNY
             spent=spent,
-            spent_currency='CNY' if spent > 0 else '-',
+            spent_currency=spent_currency,
             raw_data={
                 'available_balance': available_balance,
                 'voucher_balance': voucher_balance,
@@ -207,22 +208,31 @@ class MoonshotHandler(BasePlatformHandler):
 
             # Moonshot returns amounts in a custom unit, convert to "yuan"
             balance_raw = data.get('cur', 0.0)  # Current balance in raw unit
-            spent_raw = data.get('use', 0.0)     # Spent amount in raw unit
+            spent_raw = data.get('use')  # Spent amount in raw unit
 
             # Convert from raw unit to yuan (divide by 100000)
             balance = balance_raw / 100000.0 if balance_raw else 0.0
-            spent = spent_raw / 100000.0 if spent_raw else 0.0
-
-            # Validate balance and spent (now in yuan)
             balance = self._validate_balance(balance, "cur")
-            spent = self._validate_balance(spent, "use")
+
+            # Handle spent data - distinguish between unavailable and zero
+            spent: Union[float, str] = '-'
+            if spent_raw is not None:
+                # Ensure spent_raw is numeric before division
+                try:
+                    spent_in_yuan = float(spent_raw) / 100000.0
+                    spent = self._validate_balance(spent_in_yuan, "use")
+                except (ValueError, TypeError):
+                    # If conversion fails, treat as unavailable data
+                    spent = '-'
+
+            spent_currency = 'CNY' if isinstance(spent, (int, float)) else '-'
 
             return CostInfo(
                 platform=self.get_platform_name(),
                 balance=balance,
                 currency='CNY',  # Moonshot uses CNY
                 spent=spent,
-                spent_currency='CNY' if spent > 0 else '-',
+                spent_currency=spent_currency,
                 raw_data={
                     'cur': data.get('cur'),
                     'voucher_cur': data.get('voucher_cur'),
@@ -238,23 +248,23 @@ class MoonshotHandler(BasePlatformHandler):
         except Exception as e:
             raise ValueError(f"Failed to get organization account info for Moonshot: {e}")
 
-    def _get_spent_with_console_token(self) -> float:
+    def _get_spent_with_console_token(self) -> Union[float, str]:
         """Get spent amount using console token from localStorage (legacy method)"""
         try:
             # Check if we have a console token configured
             console_token = getattr(self.config, 'console_token', None)
             if not console_token:
-                return 0.0
+                return '-'
 
             # Get organization ID if configured
             org_id = getattr(self.config, 'org_id', None)
 
             # If we have both console token and org_id, spent info is already included in the org API response
             # No need for separate billing API call since Moonshot doesn't have this endpoint
-            return 0.0
+            return '-'
 
-        except Exception as e:
-            return 0.0
+        except Exception:
+            return '-'
 
     def get_model_tokens(self) -> PlatformTokenInfo:
         """Get model-level token information from Moonshot

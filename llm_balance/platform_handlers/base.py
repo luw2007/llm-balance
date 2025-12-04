@@ -3,7 +3,7 @@ Base handler for platform cost checking
 """
 
 from abc import ABC, abstractmethod
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, Optional, List, Union
 from dataclasses import dataclass, field
 
 @dataclass
@@ -12,7 +12,7 @@ class CostInfo:
     balance: float
     currency: str
     raw_data: Dict[str, Any]
-    spent: float = 0.0
+    spent: Union[float, str] = 0.0
     spent_currency: str = None
 
 @dataclass
