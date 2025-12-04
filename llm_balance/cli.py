@@ -439,7 +439,7 @@ class LLMBalanceCLI:
         Manage platform-specific configuration (separate from global config)
 
         Args:
-            platform: Platform name (supports 'duckcoding', 'cubence', 'csmindai', 'yourapi', 'deepseek', 'dawclaudecode', 'magic666')
+            platform: Platform name (supports 'duckcoding', 'cubence', 'csmindai', 'yourapi', 'deepseek', 'dawclaudecode', 'magic666', 'jimiai')
             key: Configuration key (optional)
             value: Configuration value (optional)
 
@@ -485,6 +485,11 @@ class LLMBalanceCLI:
                 'file': 'magic666_config.yaml',
                 'keys': ['api_user_id'],
                 'display_name': 'Magic666'
+            },
+            'jimiai': {
+                'file': 'jimiai_config.yaml',
+                'keys': ['api_user_id'],
+                'display_name': 'Jimiai'
             }
         }
 

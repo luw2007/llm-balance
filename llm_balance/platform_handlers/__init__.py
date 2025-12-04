@@ -28,6 +28,7 @@ from .cubence import CubenceHandler
 from .aicoding import AICodingHandler
 from .dawclaudecode import DawClaudeCodeHandler
 from .magic666 import Magic666Handler
+from .jimiai import JimiaiHandler
 
 def create_handler(config, browser: str = 'chrome'):
     """Factory function to create platform handlers using Python-based configuration"""
@@ -59,6 +60,7 @@ def create_handler(config, browser: str = 'chrome'):
         'aicoding': AICodingHandler,
         'dawclaudecode': DawClaudeCodeHandler,
         'magic666': Magic666Handler,
+        'jimiai': JimiaiHandler,
     }
     
     # Get handler class from configuration

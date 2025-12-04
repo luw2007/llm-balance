@@ -180,7 +180,7 @@ class ConfigManager:
             DuckCodingHandler, PackyCodeHandler, Handler88Code, Handler88996,
             YourAPIHandler, CSMindAIHandler, YesCodeHandler, OneAPIHandler,
             APIProxyHandler, FastGPTHandler, MiniMaxHandler, CubenceHandler,
-            AICodingHandler, DawClaudeCodeHandler, Magic666Handler
+            AICodingHandler, DawClaudeCodeHandler, Magic666Handler, JimiaiHandler
         )
 
         handler_map = {
@@ -210,6 +210,7 @@ class ConfigManager:
             'aicoding': AICodingHandler,
             'dawclaudecode': DawClaudeCodeHandler,
             'magic666': Magic666Handler,
+            'jimiai': JimiaiHandler,
         }
 
         if platform_name not in handler_map:
@@ -240,7 +241,7 @@ class ConfigManager:
     
     def get_all_platforms(self) -> List[str]:
         """Get all available platform names"""
-        return ['deepseek', 'moonshot', 'volcengine', 'aliyun', 'tencent', 'zhipu', 'siliconflow', 'openai', 'anthropic', 'google', 'foxcode', 'duckcoding', 'packycode', '88code', '88996', 'yourapi', 'csmindai', 'yescode', 'oneapi', 'apiproxy', 'fastgpt', 'minimax', 'cubence', 'aicoding', 'dawclaudecode', 'magic666']
+        return ['deepseek', 'moonshot', 'volcengine', 'aliyun', 'tencent', 'zhipu', 'siliconflow', 'openai', 'anthropic', 'google', 'foxcode', 'duckcoding', 'packycode', '88code', '88996', 'yourapi', 'csmindai', 'yescode', 'oneapi', 'apiproxy', 'fastgpt', 'minimax', 'cubence', 'aicoding', 'dawclaudecode', 'magic666', 'jimiai']
     
     def get_enabled_platforms(self) -> List[PlatformConfig]:
         """Get enabled platform configurations"""
@@ -304,7 +305,7 @@ class ConfigManager:
             DuckCodingHandler, PackyCodeHandler, Handler88Code, Handler88996,
             YourAPIHandler, CSMindAIHandler, YesCodeHandler, OneAPIHandler,
             APIProxyHandler, FastGPTHandler, MiniMaxHandler, CubenceHandler,
-            AICodingHandler, DawClaudeCodeHandler, Magic666Handler
+            AICodingHandler, DawClaudeCodeHandler, Magic666Handler, JimiaiHandler
         )
 
         handler_map = {
@@ -334,6 +335,7 @@ class ConfigManager:
             'aicoding': AICodingHandler,
             'dawclaudecode': DawClaudeCodeHandler,
             'magic666': Magic666Handler,
+            'jimiai': JimiaiHandler,
         }
 
         for name, handler_class in handler_map.items():
