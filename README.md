@@ -126,11 +126,11 @@ llm-balance cost --platform=csmindai
 export YOUAPI_NEW_API_USER="your_user_id"
 
 # Method 2: Separate config file
-llm-balance platform_config yourapi new_api_user your_user_id
+llm-balance platform_config yourapi api_user_id your_user_id
 
 # Method 3: Manual config file creation
 cat > ~/.llm_balance/youapi_config.yaml << EOF
-new_api_user: your_user_id
+api_user_id: your_user_id
 EOF
 
 # Then login to https://yourapi.cn and run:
@@ -659,7 +659,7 @@ llm-balance package --platform=88code
 YourAPI is a cookie-authenticated relay with simple quota-based balance and spent calculation.
 
 - Auth: Browser cookie on `yourapi.cn` with `new-api-user` header.
-- Configuration: Requires `new_api_user` setting via environment variable or separate config file.
+- Configuration: Requires `api_user_id` setting via environment variable or separate config file.
 - package: Uses quota data from `https://yourapi.cn/api/user/self`.
   - Total = `quota` (in tokens, converted to CNY by dividing by 500000)
   - Used = `used_quota` (in tokens, converted to CNY by dividing by 500000)
@@ -675,7 +675,7 @@ export YOURAPI_NEW_API_USER="your_user_id"
 
 # Method 2: Manual config file
 cat > ~/.llm_balance/yourapi_config.yaml << EOF
-new_api_user: "your_user_id"
+api_user_id: "your_user_id"
 EOF
 ```
 

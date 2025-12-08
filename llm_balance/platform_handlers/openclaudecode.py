@@ -29,7 +29,7 @@ class OpenClaudeCodeHandler(BasePlatformHandler):
                 "Sec-Fetch-Mode": "cors",
                 "Sec-Fetch-Site": "same-origin"
             },
-            "cookie_domain": "openclaudecode.cn",
+            "cookie_domain": "www.openclaudecode.cn",
             "params": {},
             "data": {},
             "enabled": False,

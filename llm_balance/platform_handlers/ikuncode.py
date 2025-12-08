@@ -29,7 +29,7 @@ class IKunCodeHandler(BasePlatformHandler):
                 "Sec-Fetch-Mode": "cors",
                 "Sec-Fetch-Site": "same-origin"
             },
-            "cookie_domain": "ikuncode.cc",
+            "cookie_domain": "api.ikuncode.cc",
             "params": {},
             "data": {},
             "enabled": False,
