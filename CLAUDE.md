@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-A Python CLI tool for checking costs and balances across 28 LLM platforms with support for multiple authentication methods (API keys, browser cookies, official SDKs), multi-currency conversion, and real-time cost monitoring.
+A Python CLI tool for checking costs and balances across 29 LLM platforms with support for multiple authentication methods (API keys, browser cookies, official SDKs), multi-currency conversion, and real-time cost monitoring.
 
 **Current Version**: 0.3.0
 
@@ -101,7 +101,7 @@ BasePlatformHandler (base.py) → CostInfo / PlatformTokenInfo
 - Individual platform failures don't block others
 
 #### 3. **Independent Configuration Architecture**
-Some platforms (DuckCoding, CSMindAI, YouAPI, 88Code, 88996, Cubence, DawClaudeCode, Magic666, Jimiai, OpenClaudeCode) use separate config files:
+Some platforms (DuckCoding, CSMindAI, YouAPI, 88Code, 88996, Cubence, DawClaudeCode, Magic666, Jimiai, OpenClaudeCode, IKunCode) use separate config files:
 - Priority: Environment variables > Separate config files > Global config
 - Separate configs at `~/.llm_balance/{platform}_config.yaml`
 - Prevents pollution of global `config.yaml`
@@ -135,7 +135,7 @@ All handlers inherit from `BasePlatformHandler` and implement:
    - Global browser setting via `llm-balance set-browser chrome`
    - Per-command override: `--browser=chrome`
 
-4. **Third-party Relay** (DuckCoding, PackyCode, CSMindAI, YouAPI, 88Code, 88996, DawClaudeCode, Magic666, Jimiai, OpenClaudeCode)
+4. **Third-party Relay** (DuckCoding, PackyCode, CSMindAI, YouAPI, 88Code, 88996, DawClaudeCode, Magic666, Jimiai, OpenClaudeCode, IKunCode)
    - Cookie-based with custom headers (`new-api-user`, `rix-api-user`, etc.)
    - Requires independent configuration (see pattern #3)
 
@@ -158,8 +158,8 @@ All handlers inherit from `BasePlatformHandler` and implement:
 - Tencent Cloud (hosts Hunyuan/混元)
 - SiliconFlow (硅基流动)
 
-**Third-party Relay Platforms (14)**
-- FoxCode, DuckCoding, PackyCode, 88Code, 88996, AICoding, YouAPI, CSMindAI, YesCode, Cubence, DawClaudeCode, Magic666, Jimiai, OpenClaudeCode
+**Third-party Relay Platforms (15)**
+- FoxCode, DuckCoding, PackyCode, 88Code, 88996, AICoding, YouAPI, CSMindAI, YesCode, Cubence, DawClaudeCode, Magic666, Jimiai, OpenClaudeCode, IKunCode
 
 **Relay Management Platforms (3)**
 - OneAPI (self-hosted), API-Proxy (public relay), FastGPT (open-source app platform)
@@ -394,6 +394,7 @@ DAWCLAUDECODE_API_USER_ID="..."
 MAGIC666_API_USER_ID="..."
 JIIMIAI_API_USER_ID="..."
 OPENCLAUDECODE_API_USER_ID="..."
+IKUNCODE_API_USER_ID="..."
 
 # Global Settings
 LLM_BALANCE_CONFIG_FILE="/path/to/config.yaml"

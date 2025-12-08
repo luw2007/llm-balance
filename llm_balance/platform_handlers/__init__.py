@@ -30,6 +30,7 @@ from .dawclaudecode import DawClaudeCodeHandler
 from .magic666 import Magic666Handler
 from .jimiai import JimiaiHandler
 from .openclaudecode import OpenClaudeCodeHandler
+from .ikuncode import IKunCodeHandler
 
 def create_handler(config, browser: str = 'chrome'):
     """Factory function to create platform handlers using Python-based configuration"""
@@ -63,6 +64,7 @@ def create_handler(config, browser: str = 'chrome'):
         'magic666': Magic666Handler,
         'jimiai': JimiaiHandler,
         'openclaudecode': OpenClaudeCodeHandler,
+        'ikuncode': IKunCodeHandler,
     }
     
     # Get handler class from configuration
