@@ -223,9 +223,19 @@ class ConfigManager:
             handler_class = handler_map[platform_name]
             config = handler_class.get_default_config()
 
-            # Apply user overrides
+            # Apply user overrides (but preserve default enabled status)
             user_override = self.user_config.get(platform_name, {})
+            default_enabled = config.get('enabled', False)
             config.update(user_override)
+
+            # Restore default enabled status unless explicitly overridden by enable/disable command
+            # Check if user explicitly set enabled via enable/disable commands
+            if 'enabled' in user_override:
+                # User explicitly set it, keep user's choice
+                pass
+            else:
+                # No explicit setting, use default
+                config['enabled'] = default_enabled
 
             return config
         except Exception as e:

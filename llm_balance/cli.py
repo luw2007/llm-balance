@@ -159,18 +159,19 @@ class LLMBalanceCLI:
     def list(self) -> str:
         """List all available platforms"""
         from .platform_configs import ConfigManager
-        
+
         config_manager = ConfigManager(self.config_file)
         platforms = config_manager.get_all_platforms()
-        
+
         result = "Available platforms:\n"
         for platform in platforms:
-            # Check if platform is enabled in user config
-            user_config = config_manager.user_config.get(platform, {})
-            enabled = user_config.get('enabled', True)
-            status = "enabled" if enabled else "disabled"
-            result += f"  {platform} ({status})\n"
-        
+            # Get full config (default + user overrides)
+            config = config_manager.get_platform_config(platform)
+            if config:
+                enabled = config.get('enabled', False)
+                status = "enabled" if enabled else "disabled"
+                result += f"  {platform} ({status})\n"
+
         return result
     
     def enable(self, platform: str) -> str:
