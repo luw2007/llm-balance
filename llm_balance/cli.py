@@ -464,12 +464,12 @@ class LLMBalanceCLI:
             },
             'csmindai': {
                 'file': 'csmindai_config.yaml',
-                'keys': ['new_api_user'],
+                'keys': ['api_user_id'],
                 'display_name': 'CSMindAI'
             },
             'yourapi': {
                 'file': 'yourapi_config.yaml',
-                'keys': ['new_api_user'],
+                'keys': ['api_user_id'],
                 'display_name': 'YourAPI'
             },
             'deepseek': {
