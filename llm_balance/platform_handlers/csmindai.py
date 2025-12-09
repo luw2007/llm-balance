@@ -213,10 +213,13 @@ class CSMindAIHandler(BasePlatformHandler):
     def _extract_models_from_quota(self, response: Dict[str, Any]) -> List[ModelTokenInfo]:
         """Extract ModelTokenInfo list from user response.
 
-        The schema:
-            - Look for data.quota and data.used_quota
-            - Create model info based on quota usage
-            - Package name based on user info
+        API Schema:
+            - data.quota: Remaining tokens (not total!)
+            - data.used_quota: Tokens that have been used/consumed
+            - Total tokens = used_quota + quota
+
+        This method correctly handles the API where 'quota' represents
+        the remaining amount, not the total allocation.
         """
         data = response if isinstance(response, dict) else {}
         user_data = data.get('data', {}) if isinstance(data.get('data'), dict) else {}
@@ -228,8 +231,9 @@ class CSMindAIHandler(BasePlatformHandler):
         default_model_name = "claude,codex"
 
         # Extract quota information
-        quota = user_data.get('quota', 0)
-        used_quota = user_data.get('used_quota', 0)
+        # quota = remaining amount, used_quota = consumed amount
+        remaining = user_data.get('quota', 0)
+        used = user_data.get('used_quota', 0)
 
         # Create package name based on user info
         display_name = user_data.get('display_name', 'User')
@@ -254,14 +258,14 @@ class CSMindAIHandler(BasePlatformHandler):
                 return 0.0
 
         # Convert to numeric values
-        total_tokens = _num(quota)
-        used_tokens = _num(used_quota)
-        remaining_tokens = max(0.0, total_tokens - used_tokens)
+        used_tokens = _num(used)
+        remaining_tokens = _num(remaining)
+        # Total is the sum of used + remaining
+        total_tokens = max(0.0, used_tokens + remaining_tokens)
 
         # Ensure non-negative values
-        total_tokens = max(0.0, total_tokens)
-        remaining_tokens = max(0.0, remaining_tokens)
         used_tokens = max(0.0, used_tokens)
+        remaining_tokens = max(0.0, remaining_tokens)
 
         # Determine status based on user status
         user_status = user_data.get('status', 1)
