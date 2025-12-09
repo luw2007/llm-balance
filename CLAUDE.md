@@ -412,7 +412,7 @@ LLM_BALANCE_RATES='{"USD": 7.5}'
 - `platform_config`: Manage independent platform configs
 - `set-browser`: Set global browser for cookie-based platforms
 - `rates`: Show current exchange rates
-- `diagnose`: Run system diagnostics
+- `doctor`: Run system diagnostics and health checks
 - `generate_config`: Generate fresh config from handlers
 
 ### Platform Selection
