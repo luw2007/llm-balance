@@ -353,14 +353,13 @@ class LLMBalanceCLI:
         Run comprehensive diagnostics
         """
         import os
-        from .platform_handlers import registry
-        
+        from .platform_configs import ConfigManager
+
         result = "🔧 LLM Balance Checker 诊断报告\n"
         result += "=" * 50 + "\n\n"
-        
+
         # 检查环境变量
         result += "📋 环境变量检查:\n"
-        import os
         env_vars = ['DEEPSEEK_API_KEY', 'MOONSHOT_API_KEY', 'VOLCENGINE_ACCESS_KEY', 'ALIYUN_ACCESS_KEY_ID']
         missing_vars = [var for var in env_vars if not os.getenv(var)]
         if missing_vars:
@@ -369,7 +368,7 @@ class LLMBalanceCLI:
                 result += f"   • {var}\n"
         else:
             result += "✅ 主要环境变量已设置\n"
-        
+
         # 检查配置文件
         result += f"\n📋 配置文件检查:\n"
         config_path = os.path.expanduser("~/.llm_balance/config.yaml")
@@ -377,29 +376,29 @@ class LLMBalanceCLI:
             result += f"✅ 配置文件存在: {config_path}\n"
         else:
             result += f"❌ 配置文件不存在: {config_path}\n"
-        
+
         # 检查浏览器
         result += f"\n📋 浏览器配置:\n"
-        checker = BalanceChecker(self.config_file, self.browser)
-        browser = checker.config_manager.get_global_browser()
+        config_manager = ConfigManager(self.config_file)
+        browser = config_manager.get_global_config().get('browser', 'chrome')
         result += f"   当前浏览器: {browser}\n"
-        
+
         # 检查平台注册
         result += f"\n📋 平台注册检查:\n"
-        platforms = checker.config_manager.list_platforms()
+        platforms = config_manager.get_all_platforms()
         result += f"   已注册平台数量: {len(platforms)}\n"
         for name in platforms:
             result += f"   • {name}\n"
-        
+
         # 系统状态
         result += f"\n📋 系统状态:\n"
         result += f"   系统运行正常\n"
         result += f"   配置文件可访问\n"
-        
+
         # 网络连接测试
         result += f"\n📋 网络连接测试:\n"
         result += "   (可选) 运行 'llm-balance cost' 测试实际连接\n"
-        
+
         return result
     
         
