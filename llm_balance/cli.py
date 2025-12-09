@@ -348,9 +348,9 @@ class LLMBalanceCLI:
         return result
     
         
-    def diagnose(self) -> str:
+    def doctor(self) -> str:
         """
-        Run comprehensive diagnostics
+        Run comprehensive diagnostics and health checks
         """
         import os
         from .platform_configs import ConfigManager
