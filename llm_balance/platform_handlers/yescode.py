@@ -333,8 +333,10 @@ class YesCodeHandler(BasePlatformHandler):
             remaining_tokens = max(0.0, total_tokens - used_tokens)
         else:
             # If no usage or no spent, estimate based on current balance
-            total_tokens = total_paid * 1000  # Default estimate
-            remaining_tokens = total_tokens
+            # Assume remaining = current balance * 1000 tokens per CNY
+            remaining_tokens = current_balance * 1000
+            # Total = used + remaining
+            total_tokens = used_tokens + remaining_tokens
 
         # Create model info
         results.append(ModelTokenInfo(
