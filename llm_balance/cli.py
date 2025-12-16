@@ -86,6 +86,22 @@ class LLMBalanceCLI:
                 # Apply sorting to multi-platform results
                 if sort == 'name':
                     balances.sort(key=lambda x: x['platform'].lower())
+                elif sort == 'balance':
+                    # Import at module level would be circular, so inline import
+                    from .utils import convert_currency, get_exchange_rates
+                    rates = get_exchange_rates()
+                    def get_sort_key(item):
+                        balance_val = item.get('balance')
+                        currency = item.get('currency', 'CNY')
+                        try:
+                            balance = float(balance_val) if balance_val not in (None, '-') else 0.0
+                        except (ValueError, TypeError):
+                            balance = 0.0
+                        try:
+                            return convert_currency(balance, currency, 'CNY')
+                        except Exception:
+                            return balance
+                    balances.sort(key=get_sort_key, reverse=True)
 
                 return checker.format_balances(balances, format, currency)
         else:
