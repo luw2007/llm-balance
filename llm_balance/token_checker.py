@@ -61,8 +61,13 @@ class TokenChecker:
             # Skip platforms that don't support tokens or have errors
             return None
 
-    def check_all_tokens(self) -> List[Dict[str, Any]]:
-        """Check token balances for all enabled platforms using thread pool"""
+    def check_all_tokens(self, sort: str = 'name') -> List[Dict[str, Any]]:
+        """
+        Check token balances for all enabled platforms using thread pool
+
+        Args:
+            sort: Sort order for results - 'name' (alphabetical), 'none' (as-is)
+        """
         tokens = []
         platforms = [p for p in self.config_manager.get_enabled_platforms() if p.show_package]
 
@@ -82,6 +87,18 @@ class TokenChecker:
                 except Exception as e:
                     # Silently skip platforms with errors
                     pass
+
+        # Apply sorting if requested
+        if sort == 'name':
+            # Sort alphabetically by platform name for consistent, predictable output
+            tokens.sort(key=lambda x: x['platform'].lower())
+            # Also sort models within each platform for consistent output
+            for token_info in tokens:
+                if 'models' in token_info and isinstance(token_info['models'], list):
+                    token_info['models'].sort(key=lambda x: x.get('model', '').lower())
+        elif sort == 'none':
+            # Keep the as-is order (preserve concurrent execution order)
+            pass
 
         return tokens
     

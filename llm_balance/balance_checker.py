@@ -9,7 +9,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from .config import ConfigManager
 from .platform_configs import PlatformConfig
 from .platform_handlers.base import BasePlatformHandler, CostInfo
-from .utils import get_nested_value, format_output
+from .utils import get_nested_value, format_output, convert_currency, get_exchange_rates
 from .platform_handlers import create_handler
 
 class BalanceChecker:
@@ -46,8 +46,13 @@ class BalanceChecker:
             print(f"Error checking {platform_config.name}: {e}")
             return None
 
-    def check_all_balances(self) -> List[Dict[str, Any]]:
-        """Check balances for all enabled platforms using thread pool"""
+    def check_all_balances(self, sort: str = 'name') -> List[Dict[str, Any]]:
+        """
+        Check balances for all enabled platforms using thread pool
+
+        Args:
+            sort: Sort order for results - 'name' (alphabetical), 'balance' (descending), 'none' (as-is)
+        """
         balances = []
         platforms = [p for p in self.config_manager.get_enabled_platforms() if p.show_cost]
 
@@ -67,6 +72,37 @@ class BalanceChecker:
                 except Exception as e:
                     platform = future_to_platform[future]
                     print(f"Error checking {platform.name}: {e}")
+
+        # Apply sorting if requested
+        if sort == 'name':
+            # Sort alphabetically by platform name for consistent, predictable output
+            balances.sort(key=lambda x: x['platform'].lower())
+        elif sort == 'balance':
+            # Sort by balance amount (descending) with currency conversion for fair comparison
+            # Cache exchange rates to avoid repeated lookups
+            rates = get_exchange_rates()
+            def get_sort_key(item):
+                # Use defensive .get() to avoid KeyError and provide sensible defaults
+                balance_val = item.get('balance')
+                currency = item.get('currency', 'CNY')
+
+                # Handle None, '-', or other invalid values
+                try:
+                    balance = float(balance_val) if balance_val not in (None, '-') else 0.0
+                except (ValueError, TypeError):
+                    balance = 0.0
+
+                # Convert to CNY for fair comparison across currencies
+                try:
+                    return convert_currency(balance, currency, 'CNY')
+                except Exception:
+                    # Fallback if conversion fails
+                    return balance
+
+            balances.sort(key=get_sort_key, reverse=True)
+        elif sort == 'none':
+            # Keep the as-is order (preserve concurrent execution order)
+            pass
 
         return balances
     

@@ -17,26 +17,36 @@ class LLMBalanceCLI:
         self.browser = browser
         ensure_config_dir()
     
-    def cost(self, platform: Optional[str] = None, 
-              format: str = 'table', 
+    def cost(self, platform: Optional[str] = None,
+              format: str = 'table',
               browser: Optional[str] = None,
-              currency: str = 'CNY') -> str:
+              currency: str = 'CNY',
+              sort: str = 'name') -> str:
         """
         Check costs for LLM platforms
-        
+
         Args:
             platform: Specific platform(s) to check, comma-separated string or tuple (optional)
                      Examples: "deepseek", "deepseek,aliyun", or multiple --platform flags
             format: Output format (json, markdown, table, total)
             browser: Browser to get cookies from (chrome, firefox, arc, brave, chromium)
             currency: Target currency for total (CNY, USD, EUR, etc.)
-        
+            sort: Sort order for results (name, balance, none)
+                 - name: Sort alphabetically by platform name (default)
+                 - balance: Sort by balance amount (descending)
+                 - none: Keep the order as results complete
+
         Returns:
             Formatted cost information
         """
         browser = browser or self.browser
         checker = BalanceChecker(self.config_file, browser)
-        
+
+        # Validate sort parameter
+        valid_sorts = ['name', 'balance', 'none']
+        if sort not in valid_sorts:
+            return f"Invalid sort option '{sort}'. Valid options: {', '.join(valid_sorts)}"
+
         if platform:
             # Handle comma-separated platform list or tuple from fire
             if isinstance(platform, tuple):
@@ -73,10 +83,14 @@ class LLMBalanceCLI:
                     else:
                         return f"Platform '{p}' not found or could not retrieve balance"
                 
+                # Apply sorting to multi-platform results
+                if sort == 'name':
+                    balances.sort(key=lambda x: x['platform'].lower())
+
                 return checker.format_balances(balances, format, currency)
         else:
             # Check all platforms
-            balances = checker.check_all_balances()
+            balances = checker.check_all_balances(sort=sort)
             return checker.format_balances(balances, format, currency)
     
     def package(self, platform: Optional[str] = None,
@@ -87,7 +101,8 @@ class LLMBalanceCLI:
                show_all: bool = False,
                show_expiry: bool = True,
                show_reset: bool = True,
-               show_reset_time: bool = True) -> str:
+               show_reset_time: bool = True,
+               sort: str = 'name') -> str:
         """
         Check model-level package/tokens for LLM platforms
 
@@ -103,12 +118,20 @@ class LLMBalanceCLI:
             show_expiry: Show expiry date for subscriptions (88code, etc.)
             show_reset: Show reset count for subscriptions (88code, etc.)
             show_reset_time: Show reset time for subscriptions (moonshot, 88code, etc.)
+            sort: Sort order for results (name, none)
+                 - name: Sort alphabetically by platform name (default)
+                 - none: Keep the order as results complete
 
         Returns:
             Formatted package information with model-level details
         """
         browser = browser or self.browser
         checker = TokenChecker(self.config_file, browser)
+
+        # Validate sort parameter
+        valid_sorts = ['name', 'none']
+        if sort not in valid_sorts:
+            return f"Invalid sort option '{sort}'. Valid options: {', '.join(valid_sorts)}"
 
         if platform:
             # Handle comma-separated platform list or tuple from fire
@@ -133,7 +156,7 @@ class LLMBalanceCLI:
                 return "No token data available"
         else:
             # Check all platforms
-            tokens = checker.check_all_tokens()
+            tokens = checker.check_all_tokens(sort=sort)
 
         return checker.format_tokens(tokens, format, currency, model, show_all, show_expiry, show_reset, show_reset_time)
 
