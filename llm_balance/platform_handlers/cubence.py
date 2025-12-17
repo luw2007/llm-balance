@@ -2,7 +2,6 @@
 Cubence platform handler
 """
 
-import os
 from typing import Dict, Any, Optional
 from .base import BasePlatformHandler, CostInfo
 from ..config import PlatformConfig
@@ -17,9 +16,8 @@ class CubenceHandler(BasePlatformHandler):
         return {
             "api_url": "https://cubence.com/api/v1/dashboard/overview",
             "method": "GET",
-            "auth_type": "token",
-            "env_var": "CUBENCE_TOKEN",
-            "token": None,  # Will be set from environment or config file
+            "auth_type": "cookie",
+            "cookie_domain": "cubence.com",
             "headers": {
                 "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
                 "Accept": "*/*",
@@ -42,29 +40,6 @@ class CubenceHandler(BasePlatformHandler):
     def __init__(self, config, browser: str = 'chrome'):
         super().__init__(browser)
         self.config = config
-        # Load platform-specific configuration from environment variables or separate config file
-        self._load_env_config()
-
-    def _load_env_config(self):
-        """Load configuration from environment variables or separate config file."""
-        # Try environment variable first
-        env_token = os.getenv('CUBENCE_TOKEN')
-        if env_token:
-            self.config.token = env_token
-            return
-
-        # Try separate config file
-        import yaml
-        from pathlib import Path
-        config_path = Path.home() / '.llm_balance' / 'cubence_config.yaml'
-        if config_path.exists():
-            try:
-                with open(config_path, 'r', encoding='utf-8') as f:
-                    cubence_config = yaml.safe_load(f) or {}
-                    if 'token' in cubence_config:
-                        self.config.token = cubence_config['token']
-            except Exception as e:
-                pass
 
     def get_balance(self) -> CostInfo:
         """Get cost information from Cubence"""
@@ -72,24 +47,18 @@ class CubenceHandler(BasePlatformHandler):
         if not api_url:
             raise ValueError("No API URL configured for Cubence")
 
-        # Get token from configuration
-        token = getattr(self.config, 'token', None)
-        if not token:
+        # Get cookies from browser
+        cookie_domain = getattr(self.config, 'cookie_domain', 'cubence.com')
+        cookies = self._get_cookies(cookie_domain, silent=False)
+
+        if not cookies:
             raise ValueError(
-                "Cubence token required. Please set it using one of the following methods:\n"
-                "1. Environment variable: export CUBENCE_TOKEN='your_token'\n"
-                "2. Config file: llm-balance platform_config cubence token 'your_token'\n"
-                "3. Or create ~/.llm_balance/cubence_config.yaml with:\n"
-                "   token: your_token"
+                f"Failed to retrieve cookies from browser for domain: {cookie_domain}\n"
+                "Please ensure you are logged in to Cubence in your browser."
             )
 
         # Prepare authentication headers
         headers = self.config.headers.copy() if hasattr(self.config, 'headers') else self.config.get('headers', {}).copy()
-
-        # Set token as cookie (Cubence uses cookie-based token authentication)
-        cookies = {
-            'token': token
-        }
 
         # Make API request
         method = self.config.method if hasattr(self.config, 'method') else self.config.get('method', 'GET')
