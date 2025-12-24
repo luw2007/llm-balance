@@ -99,18 +99,39 @@ class BasePlatformHandler(ABC):
                 'chromium': BrowserType.CHROMIUM,
                 'slack': BrowserType.SLACK,
             }
-            
+
+            # Chromium-based browsers with custom cookie paths
+            chromium_custom_paths = {
+                'arc': {
+                    'path': '~/Library/Application Support/Arc/User Data/Default/Cookies',
+                    'keyring_service': 'Arc Safe Storage',
+                    'keyring_user': 'Arc',
+                },
+                'vivaldi': {
+                    'path': '~/Library/Application Support/Vivaldi/Default/Cookies',
+                    'keyring_service': 'Vivaldi Safe Storage',
+                    'keyring_user': 'Vivaldi',
+                },
+            }
+
             # Get the browser type, default to chrome
             browser_lower = self.browser.lower()
-            supported_browsers = list(browser_mapping.keys()) + ['arc']
+            supported_browsers = list(browser_mapping.keys()) + list(chromium_custom_paths.keys())
             if browser_lower not in supported_browsers:
                 raise ValueError(f"Browser '{self.browser}' is not supported. Try: {', '.join(supported_browsers)}")
-            
-            # Special handling for Arc browser
-            if browser_lower == 'arc':
-                # Arc has a different cookie path structure, use custom implementation
-                return self._get_arc_cookies(domain, silent=silent)
-            
+
+            # Special handling for Arc and Vivaldi browsers
+            if browser_lower in chromium_custom_paths:
+                # Arc and Vivaldi have different cookie path structures and keyring passwords
+                browser_config = chromium_custom_paths[browser_lower]
+                return self._get_chromium_custom_cookies(
+                    domain,
+                    browser_config['path'],
+                    browser_config['keyring_service'],
+                    browser_config['keyring_user'],
+                    silent=silent
+                )
+
             browser_type = browser_mapping[browser_lower]
 
             # Use appropriate function based on browser family
@@ -134,118 +155,72 @@ class BasePlatformHandler(ABC):
             else:
                 raise ValueError(f"Failed to get cookies for {domain}: {e}. Please ensure you are logged in to {domain} in {self.browser} browser.")
     
+    def _get_chromium_custom_cookies(self, domain: str, cookie_path_pattern: str,
+                                     keyring_service: str, keyring_user: str,
+                                     silent: bool = True) -> Dict[str, str]:
+        """Get cookies for Chromium-based browsers with custom cookie paths (Arc, Vivaldi, etc.)
+
+        Args:
+            domain: The domain to get cookies for
+            cookie_path_pattern: Path pattern for cookie file (supports ~ expansion)
+            keyring_service: Keyring service name for the browser (e.g., 'Vivaldi Safe Storage')
+            keyring_user: Keyring username for the browser (e.g., 'Vivaldi')
+            silent: If True, suppress warning messages when cookies are not found (default: True)
+        """
+        try:
+            from pathlib import Path
+            import keyring
+            import pycookiecheat
+
+            # Expand and resolve cookie file path
+            cookie_file = Path(cookie_path_pattern).expanduser().resolve()
+
+            # Check if cookie file exists
+            if not cookie_file.exists():
+                raise ValueError(f"Cookie file not found at {cookie_file}. Please ensure the browser is installed.")
+
+            # Get browser's Safe Storage password from keyring
+            password = keyring.get_password(keyring_service, keyring_user)
+            if password is None:
+                raise ValueError(
+                    f"Could not find password for keyring ({keyring_service}, {keyring_user}). "
+                    f"Please verify the browser is installed and check Keychain Access.app"
+                )
+
+            # Prepare URL for pycookiecheat
+            url = f"https://{domain}" if not domain.startswith('http') else domain
+
+            # Use pycookiecheat with custom cookie file and browser-specific password
+            cookies = pycookiecheat.chrome_cookies(
+                url=url,
+                cookie_file=cookie_file,
+                password=password
+            )
+
+            if not cookies and not silent:
+                print(f"Warning: No cookies found for {domain}. Please ensure you are logged in to {domain}.")
+
+            return cookies
+
+        except Exception as e:
+            raise ValueError(f"Failed to get cookies for {domain}: {e}. Please ensure you are logged in to {domain}.")
+
     def _get_arc_cookies(self, domain: str, silent: bool = True) -> Dict[str, str]:
         """Get cookies for Arc browser using custom implementation
 
         Args:
             domain: The domain to get cookies for
             silent: If True, suppress warning messages when cookies are not found (default: True)
+
+        Note: This method is kept for backward compatibility but delegates to _get_chromium_custom_cookies
         """
-        try:
-            import keyring
-            import sqlite3
-            from pathlib import Path
-            from cryptography.hazmat.primitives.ciphers import Cipher
-            from cryptography.hazmat.primitives.ciphers.algorithms import AES
-            from cryptography.hazmat.primitives.ciphers.modes import CBC
-            from cryptography.hazmat.primitives.hashes import SHA1
-            from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
-            
-            # Arc browser cookie path (based on cookie_helper.py)
-            app_support = Path("Library/Application Support")
-            cookie_file = "~" / app_support / "Arc/User Data/Default/Cookies"
-            cookie_file = cookie_file.expanduser()
-            
-            # Check if cookie file exists
-            if not cookie_file.exists():
-                raise ValueError(f"Arc cookie file not found at {cookie_file}. Please ensure Arc browser is installed.")
-            
-            # Get Arc's keyring password
-            browser_name = "Arc"
-            keyring_service_name = f"{browser_name} Safe Storage"
-            keyring_username = browser_name
-            
-            key_material = keyring.get_password(keyring_service_name, keyring_username)
-            if key_material is None:
-                raise ValueError(
-                    f"Could not find a password for the pair ({keyring_service_name}, {keyring_username}). "
-                    f"Please manually verify they exist in `Keychain Access.app`."
-                )
-            
-            # Set up decryption parameters
-            config = {
-                "key_material": key_material,
-                "iterations": 1003,
-                "cookie_file": cookie_file,
-                "init_vector": b" " * 16,
-                "length": 16,
-                "salt": b"saltysalt"
-            }
-            
-            # Derive encryption key
-            kdf = PBKDF2HMAC(
-                algorithm=SHA1(),
-                iterations=config["iterations"],
-                length=config["length"],
-                salt=config["salt"],
-            )
-            enc_key = kdf.derive(config["key_material"].encode("utf8", errors="ignore"))
-            
-            # Connect to cookie database
-            conn = sqlite3.connect(f"file:{cookie_file}?mode=ro", uri=True)
-            conn.row_factory = sqlite3.Row
-            conn.text_factory = bytes
-            
-            # Check for secure column name
-            secure_column_name = "is_secure"
-            for sl_no, column_name, data_type, is_null, default_val, pk in conn.execute("PRAGMA table_info(cookies)"):
-                if column_name == "secure":
-                    secure_column_name = "secure AS is_secure"
-                    break
-            
-            # Query cookies for the domain
-            sql = (
-                "select host_key, path, "
-                + secure_column_name
-                + ", expires_utc, name, value, encrypted_value "
-                "from cookies where host_key like ?"
-            )
-            
-            cookies = {}
-            for host_key in self._generate_host_keys(domain):
-                for db_row in conn.execute(sql, (host_key,)):
-                    row = dict(db_row)
-                    
-                    # Decrypt if necessary
-                    if not row["value"] and row["encrypted_value"][:3] in {b"v10", b"v11"}:
-                        row["value"] = self._chrome_decrypt(
-                            row["encrypted_value"],
-                            enc_key,
-                            config["init_vector"]
-                        )
-                    
-                    if row["value"]:
-                        if isinstance(row["name"], bytes):
-                            cookie_name = row["name"].decode('utf8')
-                        else:
-                            cookie_name = row["name"]
-                        
-                        if isinstance(row["value"], bytes):
-                            cookie_value = row["value"].decode('utf8')
-                        else:
-                            cookie_value = row["value"]
-                        
-                        cookies[cookie_name] = cookie_value
-            
-            conn.close()
-
-            if not cookies and not silent:
-                print(f"Warning: No cookies found for {domain}. Please ensure you are logged in to {domain} in Arc browser.")
-
-            return cookies
-            
-        except Exception as e:
-            raise ValueError(f"Failed to get Arc cookies for {domain}: {e}. Please ensure you are logged in to {domain} in Arc browser.")
+        return self._get_chromium_custom_cookies(
+            domain,
+            '~/Library/Application Support/Arc/User Data/Default/Cookies',
+            'Arc Safe Storage',
+            'Arc',
+            silent
+        )
     
     def _chrome_decrypt(self, encrypted_value: bytes, key: bytes, init_vector: bytes) -> str:
         """Decrypt Chrome/Chromium's encrypted cookies"""

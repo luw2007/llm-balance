@@ -29,7 +29,7 @@ class LLMBalanceCLI:
             platform: Specific platform(s) to check, comma-separated string or tuple (optional)
                      Examples: "deepseek", "deepseek,aliyun", or multiple --platform flags
             format: Output format (json, markdown, table, total)
-            browser: Browser to get cookies from (chrome, firefox, arc, brave, chromium)
+            browser: Browser to get cookies from (chrome, firefox, arc, brave, chromium, vivaldi)
             currency: Target currency for total (CNY, USD, EUR, etc.)
             sort: Sort order for results (name, balance, none)
                  - name: Sort alphabetically by platform name (default)
@@ -126,7 +126,7 @@ class LLMBalanceCLI:
             platform: Specific platform(s) to check, comma-separated string or tuple (optional)
                      Examples: "volcengine", "volcengine,zhipu", or multiple --platform flags
             format: Output format (json, markdown, table, total)
-            browser: Browser to get cookies from (chrome, firefox, arc, brave, chromium)
+            browser: Browser to get cookies from (chrome, firefox, arc, brave, chromium, vivaldi)
             currency: Target currency for total (CNY, USD, EUR, etc.)
             model: Filter by model name (optional)
                    Examples: "gpt-4", "doubao", "glm-4.5"
@@ -187,7 +187,7 @@ class LLMBalanceCLI:
             platform: Specific platform(s) to check, comma-separated string or tuple (optional)
                      Examples: "deepseek", "deepseek,aliyun", or multiple --platform flags
             format: Output format (json, markdown, table, total)
-            browser: Browser to get cookies from (chrome, firefox, arc, brave, chromium)
+            browser: Browser to get cookies from (chrome, firefox, arc, brave, chromium, vivaldi)
             currency: Target currency for total (CNY, USD, EUR, etc.)
         
         Returns:
@@ -358,12 +358,12 @@ class LLMBalanceCLI:
         Set global browser configuration for all platforms
         
         Args:
-            browser: Browser name (chrome, firefox, arc, brave, chromium)
+            browser: Browser name (chrome, firefox, arc, brave, chromium, vivaldi)
         
         Returns:
             Confirmation message
         """
-        valid_browsers = ['chrome', 'firefox', 'arc', 'brave', 'chromium']
+        valid_browsers = ['chrome', 'firefox', 'arc', 'brave', 'chromium', 'vivaldi']
         if browser not in valid_browsers:
             return f"Invalid browser '{browser}'. Valid options: {', '.join(valid_browsers)}"
         
