@@ -14,6 +14,8 @@ class ZhipuHandler(BasePlatformHandler):
         """Get default configuration for Zhipu AI platform"""
         return {
             "api_url": "https://bigmodel.cn/api/biz/customer/accountSet",
+            "official_url": "https://open.bigmodel.cn",
+            "api_management_url": "https://open.bigmodel.cn/console/apikey",
             "method": "GET",
             "auth_type": "cookie",
             "env_var": None,
@@ -23,6 +25,17 @@ class ZhipuHandler(BasePlatformHandler):
             },
             "params": {},
             "data": {},
+            "setup_steps": [
+                '访问 https://open.bigmodel.cn 并注册/登录',
+                '完成实名认证',
+                '在浏览器中保持登录状态',
+                '工具会自动读取cookie进行认证'
+            ],
+            "notes": [
+                '使用浏览器cookie认证',
+                '需要保持浏览器登录状态',
+                '支持GLM系列模型'
+            ],
             "enabled": True,
             "cookie_domain": ".bigmodel.cn"
         }

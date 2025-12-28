@@ -27,10 +27,14 @@ class PlatformConfig:
     
     # API configuration
     api_url: str = ""
+    official_url: str = ""
+    api_management_url: str = ""
     method: str = "GET"
     headers: Dict[str, Any] = field(default_factory=dict)
     params: Dict[str, Any] = field(default_factory=dict)
     data: Dict[str, Any] = field(default_factory=dict)
+    setup_steps: List[str] = field(default_factory=list)
+    notes: List[str] = field(default_factory=list)
 
     # Extended API URLs for platforms with multiple endpoints
     account_url: Optional[str] = None
@@ -89,6 +93,8 @@ class PlatformConfig:
             
         if self.api_url:
             result['api_url'] = self.api_url
+            result['official_url'] = self.official_url
+            result['api_management_url'] = self.api_management_url
             result['method'] = self.method
             
         if self.headers:
@@ -99,6 +105,12 @@ class PlatformConfig:
             
         if self.data:
             result['data'] = self.data
+
+        if self.setup_steps:
+            result['setup_steps'] = self.setup_steps
+
+        if self.notes:
+            result['notes'] = self.notes
 
         if self.group_id:
             result['group_id'] = self.group_id
@@ -173,54 +185,13 @@ class ConfigManager:
     
     def get_platform_config(self, platform_name: str) -> Optional[Dict[str, Any]]:
         """Get platform configuration directly from handler"""
-        from .platform_handlers import (
-            DeepSeekHandler, MoonshotHandler, VolcengineHandler,
-            AliyunHandler, TencentHandler, ZhipuHandler, SiliconFlowHandler,
-            OpenAIHandler, AnthropicHandler, GoogleHandler, FoxCodeHandler,
-            DuckCodingHandler, PackyCodeHandler, Handler88Code, Handler88996,
-            YourAPIHandler, CSMindAIHandler, YesCodeHandler, OneAPIHandler,
-            APIProxyHandler, FastGPTHandler, MiniMaxHandler, CubenceHandler,
-            AICodingHandler, DawClaudeCodeHandler, Magic666Handler, JimiaiHandler,
-            OpenClaudeCodeHandler, IKunCodeHandler
-        )
+        from .platform_handlers.registry import registry
 
-        handler_map = {
-            'deepseek': DeepSeekHandler,
-            'moonshot': MoonshotHandler,
-            'volcengine': VolcengineHandler,
-            'aliyun': AliyunHandler,
-            'tencent': TencentHandler,
-            'zhipu': ZhipuHandler,
-            'siliconflow': SiliconFlowHandler,
-            'openai': OpenAIHandler,
-            'anthropic': AnthropicHandler,
-            'google': GoogleHandler,
-            'foxcode': FoxCodeHandler,
-            'duckcoding': DuckCodingHandler,
-            'packycode': PackyCodeHandler,
-            '88code': Handler88Code,
-            '88996': Handler88996,
-            'yourapi': YourAPIHandler,
-            'csmindai': CSMindAIHandler,
-            'yescode': YesCodeHandler,
-            'oneapi': OneAPIHandler,
-            'apiproxy': APIProxyHandler,
-            'fastgpt': FastGPTHandler,
-            'minimax': MiniMaxHandler,
-            'cubence': CubenceHandler,
-            'aicoding': AICodingHandler,
-            'dawclaudecode': DawClaudeCodeHandler,
-            'magic666': Magic666Handler,
-            'jimiai': JimiaiHandler,
-            'openclaudecode': OpenClaudeCodeHandler,
-            'ikuncode': IKunCodeHandler,
-        }
-
-        if platform_name not in handler_map:
+        handler_class = registry.get_handler_class(platform_name)
+        if not handler_class:
             return None
 
         try:
-            handler_class = handler_map[platform_name]
             config = handler_class.get_default_config()
 
             # Apply user overrides (but preserve default enabled status)
@@ -252,9 +223,62 @@ class ConfigManager:
         with open(self.config_file, 'w', encoding='utf-8') as f:
             yaml.dump(config, f, default_flow_style=False, allow_unicode=True)
     
+    def get_platform(self, name: str) -> Optional[PlatformConfig]:
+        """Get platform configuration by name"""
+        config_dict = self.get_platform_config(name)
+        if config_dict is None:
+            return None
+        
+        # Convert dict to PlatformConfig
+        return PlatformConfig(
+            name=config_dict.get('name', name),
+            display_name=config_dict.get('display_name', name.title()),
+            handler_class=config_dict.get('handler_class', f'{name.title()}Handler'),
+            description=config_dict.get('description', f'{name.title()} platform'),
+            auth_type=config_dict.get('auth_type', 'api_key'),
+            enabled=config_dict.get('enabled', True),
+            **{k: v for k, v in config_dict.items() if k not in ['name', 'display_name', 'handler_class', 'description', 'auth_type', 'enabled', 'user_id']}
+        )
+
+    def update_platform(self, name: str, config: Dict[str, Any]):
+        """Update platform configuration"""
+        if name not in self.user_config:
+            self.user_config[name] = {}
+        self.user_config[name].update(config)
+        self.save_config()
+
+    def get_global_browser(self) -> str:
+        """Get global browser configuration"""
+        return self.global_config.get('browser', 'chrome')
+    
+    def set_global_browser(self, browser: str):
+        """Set global browser configuration"""
+        self.set_global_config('browser', browser)
+
+    def get_platform_info(self, name: str) -> Optional[Dict[str, Any]]:
+        """Get platform information"""
+        platform_config = self.get_platform(name)
+        if not platform_config:
+            return None
+        
+        return {
+            'name': platform_config.name,
+            'display_name': platform_config.display_name,
+            'description': platform_config.description,
+            'auth_type': platform_config.auth_type,
+            'env_var': platform_config.env_var,
+            'enabled': platform_config.enabled,
+            'config': platform_config.to_dict()
+        }
+
     def get_all_platforms(self) -> List[str]:
         """Get all available platform names"""
-        return ['deepseek', 'moonshot', 'volcengine', 'aliyun', 'tencent', 'zhipu', 'siliconflow', 'openai', 'anthropic', 'google', 'foxcode', 'duckcoding', 'packycode', '88code', '88996', 'yourapi', 'csmindai', 'yescode', 'oneapi', 'apiproxy', 'fastgpt', 'minimax', 'cubence', 'aicoding', 'dawclaudecode', 'magic666', 'jimiai', 'openclaudecode', 'ikuncode']
+        from .platform_handlers.registry import registry
+        return registry.list_platforms()
+
+    def list_platforms(self) -> List[str]:
+        """List all available platform names"""
+        return self.get_all_platforms()
     
     def get_enabled_platforms(self) -> List[PlatformConfig]:
         """Get enabled platform configurations"""
@@ -311,50 +335,9 @@ class ConfigManager:
         }
 
         # Get configurations from handlers
-        from .platform_handlers import (
-            DeepSeekHandler, MoonshotHandler, VolcengineHandler,
-            AliyunHandler, TencentHandler, ZhipuHandler, SiliconFlowHandler,
-            OpenAIHandler, AnthropicHandler, GoogleHandler, FoxCodeHandler,
-            DuckCodingHandler, PackyCodeHandler, Handler88Code, Handler88996,
-            YourAPIHandler, CSMindAIHandler, YesCodeHandler, OneAPIHandler,
-            APIProxyHandler, FastGPTHandler, MiniMaxHandler, CubenceHandler,
-            AICodingHandler, DawClaudeCodeHandler, Magic666Handler, JimiaiHandler,
-            OpenClaudeCodeHandler, IKunCodeHandler
-        )
+        from .platform_handlers.registry import registry
 
-        handler_map = {
-            'deepseek': DeepSeekHandler,
-            'moonshot': MoonshotHandler,
-            'volcengine': VolcengineHandler,
-            'aliyun': AliyunHandler,
-            'tencent': TencentHandler,
-            'zhipu': ZhipuHandler,
-            'siliconflow': SiliconFlowHandler,
-            'openai': OpenAIHandler,
-            'anthropic': AnthropicHandler,
-            'google': GoogleHandler,
-            'foxcode': FoxCodeHandler,
-            'duckcoding': DuckCodingHandler,
-            'packycode': PackyCodeHandler,
-            '88code': Handler88Code,
-            '88996': Handler88996,
-            'yourapi': YourAPIHandler,
-            'csmindai': CSMindAIHandler,
-            'yescode': YesCodeHandler,
-            'oneapi': OneAPIHandler,
-            'apiproxy': APIProxyHandler,
-            'fastgpt': FastGPTHandler,
-            'minimax': MiniMaxHandler,
-            'cubence': CubenceHandler,
-            'aicoding': AICodingHandler,
-            'dawclaudecode': DawClaudeCodeHandler,
-            'magic666': Magic666Handler,
-            'jimiai': JimiaiHandler,
-            'openclaudecode': OpenClaudeCodeHandler,
-            'ikuncode': IKunCodeHandler,
-        }
-
-        for name, handler_class in handler_map.items():
+        for name, handler_class in registry.get_all_handlers().items():
             try:
                 default_config = handler_class.get_default_config()
                 config['platforms'][name] = default_config

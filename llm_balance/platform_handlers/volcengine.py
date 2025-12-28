@@ -16,6 +16,8 @@ class VolcengineHandler(BasePlatformHandler):
         """Get default configuration for Volcengine platform"""
         return {
             "api_url": "https://billing.volcengineapi.com",
+            "official_url": "https://console.volcengine.com",
+            "api_management_url": "https://console.volcengine.com",
             "method": "GET",
             "auth_type": "sdk",
             "region": "cn-beijing",
@@ -25,6 +27,19 @@ class VolcengineHandler(BasePlatformHandler):
             },
             "params": {},
             "data": {},
+            "setup_steps": [
+                '访问 https://console.volcengine.com 并注册/登录',
+                '进入控制台后选择相应服务',
+                '在 "访问控制" 中创建 Access Key 和 Secret Key',
+                '设置环境变量:',
+                '  export VOLCENGINE_ACCESS_KEY="your_access_key"',
+                '  export VOLCENGINE_SECRET_KEY="your_secret_key"'
+            ],
+            "notes": [
+                '需要同时设置ACCESS_KEY和SECRET_KEY',
+                '企业级服务，稳定性高',
+                '支持多种AI模型'
+            ],
             "enabled": False,
             "cookie_domain": "console.volcengine.com"
         }

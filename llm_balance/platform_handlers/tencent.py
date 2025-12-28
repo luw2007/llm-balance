@@ -15,6 +15,8 @@ class TencentHandler(BasePlatformHandler):
         """Get default configuration for Tencent Cloud platform"""
         return {
             "api_url": "https://billing.tencentcloudapi.com/",
+            "official_url": "https://cloud.tencent.com",
+            "api_management_url": "https://console.cloud.tencent.com/cam/capi",
             "method": "GET",
             "auth_type": "sdk",
             "env_var": "TENCENT_SECRET_ID",
@@ -24,6 +26,18 @@ class TencentHandler(BasePlatformHandler):
             },
             "params": {},
             "data": {},
+            "setup_steps": [
+                '访问 https://console.cloud.tencent.com/cam/capi',
+                '使用腾讯云账号登录',
+                '创建子用户并授权',
+                '生成 SecretId 和 SecretKey',
+                '设置环境变量: export TENCENT_API_KEY="SecretId:SecretKey"'
+            ],
+            "notes": [
+                'API Key格式：SecretId:SecretKey',
+                '需要腾讯云账号',
+                '支持混元大模型'
+            ],
             "enabled": False,
             "cookie_domain": None,
             "region": "ap-beijing"

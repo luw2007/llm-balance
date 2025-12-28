@@ -197,7 +197,7 @@ class LLMBalanceCLI:
     
     def list(self) -> str:
         """List all available platforms"""
-        from .platform_configs import ConfigManager
+        from .config import ConfigManager
 
         config_manager = ConfigManager(self.config_file)
         platforms = config_manager.get_all_platforms()
@@ -215,7 +215,7 @@ class LLMBalanceCLI:
     
     def enable(self, platform: str) -> str:
         """Enable one or more platforms (comma-separated or multiple args)."""
-        from .platform_configs import ConfigManager
+        from .config import ConfigManager
         
         config_manager = ConfigManager(self.config_file)
         all_platforms = set(config_manager.get_all_platforms())
@@ -261,7 +261,7 @@ class LLMBalanceCLI:
     
     def disable(self, platform: str) -> str:
         """Disable one or more platforms (comma-separated or multiple args)."""
-        from .platform_configs import ConfigManager
+        from .config import ConfigManager
         
         config_manager = ConfigManager(self.config_file)
         all_platforms = set(config_manager.get_all_platforms())
@@ -313,7 +313,7 @@ class LLMBalanceCLI:
             key: Configuration key (optional)
             value: Configuration value (optional)
         """
-        from .platform_configs import ConfigManager
+        from .config import ConfigManager
 
         config_manager = ConfigManager(self.config_file)
         config = config_manager.get_platform_config(platform)
@@ -386,13 +386,18 @@ class LLMBalanceCLI:
         
         return result
     
+    def setup_guide(self) -> str:
+        """Show full setup guide for all platforms"""
+        from .error_handler import get_setup_guide
+        return get_setup_guide()
+    
         
     def doctor(self) -> str:
         """
         Run comprehensive diagnostics and health checks
         """
         import os
-        from .platform_configs import ConfigManager
+        from .config import ConfigManager
 
         result = "🔧 LLM Balance Checker 诊断报告\n"
         result += "=" * 50 + "\n\n"
@@ -419,20 +424,20 @@ class LLMBalanceCLI:
         # 检查浏览器
         result += f"\n📋 浏览器配置:\n"
         config_manager = ConfigManager(self.config_file)
-        browser = config_manager.get_global_config().get('browser', 'chrome')
+        browser = config_manager.get_global_browser()
         result += f"   当前浏览器: {browser}\n"
 
         # 检查平台注册
         result += f"\n📋 平台注册检查:\n"
         platforms = config_manager.get_all_platforms()
         result += f"   已注册平台数量: {len(platforms)}\n"
-        for name in platforms:
+        for name in sorted(platforms):
             result += f"   • {name}\n"
 
         # 系统状态
         result += f"\n📋 系统状态:\n"
-        result += f"   系统运行正常\n"
-        result += f"   配置文件可访问\n"
+        result += "   系统运行正常\n"
+        result += "   配置文件可访问\n"
 
         # 网络连接测试
         result += f"\n📋 网络连接测试:\n"
@@ -452,7 +457,7 @@ class LLMBalanceCLI:
         Returns:
             Generation result
         """
-        from .platform_configs import ConfigManager
+        from .config import ConfigManager
 
         try:
             config_manager = ConfigManager(self.config_file)

@@ -119,20 +119,7 @@ class BalanceChecker:
             return None
 
         try:
-            # Convert dict config to PlatformConfig if needed
-            if isinstance(platform_config, dict):
-                platform_config = PlatformConfig(
-                    name=platform_name,
-                    display_name=platform_config.get('display_name', platform_name.title()),
-                    handler_class=platform_config.get('handler_class', f'{platform_name.title()}Handler'),
-                    description=platform_config.get('description', f'{platform_name.title()} platform'),
-                    auth_type=platform_config.get('auth_type', 'api_key'),
-                    enabled=platform_config.get('enabled', True),
-                    show_cost=platform_config.get('show_cost', True),
-                    show_package=platform_config.get('show_package', True),
-                    **{k: v for k, v in platform_config.items() if k not in ['name', 'display_name', 'handler_class', 'description', 'auth_type', 'enabled', 'show_cost', 'show_package']}
-                )
-
+            # self.config_manager.get_platform already returns PlatformConfig
             handler = self._get_handler(platform_config)
             return handler.get_balance()
         except Exception as e:

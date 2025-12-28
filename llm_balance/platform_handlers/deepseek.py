@@ -15,6 +15,8 @@ class DeepSeekHandler(BasePlatformHandler):
         """Get default configuration for DeepSeek platform"""
         return {
             "api_url": "https://api.deepseek.com/v1/user/balance",
+            "official_url": "https://platform.deepseek.com",
+            "api_management_url": "https://platform.deepseek.com/api_keys",
             "method": "GET",
             "auth_type": "bearer_token",
             "env_var": "DEEPSEEK_API_KEY",
@@ -25,6 +27,18 @@ class DeepSeekHandler(BasePlatformHandler):
             },
             "params": {},
             "data": {},
+            "setup_steps": [
+                '访问 https://platform.deepseek.com 并注册/登录',
+                '进入 "API Keys" 页面',
+                '点击 "Create API Key" 创建新的API Key',
+                '复制生成的API Key（格式：sk-xxxxxxxx）',
+                '设置环境变量: export DEEPSEEK_API_KEY="your_api_key"'
+            ],
+            "notes": [
+                'API Key以 sk- 开头',
+                '免费额度有限，超额需要付费',
+                '支持多种模型：DeepSeek-V2, DeepSeek-Coder等'
+            ],
             "enabled": True
         }
     

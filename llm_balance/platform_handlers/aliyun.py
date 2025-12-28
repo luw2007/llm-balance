@@ -26,6 +26,8 @@ class AliyunHandler(BasePlatformHandler):
         """Get default configuration for Aliyun platform"""
         return {
             "api_url": "https://business.aliyuncs.com",
+            "official_url": "https://account.aliyun.com",
+            "api_management_url": "https://ram.console.aliyun.com/manage/ak",
             "method": "POST",
             "auth_type": "sdk",
             "env_var": "ALIYUN_ACCESS_KEY_ID",
@@ -36,6 +38,20 @@ class AliyunHandler(BasePlatformHandler):
             },
             "params": {},
             "data": {},
+            "setup_steps": [
+                '访问 https://ram.console.aliyun.com/manage/ak',
+                '使用阿里云账号登录',
+                '创建用户并授权',
+                '生成 AccessKey ID 和 AccessKey Secret',
+                '设置环境变量:',
+                '  export ALIYUN_ACCESS_KEY_ID="your_access_key_id"',
+                '  export ALIYUN_ACCESS_KEY_SECRET="your_access_key_secret"'
+            ],
+            "notes": [
+                '需要同时设置ACCESS_KEY_ID和ACCESS_KEY_SECRET',
+                '使用阿里云官方SDK',
+                '支持多种云服务'
+            ],
             "enabled": False,
             "cookie_domain": None,
             "region": "cn-hangzhou"

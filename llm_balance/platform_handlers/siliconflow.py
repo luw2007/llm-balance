@@ -15,6 +15,8 @@ class SiliconFlowHandler(BasePlatformHandler):
         """Get default configuration for SiliconFlow platform"""
         return {
             "api_url": "https://api.siliconflow.cn/v1/user/info",
+            "official_url": "https://cloud.siliconflow.cn",
+            "api_management_url": "https://cloud.siliconflow.cn/account/ak",
             "method": "GET",
             "auth_type": "bearer_token",
             "env_var": "SILICONFLOW_API_KEY",
@@ -24,6 +26,17 @@ class SiliconFlowHandler(BasePlatformHandler):
             },
             "params": {},
             "data": {},
+            "setup_steps": [
+                '访问 https://cloud.siliconflow.cn 并注册/登录',
+                '进入 "账号管理" → "API密钥"',
+                '创建新的 API Key',
+                '设置环境变量: export SILICONFLOW_API_KEY="your_api_key"'
+            ],
+            "notes": [
+                '提供多种主流开源模型的托管服务',
+                '新用户通常有免费额度',
+                '支持 OpenAI 兼容接口'
+            ],
             "enabled": False,
             "cookie_domain": "cloud.siliconflow.cn"
         }

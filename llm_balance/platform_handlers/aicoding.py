@@ -2,14 +2,14 @@
 AICoding platform handler
 """
 
-import os
-from typing import Dict, Any, Optional
-from .base import BasePlatformHandler, CostInfo, ModelTokenInfo, PlatformTokenInfo
+from typing import Dict, Any, Optional, List
+from .relay import RelayPlatformHandler, CostInfo, PlatformTokenInfo, ModelTokenInfo
 from ..config import PlatformConfig
 
-
-class AICodingHandler(BasePlatformHandler):
+class AICodingHandler(RelayPlatformHandler):
     """AICoding platform cost handler"""
+
+    user_id_header = None # No user id header needed
 
     @classmethod
     def get_default_config(cls) -> dict:
@@ -38,94 +38,30 @@ class AICodingHandler(BasePlatformHandler):
             "description": "AICoding AI platform"
         }
 
-    def __init__(self, config, browser: str = 'chrome'):
-        super().__init__(browser)
-        self.config = config
-
-    def get_balance(self) -> CostInfo:
-        """Get cost information from AICoding"""
-        api_url = self.config.get('api_url') if isinstance(self.config, dict) else self.config.api_url
-        if not api_url:
-            raise ValueError("No API URL configured for AICoding")
-
-        # Prepare headers
-        headers = self.config.headers.copy() if hasattr(self.config, 'headers') else self.config.get('headers', {}).copy()
-
-        # Get cookies from browser
-        cookie_domain = getattr(self.config, 'cookie_domain', 'aicoding.sh')
-        cookies = self._get_cookies(cookie_domain)
-
-        # Make API request
-        response = self._make_request(
-            url=api_url,
-            method='GET',
-            headers=headers,
-            cookies=cookies
-        )
-
-        if not response:
-            raise ValueError("No response from AICoding API")
-
-        # Extract balance from response
-        balance = self._extract_balance(response)
-        currency = 'CNY'
-
-        # Calculate spent amount (not available from this API)
-        spent = "-"
-
-        return CostInfo(
-            platform=self.get_platform_name(),
-            balance=balance or 0.0,
-            currency=currency,
-            spent=spent,
-            spent_currency=currency,
-            raw_data=response
-        )
-
     def get_platform_name(self) -> str:
         """Get platform display name"""
         return "AICoding"
 
-    def _extract_balance(self, response: Dict[str, Any]) -> Optional[float]:
-        """Extract balance from AICoding API response
+    def get_balance(self) -> CostInfo:
+        """Get cost information from AICoding"""
+        response = self._make_relay_request()
+        
+        # Balance calculation: personal_credits / 100 = CNY
+        personal_credits = float(response.get('personal_credits', 0))
+        balance = personal_credits / 100.0
 
-        Expected response format:
-        {
-            "personal_credits": 1234,
-            ...
-        }
-
-        Balance calculation: personal_credits / 100 = CNY
-        """
-        try:
-            personal_credits = response.get('personal_credits', 0)
-            return float(personal_credits) / 100
-
-        except (ValueError, TypeError, KeyError) as e:
-            print(f"Warning: Failed to extract balance from AICoding response: {e}")
-            return None
+        return CostInfo(
+            platform=self.get_platform_name(),
+            balance=self._validate_balance(balance),
+            currency='CNY',
+            spent="-",
+            spent_currency='CNY',
+            raw_data=response
+        )
 
     def get_model_tokens(self) -> PlatformTokenInfo:
         """Get credits-based token information from AICoding"""
-        api_url = self.config.get('api_url') if isinstance(self.config, dict) else self.config.api_url
-        if not api_url:
-            raise ValueError("No API URL configured for AICoding")
-
-        headers = self.config.headers.copy() if hasattr(self.config, 'headers') else self.config.get('headers', {}).copy()
-
-        cookie_domain = getattr(self.config, 'cookie_domain', 'aicoding.sh')
-        cookies = self._get_cookies(cookie_domain)
-
-        response = self._make_request(
-            url=api_url,
-            method='GET',
-            headers=headers,
-            cookies=cookies
-        )
-
-        if not response:
-            raise ValueError("No response from AICoding API")
-
+        response = self._make_relay_request()
         personal_credits = float(response.get('personal_credits', 0))
 
         models = [

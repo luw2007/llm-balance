@@ -2,14 +2,16 @@
 OpenClaudeCode platform handler
 """
 
-import os
-from typing import Dict, Any, Optional
-from .base import BasePlatformHandler, CostInfo, ModelTokenInfo, PlatformTokenInfo
+from typing import Dict, Any, Optional, List
+from .relay import RelayPlatformHandler, CostInfo, PlatformTokenInfo, ModelTokenInfo
 from ..config import PlatformConfig
 
-
-class OpenClaudeCodeHandler(BasePlatformHandler):
+class OpenClaudeCodeHandler(RelayPlatformHandler):
     """OpenClaudeCode platform cost handler"""
+
+    platform_id = 'OPENCLAUDECODE'
+    user_id_header = 'new-api-user'
+    quota_scaling = 500000.0
 
     @classmethod
     def get_default_config(cls) -> dict:
@@ -39,173 +41,20 @@ class OpenClaudeCodeHandler(BasePlatformHandler):
             "description": "OpenClaudeCode AI platform"
         }
 
-    def __init__(self, config, browser: str = 'chrome'):
-        super().__init__(browser)
-        self.config = config
-        self._load_env_config()
-
-    def _load_env_config(self):
-        """Load configuration from environment variables or separate config file."""
-        # Try environment variable first
-        env_user_id = os.getenv('OPENCLAUDECODE_API_USER_ID')
-        if env_user_id:
-            self.config.api_user_id = env_user_id
-            return
-
-        # Try separate config file
-        import yaml
-        from pathlib import Path
-        config_path = Path.home() / '.llm_balance' / 'openclaudecode_config.yaml'
-        if config_path.exists():
-            try:
-                with open(config_path, 'r', encoding='utf-8') as f:
-                    platform_config = yaml.safe_load(f) or {}
-                    if 'api_user_id' in platform_config:
-                        self.config.api_user_id = platform_config['api_user_id']
-            except Exception:
-                pass
-
-    def get_balance(self) -> CostInfo:
-        """Get cost information from OpenClaudeCode"""
-        api_url = self.config.get('api_url') if isinstance(self.config, dict) else self.config.api_url
-        if not api_url:
-            raise ValueError("No API URL configured for OpenClaudeCode")
-
-        # Get api_user_id from configuration
-        api_user_id = getattr(self.config, 'api_user_id', None)
-        if not api_user_id:
-            raise ValueError(
-                "OpenClaudeCode api_user_id required. Please set it using one of the following methods:\n"
-                "1. Environment variable: export OPENCLAUDECODE_API_USER_ID='your_user_id'\n"
-                "2. Config file: llm-balance platform_config openclaudecode api_user_id 'your_user_id'\n"
-                "3. Or create ~/.llm_balance/openclaudecode_config.yaml with:\n"
-                "   api_user_id: your_user_id"
-            )
-
-        # Prepare headers
-        headers = self.config.headers.copy() if hasattr(self.config, 'headers') else self.config.get('headers', {}).copy()
-        headers['new-api-user'] = str(api_user_id)
-
-        # Get cookies from browser
-        cookie_domain = getattr(self.config, 'cookie_domain', 'openclaudecode.cn')
-        cookies = self._get_cookies(cookie_domain)
-
-        # Make API request
-        method = self.config.method if hasattr(self.config, 'method') else self.config.get('method', 'GET')
-        params = self.config.params if hasattr(self.config, 'params') else self.config.get('params', {})
-        data = self.config.data if hasattr(self.config, 'data') else self.config.get('data', {})
-
-        response = self._make_request(
-            url=api_url,
-            method=method,
-            headers=headers,
-            cookies=cookies,
-            params=params,
-            data=data
-        )
-
-        if not response:
-            raise ValueError("No response from OpenClaudeCode API")
-
-        # Extract balance and currency from response
-        balance = self._extract_balance(response)
-        currency = 'CNY'
-
-        # Calculate spent amount
-        spent = self._calculate_spent_amount(response)
-
-        return CostInfo(
-            platform=self.get_platform_name(),
-            balance=balance or 0.0,
-            currency=currency,
-            spent=spent,
-            spent_currency=currency,
-            raw_data=response
-        )
-
     def get_platform_name(self) -> str:
         """Get platform display name"""
         return "OpenClaudeCode"
 
-    def _extract_balance(self, response: Dict[str, Any]) -> Optional[float]:
-        """Extract balance from OpenClaudeCode API response
-
-        Expected response format:
-        {
-            "data": {
-                "quota": 5000000,
-                "used_quota": 0,
-                ...
-            },
-            "success": true
-        }
-
-        Balance calculation: quota / 500000 = CNY
-        Note: quota is in tokens, 500000 tokens = 1 CNY
-        """
-        try:
-            if 'data' in response:
-                data = response['data']
-                quota = float(data.get('quota', 0))
-                return quota / 500000
-
-            return None
-
-        except (ValueError, TypeError, KeyError) as e:
-            print(f"Warning: Failed to extract balance from OpenClaudeCode response: {e}")
-            return None
-
-    def _calculate_spent_amount(self, response: Dict[str, Any]) -> float:
-        """Calculate spent amount from OpenClaudeCode API response
-
-        Spent calculation: used_quota / 500000 = CNY
-        Note: used_quota is in tokens, 500000 tokens = 1 CNY
-        """
-        try:
-            if 'data' in response:
-                data = response['data']
-                used_quota = float(data.get('used_quota', 0))
-                return used_quota / 500000
-
-            return "-"
-
-        except (ValueError, TypeError, KeyError):
-            return "-"
-
     def get_model_tokens(self) -> PlatformTokenInfo:
-        """Get quota-based token information from OpenClaudeCode
+        """Get quota-based token information from OpenClaudeCode"""
+        response = self._make_relay_request()
 
-        Returns quota info as a single model entry showing total/used/remaining.
-        """
-        api_url = self.config.get('api_url') if isinstance(self.config, dict) else self.config.api_url
-        if not api_url:
-            raise ValueError("No API URL configured for OpenClaudeCode")
-
-        api_user_id = getattr(self.config, 'api_user_id', None)
-        if not api_user_id:
-            raise ValueError("OpenClaudeCode api_user_id required")
-
-        headers = self.config.headers.copy() if hasattr(self.config, 'headers') else self.config.get('headers', {}).copy()
-        headers['new-api-user'] = str(api_user_id)
-
-        cookie_domain = getattr(self.config, 'cookie_domain', 'openclaudecode.cn')
-        cookies = self._get_cookies(cookie_domain)
-
-        response = self._make_request(
-            url=api_url,
-            method='GET',
-            headers=headers,
-            cookies=cookies
-        )
-
-        if not response or 'data' not in response:
-            raise ValueError("No response from OpenClaudeCode API")
-
-        data = response['data']
+        data = response.get('data', {})
         quota = float(data.get('quota', 0))
+        bonus_quota = float(data.get('bonus_quota', 0))
         used_quota = float(data.get('used_quota', 0))
 
-        total_tokens = quota
+        total_tokens = quota + bonus_quota
         remaining_tokens = total_tokens - used_quota
 
         models = [

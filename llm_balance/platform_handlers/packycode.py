@@ -1,247 +1,79 @@
 """
-PackyCode third-party relay handler (balance query only)
+PackyCode third-party relay handler
 """
 
-import os
 from typing import Dict, Any, Optional, List
-from .base import BasePlatformHandler, PlatformTokenInfo, ModelTokenInfo, CostInfo
+from .relay import RelayPlatformHandler, CostInfo, PlatformTokenInfo, ModelTokenInfo
 from ..config import PlatformConfig
 
+class PackyCodeHandler(RelayPlatformHandler):
+    """PackyCode relay platform handler."""
 
-class PackyCodeHandler(BasePlatformHandler):
-    """PackyCode relay platform handler (only balance query is implemented)."""
+    platform_id = 'PACKYCODE'
+    user_id_header = 'new-api-user'
+    quota_scaling = 500000.0
 
     @classmethod
     def get_default_config(cls) -> dict:
-        """Default configuration for PackyCode balance query via cookie auth."""
+        """Default configuration for PackyCode."""
         return {
             "display_name": "PackyCode",
             "handler_class": "PackyCodeHandler",
-            "description": "PackyCode relay (balance only)",
+            "description": "PackyCode relay (balance and package)",
             "api_url": "https://packyapi.com/api/user/self",
+            "official_url": "https://www.packyapi.com",
+            "api_management_url": "https://www.packyapi.com/console/topup",
             "method": "GET",
             "auth_type": "cookie",
-            "env_var": None,
+            "env_var": "PACKYCODE_API_USER_ID",
             "headers": {
                 "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
                 "Accept": "application/json"
             },
             "params": {},
             "data": {},
-            # Keep disabled by default to avoid affecting default cost runs
+            "setup_steps": [
+                '访问 https://www.packyapi.com 并登录',
+                '进入 "控制台" → "充值" 页面获取 api_user_id',
+                '或者查看页面请求头中的 new-api-user 字段',
+                '在浏览器中保持登录状态',
+                '设置环境变量: export PACKYCODE_API_USER_ID="your_user_id"'
+            ],
+            "notes": [
+                '使用浏览器cookie认证',
+                '需要设置 PACKYCODE_API_USER_ID 环境变量',
+                '工具会自动读取浏览器中的 packyapi.com 相关的 cookie'
+            ],
             "enabled": False,
-            # Cookie domain where auth_token is stored
             "cookie_domain": "packyapi.com",
-            # Note: api_user_id is now loaded from environment variables or separate config
         }
-
-    def __init__(self, config: PlatformConfig, browser: str = 'chrome'):
-        super().__init__(browser)
-        self.config = config
-        # Load platform-specific configuration from environment variables
-        self._load_env_config()
-
-    def _load_env_config(self):
-        """Load configuration from environment variables or separate config file."""
-        # Try environment variable first
-        env_user_id = os.getenv('PACKYCODE_API_USER_ID')
-        if env_user_id:
-            self.config.api_user_id = env_user_id
-            return
-
-        # Try separate config file
-        import yaml
-        from pathlib import Path
-        config_path = Path.home() / '.llm_balance' / 'packycode_config.yaml'
-        if config_path.exists():
-            try:
-                with open(config_path, 'r', encoding='utf-8') as f:
-                    packy_config = yaml.safe_load(f) or {}
-                    if 'api_user_id' in packy_config:
-                        self.config.api_user_id = packy_config['api_user_id']
-            except Exception:
-                pass
 
     def get_platform_name(self) -> str:
         return "PackyCode"
 
-    def get_balance(self) -> CostInfo:
-        """Return cost info using quota balance and used quota from user info.
-
-        - Balance = data.quota / 500000 (CNY)
-        - Spent = data.used_quota / 500000 (CNY)
-        """
-        if not getattr(self.config, 'api_url', None):
-            raise ValueError("No API URL configured for PackyCode")
-
-        headers = (self.config.headers or {}).copy()
-
-        # Acquire cookies and auth token
-        cookies = {}
-        domains_to_try = []
-        if getattr(self.config, 'cookie_domain', None):
-            domains_to_try.append(self.config.cookie_domain)
-        for d in ["www.packyapi.com", ".packyapi.com", "packyapi.com"]:
-            if d not in domains_to_try:
-                domains_to_try.append(d)
-
-        for domain in domains_to_try:
-            try:
-                cookies = self._get_cookies(domain)
-                if cookies:
-                    break
-            except Exception:
-                continue
-
-        if not cookies:
-            raise ValueError(
-                f"No authentication cookies found for PackyCode. Please ensure you are logged in to {domains_to_try[0]} in {self.browser} browser."
-            )
-
-        # Get api_user_id from config (loaded from env var or separate config file)
-        api_user_id = getattr(self.config, 'api_user_id', None)
-        if not api_user_id:
-            raise ValueError(
-                "PackyCode requires api_user_id to be configured. Please set it using:\n"
-                "1. Environment variable: export PACKYCODE_API_USER_ID=YOUR_USER_ID\n"
-                "2. Separate config file: ~/.llm_balance/packycode_config.yaml\n"
-                "   api_user_id: YOUR_USER_ID"
-            )
-
-        # Set required headers
-        headers["new-api-user"] = str(api_user_id)
-        if "session" in cookies:
-            headers["Cookie"] = f'session={cookies["session"]}'
-
-        # Make the API request
-        response = self._make_request(
-            url=self.config.api_url,
-            method=self.config.method,
-            headers=headers,
-            cookies=cookies
-        )
-
-        if not response:
-            raise ValueError("No response from PackyCode user API")
-
-        # Extract balance and spent from quota data
-        balance = 0.0
-        spent = 0.0
-        try:
-            data = response.get('data', {}) if isinstance(response, dict) else {}
-            quota = data.get('quota', 0)
-            used_quota = data.get('used_quota', 0)
-            if quota is not None:
-                balance = float(quota) / 500000.0
-            if used_quota is not None:
-                spent = float(used_quota) / 500000.0
-        except Exception:
-            balance = 0.0
-            spent = 0.0
-
-        return CostInfo(
-            platform=self.get_platform_name(),
-            balance=balance,
-            currency='CNY',
-            spent=spent,
-            spent_currency='CNY',
-            raw_data=response
-        )
-
     def get_model_tokens(self) -> PlatformTokenInfo:
-        """Query PackyCode user info and create usage package from quota data.
-
-        Authentication:
-            - Use cookies from packyapi.com domain
-            - Use new-api-user header with api_user_id
-
-        Data source:
-            - GET https://packyapi.com/api/user/self
-            - Use data.quota and data.used_quota from response
-
-        Models:
-            - Generic model name: "claude,codex"
-            - Package name: "PackyCode 按量计费"
-        """
-        if not getattr(self.config, 'api_url', None):
-            raise ValueError("No API URL configured for PackyCode")
-
-        headers = (self.config.headers or {}).copy()
-
-        # Acquire cookies from the configured domain
-        cookies = {}
-        domains_to_try = []
-        if getattr(self.config, 'cookie_domain', None):
-            domains_to_try.append(self.config.cookie_domain)
-        for d in ["www.packyapi.com", ".packyapi.com", "packyapi.com"]:
-            if d not in domains_to_try:
-                domains_to_try.append(d)
-
-        for domain in domains_to_try:
-            try:
-                cookies = self._get_cookies(domain)
-                if cookies:
-                    break
-            except Exception:
-                continue
-
-        if not cookies:
-            raise ValueError(
-                f"No authentication cookies found for PackyCode. Please ensure you are logged in to {domains_to_try[0]} in {self.browser} browser."
-            )
-
-        # Get api_user_id from config (loaded from env var or separate config file)
-        api_user_id = getattr(self.config, 'api_user_id', None)
-        if not api_user_id:
-            raise ValueError(
-                "PackyCode requires api_user_id to be configured. Please set it using:\n"
-                "1. Environment variable: export PACKYCODE_API_USER_ID=YOUR_USER_ID\n"
-                "2. Separate config file: ~/.llm_balance/packycode_config.yaml\n"
-                "   api_user_id: YOUR_USER_ID"
-            )
-
-        # Set required headers
-        headers["new-api-user"] = str(api_user_id)
-        if "session" in cookies:
-            headers["Cookie"] = f'session={cookies["session"]}'
-
-        # Make the user info request
-        response = self._make_request(
-            url=self.config.api_url,
-            method=self.config.method,
-            headers=headers,
-            cookies=cookies
-        )
-
-        if not response:
-            raise ValueError("No response from PackyCode user API")
+        """Query PackyCode user info and create usage package from quota data."""
+        response = self._make_relay_request()
 
         # Extract quota information
         total_quota = 0.0
         used_quota = 0.0
         try:
-            data = response.get('data', {}) if isinstance(response, dict) else {}
-            quota = data.get('quota', 0)
-            used_quota_data = data.get('used_quota', 0)
-            if quota is not None:
-                total_quota = float(quota)
-            if used_quota_data is not None:
-                used_quota = float(used_quota_data)
+            data = response.get('data', {})
+            total_quota = float(data.get('quota', 0))
+            used_quota = float(data.get('used_quota', 0))
         except Exception:
-            total_quota = 0.0
-            used_quota = 0.0
+            pass
 
-        # Calculate remaining quota
         remaining_quota = max(0.0, total_quota - used_quota)
 
-        # Create model info
         model_info = ModelTokenInfo(
             model="claude,codex",
             package="PackyCode 按量计费",
             remaining_tokens=remaining_quota,
             used_tokens=used_quota,
             total_tokens=total_quota,
-            status="active"  # PackyCode packages are always active when returned
+            status="active"
         )
 
         return PlatformTokenInfo(

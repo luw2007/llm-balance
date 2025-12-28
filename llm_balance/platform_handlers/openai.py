@@ -16,6 +16,8 @@ class OpenAIHandler(BasePlatformHandler):
         """Get default configuration for OpenAI platform"""
         return {
             "api_url": "https://api.openai.com/v1/organization/costs",
+            "official_url": "https://platform.openai.com",
+            "api_management_url": "https://platform.openai.com/api-keys",
             "method": "GET",
             "auth_type": "bearer_token",
             "env_var": "OPENAI_ADMIN_KEY",  # Use Admin Key for organization-level access
@@ -29,6 +31,17 @@ class OpenAIHandler(BasePlatformHandler):
                 "limit": 1
             },
             "data": {},
+            "setup_steps": [
+                '访问 https://platform.openai.com 并注册/登录',
+                '进入 "Settings" → "API Keys"',
+                '创建具有充分权限的 API Key',
+                '设置环境变量: export OPENAI_ADMIN_KEY="your_api_key"'
+            ],
+            "notes": [
+                '需要使用具有组织级访问权限的 Admin Key',
+                '支持 GPT-4o, GPT-4-turbo 等模型',
+                '费用显示通常有一定延迟'
+            ],
             "enabled": False
         }
     

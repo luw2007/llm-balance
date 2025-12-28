@@ -15,6 +15,8 @@ class MoonshotHandler(BasePlatformHandler):
         """Get default configuration for Moonshot platform"""
         return {
             "api_url": "https://api.moonshot.cn/v1/users/me/balance",
+            "official_url": "https://www.kimi.com",
+            "api_management_url": "https://www.kimi.com/settings/apikeys",
             "method": "GET",
             "auth_type": "bearer_token",
             "env_var": "MOONSHOT_API_KEY",
@@ -27,6 +29,17 @@ class MoonshotHandler(BasePlatformHandler):
             },
             "params": {},
             "data": {},
+            "setup_steps": [
+                '访问 https://www.kimi.com 并注册/登录',
+                '进入 "设置" → "API Keys"',
+                '点击 "创建新的API Key"',
+                '复制API Key并设置环境变量: export MOONSHOT_API_KEY="your_api_key"'
+            ],
+            "notes": [
+                'API Key以 sk- 开头',
+                '有免费试用额度',
+                '支持长文本处理'
+            ],
             "enabled": True
         }
     
