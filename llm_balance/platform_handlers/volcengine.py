@@ -5,7 +5,7 @@ Volcengine platform handler
 import os
 from typing import Dict, Any, Optional, List
 from datetime import datetime, date, timedelta
-from .base import BasePlatformHandler, CostInfo, PlatformTokenInfo, ModelTokenInfo
+from .base import BasePlatformHandler, CostInfo, PlatformTokenInfo, ModelTokenInfo, CodingPlanInfo, CodingPlanQuota
 from ..config import PlatformConfig
 
 class VolcengineHandler(BasePlatformHandler):
@@ -38,7 +38,9 @@ class VolcengineHandler(BasePlatformHandler):
             "notes": [
                 '需要同时设置ACCESS_KEY和SECRET_KEY',
                 '企业级服务，稳定性高',
-                '支持多种AI模型'
+                '支持多种AI模型',
+                '支持火山方舟 Coding Plan 资源包',
+                'Coding Plan 额度通过 ListResourcePackages 接口查询'
             ],
             "enabled": False,
             "cookie_domain": "console.volcengine.com"
@@ -247,6 +249,104 @@ class VolcengineHandler(BasePlatformHandler):
                 return self._get_model_tokens_with_cookies()
         else:
             return self._get_model_tokens_with_cookies()
+    
+    def get_coding_plan(self) -> CodingPlanInfo:
+        """Get coding plan information from Volcengine using GetCodingPlanUsage API
+        
+        Supports authentication via:
+        1. Environment variable VOLCENGINE_COOKIES (cookie string from browser)
+        2. Browser cookies (via pycookiecheat)
+        """
+        try:
+            import requests
+            import re
+            import json as json_module
+            
+            cookies = {}
+            csrf_token = None
+            
+            env_cookies = os.getenv('VOLCENGINE_COOKIES')
+            if env_cookies:
+                for item in env_cookies.split(';'):
+                    item = item.strip()
+                    if '=' in item:
+                        key, value = item.split('=', 1)
+                        cookies[key.strip()] = value.strip()
+                csrf_token = cookies.get('csrfToken')
+            
+            if not cookies:
+                cookies = self._get_cookies(self.config.cookie_domain)
+            
+            if not cookies:
+                raise ValueError("No authentication cookies found. Set VOLCENGINE_COOKIES env var or login in browser.")
+            
+            if not csrf_token:
+                csrf_token = cookies.get('csrfToken')
+            
+            if not csrf_token:
+                raise ValueError("Failed to get CSRF token for Volcengine. Please re-login in browser.")
+            
+            session = requests.Session()
+            for key, value in cookies.items():
+                session.cookies.set(key, value)
+            
+            referer_url = "https://console.volcengine.com/ark/region:ark+cn-beijing/openManagement/codingPlan"
+            api_headers = {
+                "User-Agent": self.config.headers.get("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"),
+                "Accept": "application/json, text/plain, */*",
+                "Content-Type": "application/json",
+                "Origin": "https://console.volcengine.com",
+                "Referer": referer_url,
+                "X-CSRF-Token": csrf_token
+            }
+            
+            api_url = "https://console.volcengine.com/api/top/ark/cn-beijing/2024-01-01/GetCodingPlanUsage"
+            api_response = session.post(api_url, headers=api_headers, json={}, timeout=10)
+            
+            if api_response.status_code != 200:
+                raise ValueError(f"API request failed with status {api_response.status_code}")
+            
+            result = api_response.json()
+            
+            if 'ResponseMetadata' in result and 'Error' in result.get('ResponseMetadata', {}):
+                error = result['ResponseMetadata']['Error']
+                raise ValueError(f"API error: {error.get('Code', 'Unknown')} - {error.get('Message', 'Unknown error')}")
+            
+            data = result.get('Result', {})
+            quotas = []
+            
+            status = data.get('Status', 'Unknown')
+            update_timestamp = data.get('UpdateTimestamp', 0)
+            update_time = datetime.fromtimestamp(update_timestamp).strftime('%Y-%m-%d %H:%M:%S') if update_timestamp > 0 else None
+            
+            quota_usage_list = data.get('QuotaUsage', [])
+            for item in quota_usage_list:
+                level = item.get('Level', 'unknown')
+                percent = float(item.get('Percent', 0))
+                reset_timestamp = int(item.get('ResetTimestamp', -1))
+                
+                reset_time = None
+                if reset_timestamp > 0:
+                    reset_time = datetime.fromtimestamp(reset_timestamp).strftime('%Y-%m-%d %H:%M:%S')
+                
+                quota = CodingPlanQuota(
+                    level=level,
+                    percent=percent,
+                    reset_timestamp=reset_timestamp,
+                    reset_time=reset_time
+                )
+                quotas.append(quota)
+            
+            return CodingPlanInfo(
+                platform=self.get_platform_name(),
+                status=status,
+                quotas=quotas,
+                update_time=update_time,
+                raw_data=result
+            )
+            
+        except Exception as e:
+            raise ValueError(f"Failed to get coding plan info for Volcengine: {e}")
     
     def _get_model_tokens_with_sdk(self) -> PlatformTokenInfo:
         """Get model-level tokens using official Volcengine SDK with ListResourcePackages API"""

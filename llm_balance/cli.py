@@ -6,6 +6,7 @@ import fire
 from typing import Optional, List
 from .balance_checker import BalanceChecker
 from .token_checker import TokenChecker
+from .plan_checker import PlanChecker
 from .utils import ensure_config_dir, get_exchange_rates
 
 class LLMBalanceCLI:
@@ -175,6 +176,52 @@ class LLMBalanceCLI:
             tokens = checker.check_all_tokens(sort=sort)
 
         return checker.format_tokens(tokens, format, currency, model, show_all, show_expiry, show_reset, show_reset_time)
+
+    def plan(self, platform: Optional[str] = None,
+             format: str = 'table',
+             browser: Optional[str] = None,
+             sort: str = 'name') -> str:
+        """
+        Check coding plan limits for LLM platforms
+
+        Args:
+            platform: Specific platform(s) to check, comma-separated string or tuple (optional)
+                     Examples: "zhipu", "moonshot,volcengine", or multiple --platform flags
+            format: Output format (json, table)
+            browser: Browser to get cookies from (chrome, firefox, arc, brave, chromium, vivaldi)
+            sort: Sort order for results (name, none)
+                 - name: Sort alphabetically by platform name (default)
+                 - none: Keep the order as results complete
+
+        Returns:
+            Formatted coding plan information
+        """
+        browser = browser or self.browser
+        checker = PlanChecker(self.config_file, browser)
+
+        if platform:
+            if isinstance(platform, tuple):
+                platforms = [p.strip() for p in platform if p.strip()]
+            elif isinstance(platform, str):
+                platforms = [p.strip() for p in platform.split(',') if p.strip()]
+            else:
+                platforms = [str(platform).strip()] if str(platform).strip() else []
+
+            if not platforms:
+                return "No valid platforms specified"
+
+            plans = []
+            for p in platforms:
+                plan_info = checker.check_platform_plan(p)
+                if plan_info:
+                    plans.append(plan_info)
+            
+            if not plans:
+                return "No coding plan data available"
+        else:
+            plans = checker.check_all_plans(sort=sort)
+
+        return checker.format_plans(plans, format)
 
     def check(self, platform: Optional[str] = None, 
               format: str = 'table', 
@@ -404,7 +451,7 @@ class LLMBalanceCLI:
 
         # 检查环境变量
         result += "📋 环境变量检查:\n"
-        env_vars = ['DEEPSEEK_API_KEY', 'MOONSHOT_API_KEY', 'VOLCENGINE_ACCESS_KEY', 'ALIYUN_ACCESS_KEY_ID']
+        env_vars = ['DEEPSEEK_API_KEY', 'MOONSHOT_API_KEY', 'VOLCENGINE_ACCESS_KEY', 'ALIYUN_ACCESS_KEY_ID', 'ZHIPU_API_KEY']
         missing_vars = [var for var in env_vars if not os.getenv(var)]
         if missing_vars:
             result += "❌ 缺失的环境变量:\n"

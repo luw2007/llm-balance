@@ -3,7 +3,7 @@ Zhipu AI (智谱AI) platform handler
 """
 
 from typing import Dict, Any, Optional, List
-from .base import BasePlatformHandler, CostInfo, PlatformTokenInfo, ModelTokenInfo
+from .base import BasePlatformHandler, CostInfo, PlatformTokenInfo, ModelTokenInfo, CodingPlanInfo, CodingPlanQuota
 from ..config import PlatformConfig
 
 class ZhipuHandler(BasePlatformHandler):
@@ -34,7 +34,9 @@ class ZhipuHandler(BasePlatformHandler):
             "notes": [
                 '使用浏览器cookie认证',
                 '需要保持浏览器登录状态',
-                '支持GLM系列模型'
+                '支持GLM系列模型',
+                '支持 Coding Plan (Claude Code 兼容模式)',
+                'Coding Plan 额度通过 ZHIPU_API_KEY 或浏览器登录查询'
             ],
             "enabled": True,
             "cookie_domain": ".bigmodel.cn"
@@ -160,6 +162,73 @@ class ZhipuHandler(BasePlatformHandler):
         return PlatformTokenInfo(
             platform=self.get_platform_name(),
             models=models,
+            raw_data=response
+        )
+
+    def get_coding_plan(self) -> CodingPlanInfo:
+        """Get coding plan information from Zhipu AI"""
+        import os
+        from datetime import datetime
+        
+        auth_token = os.getenv('ZHIPU_AUTH_TOKEN') or os.getenv('ANTHROPIC_AUTH_TOKEN')
+        
+        if not auth_token:
+            cookies = self._get_cookies(self.config.cookie_domain)
+            for cookie_name in ['bigmodel_token_production', 'token', 'session_token', 'auth_token']:
+                if cookie_name in cookies:
+                    auth_token = cookies[cookie_name]
+                    break
+        
+        if not auth_token:
+            raise NotImplementedError("Zhipu auth token required for coding plan. Set ZHIPU_AUTH_TOKEN environment variable.")
+
+        quota_api_url = "https://open.bigmodel.cn/api/monitor/usage/quota/limit"
+        headers = {
+            "Authorization": auth_token,
+            "Content-Type": "application/json",
+            "Accept-Language": "en-US,en"
+        }
+
+        response = self._make_request(
+            url=quota_api_url,
+            method='GET',
+            headers=headers
+        )
+
+        if not response:
+            raise NotImplementedError("Zhipu AI coding plan API not available")
+        
+        if response.get('code') and response.get('code') != 200:
+            raise NotImplementedError(f"Zhipu AI coding plan API error: {response.get('msg', 'Unknown error')}")
+
+        data = response.get('data', response)
+        limits = data.get('limits', [])
+        
+        quotas = []
+        for limit_data in limits:
+            limit_type = limit_data.get('type', 'unknown')
+            percent = float(limit_data.get('percentage', 0))
+            
+            if limit_type == 'TOKENS_LIMIT':
+                level = 'hourly'
+            elif limit_type == 'TIME_LIMIT':
+                level = 'monthly'
+            else:
+                level = limit_type.lower()
+            
+            quota = CodingPlanQuota(
+                level=level,
+                percent=percent,
+                reset_timestamp=-1,
+                reset_time=None
+            )
+            quotas.append(quota)
+
+        return CodingPlanInfo(
+            platform=self.get_platform_name(),
+            status="Running",
+            quotas=quotas,
+            update_time=datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
             raw_data=response
         )
     

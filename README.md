@@ -268,11 +268,31 @@ llm-balance package --show-expiry --show-reset --show-reset-time  # Show all
 
 > By default the `package` command hides entries marked as inactive. Pass `--show-all` to include them across all output formats.
 
+### Coding Plan Usage
+
+Check coding plan limits for Claude Code compatible platforms (Volcengine, Zhipu):
+
+```bash
+# Check all platforms
+llm-balance plan
+
+# Check specific platform
+llm-balance plan --platform=volcengine
+
+# Use specific browser for cookies
+llm-balance plan --browser=doubao
+```
+
+> **Note**: Coding Plan monitoring requires platform-specific authentication:
+> - **Volcengine**: Browser cookies (login to console.volcengine.com)
+> - **Zhipu AI**: Set `ZHIPU_AUTH_TOKEN` or `ANTHROPIC_AUTH_TOKEN` environment variable
+
 #### Quick Reference
 | Command | Purpose | Example |
 |---------|---------|---------|
 | `llm-balance cost` | Check balance & spent | `llm-balance cost --platform=volcengine` |
 | `llm-balance package` | Check token usage | `llm-balance package --platform=zhipu` |
+| `llm-balance plan` | Check coding plan limits | `llm-balance plan --platform=volcengine` |
 | `llm-balance list` | List platforms | `llm-balance list` |
 | `llm-balance enable` | Enable platform | `llm-balance enable deepseek` |
 | `llm-balance disable` | Disable platform | `llm-balance disable tencent` |

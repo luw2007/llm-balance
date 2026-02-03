@@ -33,6 +33,23 @@ class PlatformTokenInfo:
     models: List[ModelTokenInfo]
     raw_data: Dict[str, Any]
 
+@dataclass
+class CodingPlanQuota:
+    """单个限额级别的使用情况"""
+    level: str  # session, hourly, daily, weekly, monthly, total
+    percent: float  # 使用百分比 (0-100)
+    reset_timestamp: int  # 重置时间戳，-1 表示不重置
+    reset_time: Optional[str] = None  # 格式化的重置时间
+
+@dataclass
+class CodingPlanInfo:
+    """Coding Plan 使用情况"""
+    platform: str
+    status: str  # Running, Stopped, etc.
+    quotas: List[CodingPlanQuota]
+    update_time: Optional[str] = None  # 数据更新时间
+    raw_data: Dict[str, Any] = field(default_factory=dict)
+
 class BasePlatformHandler(ABC):
     """Base class for platform cost handlers"""
 
@@ -76,6 +93,10 @@ class BasePlatformHandler(ABC):
         """Get model-level token information for the platform (optional)"""
         raise NotImplementedError(f"Model token checking not implemented for {self.get_platform_name()}")
     
+    def get_coding_plan(self) -> CodingPlanInfo:
+        """Get coding plan information for the platform (optional)"""
+        raise NotImplementedError(f"Coding plan checking not implemented for {self.get_platform_name()}")
+    
     def _get_cookies(self, domain: str, silent: bool = True) -> Dict[str, str]:
         """Get cookies for domain using pycookiecheat
 
@@ -111,6 +132,11 @@ class BasePlatformHandler(ABC):
                     'path': '~/Library/Application Support/Vivaldi/Default/Cookies',
                     'keyring_service': 'Vivaldi Safe Storage',
                     'keyring_user': 'Vivaldi',
+                },
+                'doubao': {
+                    'path': '~/Library/Application Support/Doubao/Default/Cookies',
+                    'keyring_service': 'Doubao Safe Storage',
+                    'keyring_user': 'Doubao',
                 },
             }
 

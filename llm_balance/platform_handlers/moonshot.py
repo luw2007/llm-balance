@@ -4,7 +4,7 @@ Moonshot platform handler
 
 import os
 from typing import Dict, Any, Optional, List, Union
-from .base import BasePlatformHandler, CostInfo, PlatformTokenInfo, ModelTokenInfo
+from .base import BasePlatformHandler, CostInfo, PlatformTokenInfo, ModelTokenInfo, CodingPlanInfo, CodingPlanQuota
 from ..config import PlatformConfig
 
 class MoonshotHandler(BasePlatformHandler):
@@ -38,7 +38,9 @@ class MoonshotHandler(BasePlatformHandler):
             "notes": [
                 'API Key以 sk- 开头',
                 '有免费试用额度',
-                '支持长文本处理'
+                '支持长文本处理',
+                '支持 Kimi Code 编程计划 (FEATURE_CODING)',
+                '查询编程计划需要 MOONSHOT_CONSOLE_TOKEN 和 MOONSHOT_ORG_ID'
             ],
             "enabled": True
         }
@@ -65,10 +67,7 @@ class MoonshotHandler(BasePlatformHandler):
         if env_ingress_cookie:
             self.config.ingress_cookie = env_ingress_cookie
 
-        if env_console_token or env_org_id or env_ingress_cookie:
-            return
-
-        # Try separate config file
+        # Try separate config file to fill in missing values
         import yaml
         from pathlib import Path
         config_path = Path.home() / '.llm_balance' / 'moonshot_config.yaml'
@@ -76,13 +75,13 @@ class MoonshotHandler(BasePlatformHandler):
             try:
                 with open(config_path, 'r', encoding='utf-8') as f:
                     moon_config = yaml.safe_load(f) or {}
-                    if 'console_token' in moon_config:
+                    if 'console_token' in moon_config and not getattr(self.config, 'console_token', None):
                         self.config.console_token = moon_config['console_token']
-                    if 'org_id' in moon_config:
+                    if 'org_id' in moon_config and not getattr(self.config, 'org_id', None):
                         self.config.org_id = moon_config['org_id']
-                    if 'ingress_cookie' in moon_config:
+                    if 'ingress_cookie' in moon_config and not getattr(self.config, 'ingress_cookie', None):
                         self.config.ingress_cookie = moon_config['ingress_cookie']
-            except Exception as e:
+            except Exception:
                 pass
 
     def get_balance(self) -> CostInfo:
@@ -304,6 +303,91 @@ class MoonshotHandler(BasePlatformHandler):
             raise
         except Exception as e:
             raise ValueError(f"Failed to get model token info for {self.get_platform_name()}: {e}")
+
+    def get_coding_plan(self) -> CodingPlanInfo:
+        """Get coding plan information from Moonshot"""
+        from datetime import datetime
+        
+        console_token = getattr(self.config, 'console_token', None)
+        org_id = getattr(self.config, 'org_id', None)
+
+        if not console_token or not org_id:
+            raise NotImplementedError(
+                "Moonshot Coding Plan requires MOONSHOT_CONSOLE_TOKEN and MOONSHOT_ORG_ID"
+            )
+
+        billing_url = "https://www.kimi.com/apiv2/kimi.gateway.billing.v1.BillingService/GetUsages"
+
+        headers = {
+            'Authorization': f'Bearer {console_token}',
+            'Content-Type': 'application/json',
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
+            'Accept': 'application/json',
+            'Referer': 'https://www.kimi.com/'
+        }
+
+        cookies = {}
+        try:
+            for domain in ['.kimi.com', 'kimi.com', '.moonshot.cn', 'moonshot.cn']:
+                try:
+                    domain_cookies = self._get_cookies(domain)
+                    if domain_cookies:
+                        cookies.update(domain_cookies)
+                        break
+                except Exception:
+                    continue
+        except Exception:
+            pass
+
+        data = {"scope": ["FEATURE_CODING"]}
+
+        response = self._make_request(
+            url=billing_url,
+            method='POST',
+            headers=headers,
+            cookies=cookies,
+            data=data
+        )
+
+        if not response:
+            raise ValueError("No response from Moonshot billing API")
+
+        quotas = []
+        usages = response.get('usages', [])
+        for usage in usages:
+            if usage.get('scope') == 'FEATURE_CODING':
+                detail = usage.get('detail', {})
+                limit_val = self._num(detail.get('limit', 0))
+                used = self._num(detail.get('used', 0))
+                
+                percent = (used / limit_val * 100) if limit_val > 0 else 0
+                
+                reset_time_str = detail.get('resetTime')
+                reset_timestamp = -1
+                reset_time = None
+                if reset_time_str:
+                    try:
+                        dt = datetime.fromisoformat(reset_time_str.replace('Z', '+00:00'))
+                        reset_timestamp = int(dt.timestamp())
+                        reset_time = dt.strftime('%Y-%m-%d %H:%M:%S')
+                    except Exception:
+                        pass
+                
+                quota = CodingPlanQuota(
+                    level="monthly",
+                    percent=percent,
+                    reset_timestamp=reset_timestamp,
+                    reset_time=reset_time
+                )
+                quotas.append(quota)
+
+        return CodingPlanInfo(
+            platform=self.get_platform_name(),
+            status="Running",
+            quotas=quotas,
+            update_time=datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            raw_data=response
+        )
 
     def _get_code_package_usage(self, console_token: str, org_id: str) -> List[ModelTokenInfo]:
         """Get code package usage information from Moonshot billing API"""
