@@ -122,21 +122,25 @@ class BasePlatformHandler(ABC):
             }
 
             # Chromium-based browsers with custom cookie paths
+            # iterations: macOS Chrome uses 1003, but some browsers (like Doubao) use 1
             chromium_custom_paths = {
                 'arc': {
                     'path': '~/Library/Application Support/Arc/User Data/Default/Cookies',
                     'keyring_service': 'Arc Safe Storage',
                     'keyring_user': 'Arc',
+                    'iterations': 1003,
                 },
                 'vivaldi': {
                     'path': '~/Library/Application Support/Vivaldi/Default/Cookies',
                     'keyring_service': 'Vivaldi Safe Storage',
                     'keyring_user': 'Vivaldi',
+                    'iterations': 1003,
                 },
                 'doubao': {
                     'path': '~/Library/Application Support/Doubao/Default/Cookies',
                     'keyring_service': 'Doubao Safe Storage',
                     'keyring_user': 'Doubao',
+                    'iterations': 1003,
                 },
             }
 
@@ -146,15 +150,15 @@ class BasePlatformHandler(ABC):
             if browser_lower not in supported_browsers:
                 raise ValueError(f"Browser '{self.browser}' is not supported. Try: {', '.join(supported_browsers)}")
 
-            # Special handling for Arc and Vivaldi browsers
+            # Special handling for custom Chromium-based browsers
             if browser_lower in chromium_custom_paths:
-                # Arc and Vivaldi have different cookie path structures and keyring passwords
                 browser_config = chromium_custom_paths[browser_lower]
                 return self._get_chromium_custom_cookies(
                     domain,
                     browser_config['path'],
                     browser_config['keyring_service'],
                     browser_config['keyring_user'],
+                    iterations=browser_config.get('iterations', 1003),
                     silent=silent
                 )
 
@@ -183,53 +187,121 @@ class BasePlatformHandler(ABC):
     
     def _get_chromium_custom_cookies(self, domain: str, cookie_path_pattern: str,
                                      keyring_service: str, keyring_user: str,
+                                     iterations: int = 1003,
                                      silent: bool = True) -> Dict[str, str]:
-        """Get cookies for Chromium-based browsers with custom cookie paths (Arc, Vivaldi, etc.)
+        """Get cookies for Chromium-based browsers with custom cookie paths
 
         Args:
             domain: The domain to get cookies for
             cookie_path_pattern: Path pattern for cookie file (supports ~ expansion)
             keyring_service: Keyring service name for the browser (e.g., 'Vivaldi Safe Storage')
             keyring_user: Keyring username for the browser (e.g., 'Vivaldi')
+            iterations: PBKDF2 iterations for key derivation (macOS Chrome uses 1003)
             silent: If True, suppress warning messages when cookies are not found (default: True)
         """
+        from pathlib import Path
+        import keyring
+
+        cookie_file = Path(cookie_path_pattern).expanduser().resolve()
+        if not cookie_file.exists():
+            raise ValueError(f"Cookie file not found at {cookie_file}. Please ensure the browser is installed.")
+
+        password = keyring.get_password(keyring_service, keyring_user)
+        if password is None:
+            raise ValueError(
+                f"Could not find password for keyring ({keyring_service}, {keyring_user}). "
+                f"Please verify the browser is installed and check Keychain Access.app"
+            )
+
+        url = f"https://{domain}" if not domain.startswith('http') else domain
+
+        # 优先使用 pycookiecheat（v0.8.0+ 自动处理 cookie db version >= 24）
         try:
-            from pathlib import Path
-            import keyring
             import pycookiecheat
-
-            # Expand and resolve cookie file path
-            cookie_file = Path(cookie_path_pattern).expanduser().resolve()
-
-            # Check if cookie file exists
-            if not cookie_file.exists():
-                raise ValueError(f"Cookie file not found at {cookie_file}. Please ensure the browser is installed.")
-
-            # Get browser's Safe Storage password from keyring
-            password = keyring.get_password(keyring_service, keyring_user)
-            if password is None:
-                raise ValueError(
-                    f"Could not find password for keyring ({keyring_service}, {keyring_user}). "
-                    f"Please verify the browser is installed and check Keychain Access.app"
-                )
-
-            # Prepare URL for pycookiecheat
-            url = f"https://{domain}" if not domain.startswith('http') else domain
-
-            # Use pycookiecheat with custom cookie file and browser-specific password
             cookies = pycookiecheat.chrome_cookies(
                 url=url,
                 cookie_file=cookie_file,
                 password=password
             )
+            if cookies:
+                return cookies
+        except Exception:
+            pass
 
-            if not cookies and not silent:
-                print(f"Warning: No cookies found for {domain}. Please ensure you are logged in to {domain}.")
-
-            return cookies
-
+        # 回退到自定义解密逻辑（兼容旧版 pycookiecheat 或解密失败的情况）
+        try:
+            return self._decrypt_chromium_cookies(
+                domain, cookie_file, password, iterations, silent
+            )
         except Exception as e:
             raise ValueError(f"Failed to get cookies for {domain}: {e}. Please ensure you are logged in to {domain}.")
+
+    def _decrypt_chromium_cookies(self, domain: str, cookie_file, password: str,
+                                   iterations: int = 1003, silent: bool = True) -> Dict[str, str]:
+        """Decrypt Chromium cookies with custom logic (fallback for old pycookiecheat versions)"""
+        import sqlite3
+        from cryptography.hazmat.primitives.ciphers import Cipher
+        from cryptography.hazmat.primitives.ciphers.algorithms import AES
+        from cryptography.hazmat.primitives.ciphers.modes import CBC
+        from cryptography.hazmat.primitives.hashes import SHA1
+        from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+
+        kdf = PBKDF2HMAC(
+            algorithm=SHA1(),
+            iterations=iterations,
+            length=16,
+            salt=b"saltysalt",
+        )
+        key = kdf.derive(password.encode("utf8"))
+        init_vector = b" " * 16
+
+        host_keys = self._generate_host_keys(domain)
+
+        conn = sqlite3.connect(str(cookie_file))
+        cursor = conn.cursor()
+
+        # Cookie database version >= 24 includes SHA256 hash prefix (32 bytes)
+        cookie_db_version = 0
+        try:
+            row = cursor.execute("SELECT value FROM meta WHERE key = 'version'").fetchone()
+            if row:
+                cookie_db_version = int(row[0])
+        except Exception:
+            pass
+
+        cookies = {}
+        for host_key in host_keys:
+            cursor.execute(
+                "SELECT name, encrypted_value FROM cookies WHERE host_key = ?",
+                (host_key,)
+            )
+            for name, encrypted_value in cursor.fetchall():
+                if not encrypted_value or len(encrypted_value) <= 3:
+                    continue
+                try:
+                    enc_val = encrypted_value[3:]
+                    cipher = Cipher(algorithm=AES(key), mode=CBC(init_vector))
+                    decryptor = cipher.decryptor()
+                    decrypted = decryptor.update(enc_val) + decryptor.finalize()
+
+                    if cookie_db_version >= 24:
+                        decrypted = decrypted[32:]
+
+                    last = decrypted[-1]
+                    if isinstance(last, int):
+                        value = decrypted[:-last].decode("utf8")
+                    else:
+                        value = decrypted[:-ord(last)].decode("utf8")
+                    cookies[name] = value
+                except Exception:
+                    continue
+
+        conn.close()
+
+        if not cookies and not silent:
+            print(f"Warning: No cookies found for {domain}. Please ensure you are logged in to {domain}.")
+
+        return cookies
 
     def _get_arc_cookies(self, domain: str, silent: bool = True) -> Dict[str, str]:
         """Get cookies for Arc browser using custom implementation
