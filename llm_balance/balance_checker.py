@@ -159,4 +159,58 @@ class BalanceChecker:
             'raw_data': balance.raw_data
         }
         return format_output([balance_dict], format_type, target_currency)
+    
+    def get_platform_info(self, platform_name: str) -> Dict[str, Any]:
+        """获取指定平台的完整信息（cost + package + plan）
+        
+        Args:
+            platform_name: 平台名称
+            
+        Returns:
+            包含 cost_info、package_info 和 plan_info 的字典
+            
+        Raises:
+            ValueError: 平台不存在或未启用
+        """
+        from .platform_handlers.registry import registry
+        
+        handler_class = registry.get_handler_class(platform_name.lower())
+        if not handler_class:
+            raise ValueError(f"平台 {platform_name} 不存在")
+        
+        platform_config = self.config_manager.get_platform(platform_name)
+        if not platform_config:
+            raise ValueError(f"平台 {platform_name} 配置未找到")
+        
+        if not platform_config.enabled:
+            raise ValueError(f"平台 {platform_name} 未启用，请先使用 'llm-balance enable {platform_name}' 启用")
+        
+        result = {}
+        
+        try:
+            handler = self._get_handler(platform_config)
+            cost_info = handler.get_balance()
+            result['cost_info'] = cost_info
+        except Exception as e:
+            raise ValueError(f"获取平台 {platform_name} 的余额信息失败: {e}")
+        
+        result['package_info'] = None
+        try:
+            package_info = handler.get_model_tokens()
+            result['package_info'] = package_info
+        except NotImplementedError:
+            pass
+        except Exception as e:
+            print(f"Warning: 获取平台 {platform_name} 的套餐信息失败: {e}")
+        
+        result['plan_info'] = None
+        try:
+            plan_info = handler.get_coding_plan()
+            result['plan_info'] = plan_info
+        except (NotImplementedError, ValueError):
+            pass
+        except Exception as e:
+            print(f"Warning: 获取平台 {platform_name} 的编码计划信息失败: {e}")
+        
+        return result
 

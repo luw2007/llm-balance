@@ -302,6 +302,272 @@ def _format_total(balances: List[Dict[str, Any]], target_currency: str = 'CNY') 
     else:
         return f"Total cost: {total:.2f} {target_currency}"
 
+def format_platform_info(platform_info: Dict[str, Any], format_type: str = 'table', target_currency: str = 'CNY') -> str:
+    """
+    Format combined platform info (cost + package + plan) in different formats
+    
+    Args:
+        platform_info: Dict with 'cost_info' (CostInfo), 'package_info' (PlatformTokenInfo or None), 
+                      and 'plan_info' (CodingPlanInfo or None)
+        format_type: Output format - 'table', 'json', or 'markdown'
+        target_currency: Target currency for cost conversion
+        
+    Returns:
+        Formatted string representation of platform info
+    """
+    cost_info = platform_info.get('cost_info')
+    package_info = platform_info.get('package_info')
+    plan_info = platform_info.get('plan_info')
+    
+    if format_type == 'json':
+        return _format_platform_info_json(cost_info, package_info, plan_info)
+    elif format_type == 'markdown':
+        return _format_platform_info_markdown(cost_info, package_info, plan_info, target_currency)
+    else:
+        return _format_platform_info_table(cost_info, package_info, plan_info, target_currency)
+
+def _format_platform_info_json(cost_info, package_info, plan_info) -> str:
+    """Format platform info as JSON"""
+    result = {
+        'cost': None,
+        'package': None,
+        'plan': None
+    }
+    
+    if cost_info:
+        result['cost'] = {
+            'platform': cost_info.platform,
+            'balance': cost_info.balance,
+            'currency': cost_info.currency,
+            'spent': cost_info.spent,
+            'spent_currency': cost_info.spent_currency,
+            'raw_data': cost_info.raw_data
+        }
+    
+    if package_info:
+        result['package'] = {
+            'platform': package_info.platform,
+            'models': [
+                {
+                    'model': m.model,
+                    'package': m.package,
+                    'remaining_tokens': m.remaining_tokens,
+                    'used_tokens': m.used_tokens,
+                    'total_tokens': m.total_tokens,
+                    'status': m.status,
+                    'expiry_date': m.expiry_date,
+                    'reset_count': m.reset_count,
+                    'reset_time': m.reset_time
+                }
+                for m in package_info.models
+            ],
+            'raw_data': package_info.raw_data
+        }
+    else:
+        result['package'] = {'message': '该平台不支持 token 监控'}
+    
+    if plan_info:
+        result['plan'] = {
+            'platform': plan_info.platform,
+            'status': plan_info.status,
+            'quotas': [
+                {
+                    'level': q.level,
+                    'percent': q.percent,
+                    'reset_timestamp': q.reset_timestamp,
+                    'reset_time': q.reset_time
+                }
+                for q in plan_info.quotas
+            ],
+            'update_time': plan_info.update_time,
+            'raw_data': plan_info.raw_data
+        }
+    else:
+        result['plan'] = {'message': '该平台不支持编码计划监控'}
+    
+    clean_result = _clean_for_json(result)
+    return json.dumps(clean_result, indent=2, ensure_ascii=False)
+
+def _format_platform_info_markdown(cost_info, package_info, plan_info, target_currency: str) -> str:
+    """Format platform info as markdown"""
+    lines = []
+    
+    if cost_info:
+        platform_name = cost_info.platform
+        lines.append(f"# {platform_name} 平台信息\n")
+        
+        lines.append("## 费用信息\n")
+        lines.append("| 项目 | 数值 | 货币 |")
+        lines.append("|------|------|------|")
+        
+        balance_display = f"{cost_info.balance:.2f}" if isinstance(cost_info.balance, (int, float)) else "-"
+        lines.append(f"| 余额 | {balance_display} | {cost_info.currency} |")
+        
+        if cost_info.spent != "-" and cost_info.spent is not None:
+            spent_display = f"{cost_info.spent:.2f}" if isinstance(cost_info.spent, (int, float)) else "-"
+            spent_currency = cost_info.spent_currency or cost_info.currency
+            lines.append(f"| 已消费 | {spent_display} | {spent_currency} |")
+        
+        if target_currency != cost_info.currency:
+            converted_balance = convert_currency(cost_info.balance, cost_info.currency, target_currency)
+            lines.append(f"| 余额({target_currency}) | {converted_balance:.2f} | {target_currency} |")
+    
+    if package_info:
+        lines.append("\n## Token 使用情况\n")
+        lines.append("| 模型 | 套餐 | 剩余 Token | 已用 Token | 总 Token | 状态 |")
+        lines.append("|------|------|------------|------------|----------|------|")
+        
+        for model in package_info.models:
+            lines.append(
+                f"| {model.model} | {model.package} | "
+                f"{model.remaining_tokens:,.0f} | {model.used_tokens:,.0f} | "
+                f"{model.total_tokens:,.0f} | {model.status} |"
+            )
+            
+            if model.expiry_date:
+                lines.append(f"| | 到期时间: {model.expiry_date} | | | | |")
+            if model.reset_time:
+                lines.append(f"| | 重置时间: {model.reset_time} | | | | |")
+    else:
+        lines.append("\n## Token 使用情况\n")
+        lines.append("该平台不支持 token 监控")
+    
+    if plan_info:
+        lines.append("\n## 编码计划使用情况\n")
+        lines.append(f"状态: {plan_info.status}")
+        if plan_info.update_time:
+            lines.append(f"更新时间: {plan_info.update_time}\n")
+        
+        lines.append("| 类型 | 已用百分比 | 重置时间 |")
+        lines.append("|------|-----------|---------|")
+        
+        for quota in plan_info.quotas:
+            reset_time_display = quota.reset_time if quota.reset_time else "-"
+            lines.append(f"| {quota.level.capitalize()} | {quota.percent:.1f}% | {reset_time_display} |")
+    else:
+        lines.append("\n## 编码计划使用情况\n")
+        lines.append("该平台不支持编码计划监控")
+    
+    return '\n'.join(lines)
+
+def _format_platform_info_table(cost_info, package_info, plan_info, target_currency: str) -> str:
+    """Format platform info as text table"""
+    lines = []
+    
+    if cost_info:
+        platform_name = cost_info.platform
+        lines.append("=" * 80)
+        lines.append(f" {platform_name} 平台信息")
+        lines.append("=" * 80)
+        
+        lines.append("\n【费用信息】")
+        lines.append("-" * 80)
+        
+        balance_display = f"{cost_info.balance:.2f}" if isinstance(cost_info.balance, (int, float)) else "-"
+        lines.append(f"  余额:     {balance_display} {cost_info.currency}")
+        
+        if cost_info.spent != "-" and cost_info.spent is not None:
+            spent_display = f"{cost_info.spent:.2f}" if isinstance(cost_info.spent, (int, float)) else "-"
+            spent_currency = cost_info.spent_currency or cost_info.currency
+            lines.append(f"  已消费:   {spent_display} {spent_currency}")
+        
+        if target_currency != cost_info.currency and isinstance(cost_info.balance, (int, float)):
+            converted_balance = convert_currency(cost_info.balance, cost_info.currency, target_currency)
+            lines.append(f"  余额({target_currency}): {converted_balance:.2f} {target_currency}")
+    
+    if package_info:
+        lines.append("\n【Token 使用情况】")
+        lines.append("-" * 80)
+        lines.append(f"{'模型':<20} {'套餐':<15} {'剩余Token':<15} {'已用Token':<15} {'总Token':<15} {'状态':<10}")
+        lines.append("-" * 80)
+        
+        for model in package_info.models:
+            lines.append(
+                f"{model.model:<20} {model.package:<15} "
+                f"{model.remaining_tokens:<15,.0f} {model.used_tokens:<15,.0f} "
+                f"{model.total_tokens:<15,.0f} {model.status:<10}"
+            )
+            
+            if model.expiry_date:
+                lines.append(f"  ↳ 到期时间: {model.expiry_date}")
+            if model.reset_time:
+                lines.append(f"  ↳ 重置时间: {model.reset_time}")
+    else:
+        lines.append("\n【Token 使用情况】")
+        lines.append("-" * 80)
+        lines.append("  该平台不支持 token 监控")
+    
+    if plan_info:
+        from datetime import datetime
+        
+        lines.append("\n【编码计划使用情况】")
+        lines.append("-" * 80)
+        
+        status_icon = '●' if plan_info.status == 'Running' else '○'
+        status_text = 'Active' if plan_info.status == 'Running' else 'Inactive' if plan_info.status == 'Stopped' else plan_info.status
+        lines.append(f"  状态: {status_icon} {status_text}")
+        
+        if plan_info.update_time:
+            update_short = plan_info.update_time[5:16] if len(plan_info.update_time) > 16 else plan_info.update_time
+            lines.append(f"  更新时间: {update_short}")
+        
+        lines.append("")
+        lines.append(f"  {'类型':<12} {'已用':<8} {'进度':<30} {'重置时间':<15}")
+        lines.append("  " + "-" * 76)
+        
+        level_names = {
+            'session': 'Session',
+            'hourly': 'Hourly',
+            'daily': 'Daily',
+            'weekly': 'Weekly',
+            'monthly': 'Monthly',
+            'total': 'Total'
+        }
+        
+        for quota in plan_info.quotas:
+            level_display = level_names.get(quota.level, quota.level.capitalize())
+            percent_str = f"{quota.percent:>5.1f}%"
+            
+            bar_width = 25
+            filled = int(bar_width * min(quota.percent, 100) / 100)
+            
+            if quota.percent >= 90:
+                bar_char = '▓'
+                warn_suffix = ' !'
+            elif quota.percent >= 70:
+                bar_char = '▒'
+                warn_suffix = ''
+            else:
+                bar_char = '░'
+                warn_suffix = ''
+            
+            bar = bar_char * filled + '░' * (bar_width - filled)
+            
+            if quota.reset_time:
+                try:
+                    reset_dt = datetime.strptime(quota.reset_time, '%Y-%m-%d %H:%M:%S')
+                    now = datetime.now()
+                    delta = reset_dt - now
+                    if delta.days > 0:
+                        reset_display = f"{delta.days}d {delta.seconds // 3600}h"
+                    elif delta.seconds > 3600:
+                        reset_display = f"{delta.seconds // 3600}h {(delta.seconds % 3600) // 60}m"
+                    else:
+                        reset_display = f"{delta.seconds // 60}m"
+                except:
+                    reset_display = quota.reset_time[:10]
+            else:
+                reset_display = "—"
+            
+            lines.append(f"  {level_display:<12} {percent_str:>6}{warn_suffix:<2} {bar}  {reset_display:>12}")
+    else:
+        lines.append("\n【编码计划使用情况】")
+        lines.append("-" * 80)
+        lines.append("  该平台不支持编码计划监控")
+    
+    lines.append("=" * 80)
+    return '\n'.join(lines)
+
 def ensure_config_dir():
     """Ensure configuration directory exists"""
     home = Path.home()
