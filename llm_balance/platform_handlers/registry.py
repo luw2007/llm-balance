@@ -33,7 +33,7 @@ class PlatformRegistry:
         from ._88996 import Handler88996
         from .yourapi import YourAPIHandler
         from .csmindai import CSMindAIHandler
-        from .yescode import YesCodeHandler
+        from .yesvg import YesVgHandler
         from .oneapi import OneAPIHandler
         from .apiproxy import APIProxyHandler
         from .fastgpt import FastGPTHandler
@@ -64,7 +64,7 @@ class PlatformRegistry:
             '88996': Handler88996,
             'yourapi': YourAPIHandler,
             'csmindai': CSMindAIHandler,
-            'yescode': YesCodeHandler,
+            'yesvg': YesVgHandler,
             'oneapi': OneAPIHandler,
             'apiproxy': APIProxyHandler,
             'fastgpt': FastGPTHandler,

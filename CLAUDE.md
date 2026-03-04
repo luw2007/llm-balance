@@ -159,7 +159,7 @@ All handlers inherit from `BasePlatformHandler` and implement:
 - SiliconFlow (硅基流动)
 
 **Third-party Relay Platforms (15)**
-- FoxCode, DuckCoding, PackyCode, 88Code, 88996, AICoding, YouAPI, CSMindAI, YesCode, Cubence, DawClaudeCode, Magic666, Jimiai, OpenClaudeCode, IKunCode
+- FoxCode, DuckCoding, PackyCode, 88Code, 88996, AICoding, YouAPI, CSMindAI, YesVg, Cubence, DawClaudeCode, Magic666, Jimiai, OpenClaudeCode, IKunCode
 
 **Relay Management Platforms (3)**
 - OneAPI (self-hosted), API-Proxy (public relay), FastGPT (open-source app platform)

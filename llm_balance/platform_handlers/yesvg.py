@@ -1,5 +1,5 @@
 """
-YesCode third-party relay handler
+YesVg third-party relay handler
 """
 
 import os
@@ -8,16 +8,16 @@ from .base import BasePlatformHandler, PlatformTokenInfo, ModelTokenInfo, CostIn
 from ..config import PlatformConfig
 
 
-class YesCodeHandler(BasePlatformHandler):
-    """YesCode relay platform handler."""
+class YesVgHandler(BasePlatformHandler):
+    """YesVg relay platform handler."""
 
     @classmethod
     def get_default_config(cls) -> dict:
-        """Default configuration for YesCode balance query via console_token auth."""
+        """Default configuration for YesVg balance query via console_token auth."""
         return {
-            "display_name": "YesCode",
-            "handler_class": "YesCodeHandler",
-            "description": "YesCode API relay (co.yes.vg)",
+            "display_name": "YesVg",
+            "handler_class": "YesVgHandler",
+            "description": "YesVg API relay (co.yes.vg)",
             "api_url": "https://co.yes.vg/api/v1/user/balance",
             "method": "GET",
             "auth_type": "console_token",
@@ -54,7 +54,7 @@ class YesCodeHandler(BasePlatformHandler):
     def _load_env_config(self):
         """Load configuration from environment variables or separate config file."""
         # Try environment variable first
-        env_console_token = os.getenv('YESCODE_CONSOLE_TOKEN')
+        env_console_token = os.getenv('YESVG_CONSOLE_TOKEN')
         if env_console_token:
             self.config.console_token = env_console_token
             return
@@ -62,18 +62,18 @@ class YesCodeHandler(BasePlatformHandler):
         # Try separate config file
         import yaml
         from pathlib import Path
-        config_path = Path.home() / '.llm_balance' / 'yescode_config.yaml'
+        config_path = Path.home() / '.llm_balance' / 'yesvg_config.yaml'
         if config_path.exists():
             try:
                 with open(config_path, 'r', encoding='utf-8') as f:
-                    yescode_config = yaml.safe_load(f) or {}
-                    if 'console_token' in yescode_config:
-                        self.config.console_token = yescode_config['console_token']
+                    yesvg_config = yaml.safe_load(f) or {}
+                    if 'console_token' in yesvg_config:
+                        self.config.console_token = yesvg_config['console_token']
             except Exception:
                 pass
 
     def get_platform_name(self) -> str:
-        return "YesCode"
+        return "YesVg"
 
     def get_balance(self) -> CostInfo:
         """Return cost info using balance and payment history data from API.
@@ -103,7 +103,7 @@ class YesCodeHandler(BasePlatformHandler):
         - Spent = Total - balance
         """
         if not getattr(self.config, 'api_url', None):
-            raise ValueError("No API URL configured for YesCode")
+            raise ValueError("No API URL configured for YesVg")
 
         headers = (self.config.headers or {}).copy()
 
@@ -111,9 +111,9 @@ class YesCodeHandler(BasePlatformHandler):
         console_token = getattr(self.config, 'console_token', None)
         if not console_token:
             raise ValueError(
-                "YesCode requires console_token to be configured. Please set it using:\n"
-                "1. Environment variable: export YESCODE_CONSOLE_TOKEN=YOUR_TOKEN\n"
-                "2. Separate config file: ~/.llm_balance/yescode_config.yaml\n"
+                "YesVg requires console_token to be configured. Please set it using:\n"
+                "1. Environment variable: export YESVG_CONSOLE_TOKEN=YOUR_TOKEN\n"
+                "2. Separate config file: ~/.llm_balance/yesvg_config.yaml\n"
                 "   console_token: YOUR_TOKEN"
             )
 
@@ -128,7 +128,7 @@ class YesCodeHandler(BasePlatformHandler):
         )
 
         if not balance_response:
-            raise ValueError("No response from YesCode balance API")
+            raise ValueError("No response from YesVg balance API")
 
         # Make API request for payment history to calculate total
         history_url = "https://co.yes.vg/api/v1/user/payment/history?page=1&limit=20"
@@ -192,7 +192,7 @@ class YesCodeHandler(BasePlatformHandler):
         )
 
     def get_model_tokens(self) -> PlatformTokenInfo:
-        """Query YesCode usage data and create usage package from usage summary.
+        """Query YesVg usage data and create usage package from usage summary.
 
         Authentication:
             - Use console_token from environment variables or config file
@@ -209,10 +209,10 @@ class YesCodeHandler(BasePlatformHandler):
 
         Models:
             - Generic model name: "All Models"
-            - Package name: "YesCode Account"
+            - Package name: "YesVg Account"
         """
         if not getattr(self.config, 'api_url', None):
-            raise ValueError("No API URL configured for YesCode")
+            raise ValueError("No API URL configured for YesVg")
 
         headers = (self.config.headers or {}).copy()
 
@@ -220,9 +220,9 @@ class YesCodeHandler(BasePlatformHandler):
         console_token = getattr(self.config, 'console_token', None)
         if not console_token:
             raise ValueError(
-                "YesCode requires console_token to be configured. Please set it using:\n"
-                "1. Environment variable: export YESCODE_CONSOLE_TOKEN=YOUR_TOKEN\n"
-                "2. Separate config file: ~/.llm_balance/yescode_config.yaml\n"
+                "YesVg requires console_token to be configured. Please set it using:\n"
+                "1. Environment variable: export YESVG_CONSOLE_TOKEN=YOUR_TOKEN\n"
+                "2. Separate config file: ~/.llm_balance/yesvg_config.yaml\n"
                 "   console_token: YOUR_TOKEN"
             )
 
@@ -244,9 +244,9 @@ class YesCodeHandler(BasePlatformHandler):
         )
 
         if not balance_response:
-            raise ValueError("No response from YesCode balance API")
+            raise ValueError("No response from YesVg balance API")
         if not usage_response:
-            raise ValueError("No response from YesCode usage API")
+            raise ValueError("No response from YesVg usage API")
 
         # Extract token information and create models
         models = self._extract_models_from_usage(balance_response, usage_response)
@@ -341,7 +341,7 @@ class YesCodeHandler(BasePlatformHandler):
         # Create model info
         results.append(ModelTokenInfo(
             model="claude,codex",
-            package="YesCode Account",
+            package="YesVg Account",
             remaining_tokens=remaining_tokens,
             used_tokens=used_tokens,
             total_tokens=total_tokens,
