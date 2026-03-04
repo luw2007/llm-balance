@@ -45,6 +45,7 @@ class PlatformRegistry:
         from .jimiai import JimiaiHandler
         from .openclaudecode import OpenClaudeCodeHandler
         from .ikuncode import IKunCodeHandler
+        from .yescode import YesCodeHandler
 
         self._handlers = {
             'deepseek': DeepSeekHandler,
@@ -76,6 +77,7 @@ class PlatformRegistry:
             'jimiai': JimiaiHandler,
             'openclaudecode': OpenClaudeCodeHandler,
             'ikuncode': IKunCodeHandler,
+            'yescode': YesCodeHandler,
         }
         self._initialized = True
 

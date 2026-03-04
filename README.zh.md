@@ -56,6 +56,9 @@ export TENCENT_API_KEY="your_tencent_api_key"
 # DuckCoding 需要额外的用户ID配置
 export DUCKCODING_API_USER_ID="your_user_id"
 
+# YesCode 需要 API Key 配置
+export YESCODE_API_KEY="your_api_key"
+
 # CSMindAI 需要额外的用户ID配置
 export CSMINDDAI_NEW_API_USER="your_user_id"
 
@@ -307,18 +310,19 @@ platforms:
 | **腾讯云** | SDK | ✅ | 需要 TENCENT_API_KEY (SecretId:SecretKey) | ❌ 不支持 | ✅ 支持 |
 | **智谱AI** | Cookie | ✅ | 需要登录 https://open.bigmodel.cn | ✅ 完整支持 | ✅ 完整支持 |
 
-### 🔄 第三方中转平台 (2)
+### 🔄 第三方中转平台 (3)
 
 | 平台 | 认证方式 | 状态 | 说明 | Token监控 | 支出追踪 | 独立配置 |
 |------|----------|------|------|-----------|-----------|-----------|
 | **FoxCode** | Cookie | ✅ | 中转服务，支持控制台访问 | ✅ 完整支持 | ✅ 完整支持 | ❌ 不需要 |
 | **DuckCoding** | Cookie | ✅ | 中转服务，支持Token套餐 | ✅ 完整支持 | ✅ 完整支持 | ✅ 需要 |
+| **YesCode** | API Key | ✅ | 订阅制中转服务，支持多维度限额 | ✅ 完整支持 | ✅ 完整支持 | ✅ 需要 |
 
 ### 📊 平台状态总结
 
-**生产就绪 (12个平台)**: 以上列出的所有平台均经过完整测试，可用于生产环境。
+**生产就绪 (13个平台)**: 以上列出的所有平台均经过完整测试，可用于生产环境。
 
-**独立配置**: DuckCoding 使用独立配置文件，避免污染全局配置。
+**独立配置**: DuckCoding、YesCode 使用独立配置文件，避免污染全局配置。
 
 **开发状态**: 其他平台 (Azure OpenAI、零一万物、MiniMax) 在 `dev` 分支中积极开发中。
 
@@ -403,6 +407,47 @@ llm-balance package --platform=duckcoding
 llm-balance platform_config duckcoding
 # 配置用户ID
 llm-balance platform_config duckcoding api_user_id your_user_id
+```
+
+### 第三方中转：YesCode
+
+YesCode 为基于 API Key 的订阅制中转服务，支持多维度限额管理，使用独立配置。详细使用说明请参考 [YesCode 快速使用指南](docs/yescode_setup.md)。
+
+- 认证：API Key（Bearer Token），请求 `https://api.yescode.cloud/api/v1/subscriptions` 接口。
+- 配置：需要通过环境变量或独立配置文件设置 API Key。
+- package：使用订阅套餐的月度限额信息。
+  - 总计 = `monthly_limit_usd * 100`（token 数量）
+  - 已用 = `monthly_usage_usd * 100`（token 数量）
+  - 剩余 = 总计 - 已用
+  - Package 列显示套餐名称（如 "Pro Plan"）
+- cost：支持多维度限额（每日/每周/每月）。
+  - 余额 = min(每日剩余, 每周剩余, 每月剩余)（USD）
+  - 支出 = 月度已用金额（USD）
+- plan：支持 Coding Plan 监控，显示每日/周/月使用百分比。
+
+配置选项：
+```bash
+# 方法1：环境变量
+export YESCODE_API_KEY="your_api_key"
+
+# 方法2：独立配置文件（推荐）
+cat > ~/.llm_balance/yescode_config.yaml << EOF
+console_token: your_api_key
+# 或使用
+api_key: your_api_key
+EOF
+```
+
+示例：
+```bash
+# 检查余额和支出
+llm-balance cost --platform=yescode
+# 检查Token使用量
+llm-balance package --platform=yescode
+# 检查 Coding Plan 用量
+llm-balance plan --platform=yescode
+# 查看详细信息（JSON格式）
+llm-balance cost --platform=yescode --format=json
 ```
 
 ## 浏览器支持
