@@ -229,6 +229,16 @@ class YesCodeHandler(BasePlatformHandler):
                 monthly_used = float(sub.get('monthly_usage_usd', 0))
                 monthly_remaining = max(0, monthly_limit - monthly_used)
                 
+                expires_at = sub.get('expires_at')
+                expiry_date = None
+                
+                if expires_at:
+                    try:
+                        dt = datetime.fromisoformat(expires_at.replace('+08:00', ''))
+                        expiry_date = dt.strftime('%Y-%m-%d')
+                    except:
+                        pass
+                
                 if monthly_limit > 0:
                     models.append(ModelTokenInfo(
                         model=platform,
@@ -236,7 +246,8 @@ class YesCodeHandler(BasePlatformHandler):
                         remaining_tokens=monthly_remaining * 100,
                         used_tokens=monthly_used * 100,
                         total_tokens=monthly_limit * 100,
-                        status="active"
+                        status="active",
+                        expiry_date=expiry_date
                     ))
         
         except Exception as e:
