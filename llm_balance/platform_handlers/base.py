@@ -379,7 +379,7 @@ class BasePlatformHandler(ABC):
                     headers=headers or {},
                     cookies=cookies or {},
                     params=params,
-                    timeout=10,
+                    timeout=20,
                     proxies=proxies
                 )
             elif method.upper() == 'GET' and data:
@@ -390,7 +390,7 @@ class BasePlatformHandler(ABC):
                     headers=headers or {},
                     cookies=cookies or {},
                     params=data,
-                    timeout=10,
+                    timeout=20,
                     proxies=proxies
                 )
             else:
@@ -400,7 +400,7 @@ class BasePlatformHandler(ABC):
                     headers=headers or {},
                     cookies=cookies or {},
                     json=data,
-                    timeout=10,
+                    timeout=20,
                     proxies=proxies
                 )
             

@@ -177,6 +177,36 @@ class LLMBalanceCLI:
 
         return checker.format_tokens(tokens, format, currency, model, show_all, show_expiry, show_reset, show_reset_time)
 
+    def platform(self, platform_name: str, 
+                  format: str = 'table',
+                  currency: str = 'CNY',
+                  browser: Optional[str] = None) -> str:
+        """
+        Get comprehensive information (cost + token usage) for a specific platform
+
+        Args:
+            platform_name: Platform name to check (required)
+                          Example: "deepseek", "volcengine", "moonshot"
+            format: Output format (table, json, markdown)
+            currency: Target currency for cost conversion (CNY, USD, EUR, etc.)
+            browser: Browser to get cookies from (chrome, firefox, arc, brave, chromium, vivaldi)
+
+        Returns:
+            Formatted platform information including balance, spent, and token usage
+        """
+        from .utils import format_platform_info
+        
+        browser = browser or self.browser
+        checker = BalanceChecker(self.config_file, browser)
+
+        try:
+            platform_info = checker.get_platform_info(platform_name)
+            return format_platform_info(platform_info, format, currency)
+        except ValueError as e:
+            return f"错误: {str(e)}"
+        except Exception as e:
+            return f"获取平台信息失败: {str(e)}\n请检查平台名称是否正确，或使用 'llm-balance list' 查看可用平台列表"
+
     def plan(self, platform: Optional[str] = None,
              format: str = 'table',
              browser: Optional[str] = None,
@@ -651,6 +681,19 @@ class LLMBalanceCLI:
 
 def main():
     """Main CLI entry point"""
+    import sys
+    from .platform_handlers.registry import registry
+    
+    if len(sys.argv) > 1:
+        command = sys.argv[1]
+        
+        if command not in ['cost', 'package', 'platform', 'plan', 'check', 'list', 
+                          'enable', 'disable', 'config', 'set_browser', 'rates', 
+                          'setup_guide', 'doctor', 'generate_config', 'platform_config']:
+            if registry.get_handler_class(command):
+                sys.argv[1] = 'platform'
+                sys.argv.insert(2, command)
+    
     fire.Fire(LLMBalanceCLI)
 
 if __name__ == '__main__':
