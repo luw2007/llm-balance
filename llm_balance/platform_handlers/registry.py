@@ -46,6 +46,7 @@ class PlatformRegistry:
         from .openclaudecode import OpenClaudeCodeHandler
         from .ikuncode import IKunCodeHandler
         from .yescode import YesCodeHandler
+        from .codex import CodexHandler
 
         self._handlers = {
             'deepseek': DeepSeekHandler,
@@ -78,6 +79,7 @@ class PlatformRegistry:
             'openclaudecode': OpenClaudeCodeHandler,
             'ikuncode': IKunCodeHandler,
             'yescode': YesCodeHandler,
+            'codex': CodexHandler,
         }
         self._initialized = True
 

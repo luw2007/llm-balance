@@ -126,7 +126,7 @@ llm-balance package --show-all       # 包含已停用套餐
 
 #### 检查 Coding Plan 用量
 
-检查 Claude Code 兼容平台（火山引擎、智谱）的 Coding Plan 限额：
+检查 Claude Code 兼容平台（火山引擎、智谱、Codex）的 Coding Plan 限额：
 
 ```bash
 # 检查所有平台
@@ -134,6 +134,7 @@ llm-balance plan
 
 # 检查特定平台
 llm-balance plan --platform=volcengine
+llm-balance plan --platform=codex
 
 # 使用特定浏览器的 cookies
 llm-balance plan --browser=doubao
@@ -142,6 +143,7 @@ llm-balance plan --browser=doubao
 > **注意**: Coding Plan 监控需要平台特定的认证：
 > - **火山引擎**: 浏览器 Cookies（登录 console.volcengine.com）
 > - **智谱 AI**: 设置 `ZHIPU_AUTH_TOKEN` 或 `ANTHROPIC_AUTH_TOKEN` 环境变量
+> - **Codex**: 读取 Codex CLI 会话生成的本地日志 `~/.codex/sessions/**/rollout-*.jsonl`
 
 ### 平台管理
 
