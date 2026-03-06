@@ -131,6 +131,15 @@ def format_output(balances: List[Dict[str, Any]], format_type: str = 'table', ta
     else:  # table format
         return _format_table(balances, target_currency)
 
+def _parse_display_number(value: Any) -> Optional[float]:
+    """Parse display number with '-' and None support"""
+    if value in (None, '-'):
+        return None
+    try:
+        return float(value)
+    except (ValueError, TypeError):
+        return None
+
 def _format_table(balances: List[Dict[str, Any]], target_currency: str = 'CNY') -> str:
     """Format as text table"""
     lines = []
@@ -165,31 +174,18 @@ def _format_table(balances: List[Dict[str, Any]], target_currency: str = 'CNY') 
             spent = balance.get('spent', 0)
             row_has_spent = 'spent' in balance
         
-        # Ensure amount is a number and prepare display
-        amount_is_dash = (amount == '-')
-        amount_is_numeric = True
-        try:
-            amount_float = float(amount) if not amount_is_dash and amount is not None else 0.0
-        except (ValueError, TypeError):
-            amount_float = 0.0
-            amount_is_numeric = False
-        # If not numeric (e.g., None or non-number), display '-'
-        if amount_is_dash or not amount_is_numeric:
-            amount_display = '-'
-        else:
-            amount_display = f"{amount_float:.2f}"
-            
-        # Ensure spent is a number or handle "-" string
-        if spent == "-" or spent is None:
-            spent_display = "-"
-            spent_float = 0.0
-        else:
-            try:
-                spent_float = float(spent)
+        amount_parsed = _parse_display_number(amount)
+        amount_is_numeric = amount_parsed is not None
+        amount_float = amount_parsed if amount_parsed is not None else 0.0
+        amount_display = f"{amount_float:.2f}" if amount_is_numeric else '-'
+
+        spent_float = 0.0
+        spent_display = '-'
+        if row_has_spent:
+            spent_parsed = _parse_display_number(balance.get('spent'))
+            if spent_parsed is not None:
+                spent_float = spent_parsed
                 spent_display = f"{spent_float:.2f}"
-            except (ValueError, TypeError):
-                spent_display = "-"
-                spent_float = 0.0
         
         if is_tokens:
             lines.append(f"{platform:<20} {amount_float:<15.2f} {currency:<10}")
@@ -199,7 +195,7 @@ def _format_table(balances: List[Dict[str, Any]], target_currency: str = 'CNY') 
             lines.append(f"{platform:<20} {amount_display:<15} {currency:<10}")
         
         # Convert to target currency for total
-        if not amount_is_dash and amount_is_numeric:  # Add to total if we have valid numeric data (including negative)
+        if amount_is_numeric:  # Add to total if we have valid numeric data (including negative)
             total += convert_currency(amount_float, currency, target_currency)
         
         # Add spent to total spent
@@ -249,17 +245,10 @@ def _format_markdown(balances: List[Dict[str, Any]]) -> str:
             spent = balance.get('spent', 0)
             currency = balance['currency']
             
-            # Prepare display strings
-            amount_is_dash = (amount == '-')
-            amount_is_numeric = True
-            try:
-                amount_float = float(amount) if not amount_is_dash and amount is not None else 0.0
-            except (ValueError, TypeError):
-                amount_float = 0.0
-                amount_is_numeric = False
-            amount_display = '-' if (amount_is_dash or not amount_is_numeric) else f"{amount_float:.2f}"
-
-            spent_display = "-" if spent == "-" else f"{float(spent):.2f}" if isinstance(spent, (int, float)) else "-"
+            amount_parsed = _parse_display_number(amount)
+            amount_display = '-' if amount_parsed is None else f"{amount_parsed:.2f}"
+            spent_parsed = _parse_display_number(spent)
+            spent_display = '-' if spent_parsed is None else f"{spent_parsed:.2f}"
             
             if has_spent:
                 lines.append(f"| {platform} | {amount_display} | {spent_display} | {currency} |")
