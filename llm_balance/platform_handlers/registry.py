@@ -79,6 +79,7 @@ class PlatformRegistry:
             'openclaudecode': OpenClaudeCodeHandler,
             'ikuncode': IKunCodeHandler,
             'yescode': YesCodeHandler,
+            'chatgpt': CodexHandler,
             'codex': CodexHandler,
         }
         self._initialized = True
