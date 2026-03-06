@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-03-06
+
 ### Added
 - **DawClaudeCode platform support**:
   - Added DawClaudeCode third-party relay platform with quota-based balance and package information
